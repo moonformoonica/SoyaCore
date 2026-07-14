@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Exceptions\ApiException;
 use App\Http\Requests\BayarRequest;
 use App\Http\Requests\StoreTransaksiRequest;
+use App\Http\Requests\TerapkanDiskonRequest;
 use App\Http\Resources\TransaksiResource;
 use App\Models\Transaksi;
+use App\Services\DiskonEngine;
 use App\Services\TransaksiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -56,6 +58,22 @@ class TransaksiController extends Controller
 
     public function show(Transaksi $transaksi): TransaksiResource
     {
+        return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
+    }
+
+    public function diskon(
+        TerapkanDiskonRequest $request,
+        Transaksi $transaksi,
+        DiskonEngine $engine,
+    ): TransaksiResource {
+        $this->service->pastikanPending($transaksi);
+
+        $data = $request->validated();
+        $hasil = $engine->hitung($transaksi->subtotal, $data['tipe'], $data['nilai']);
+
+        $transaksi->forceFill($hasil)->save();
+        $this->service->recalculateTotals($transaksi);
+
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
     }
 

@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('transaksi/{transaksi}/items', [TransaksiItemController::class, 'store']);
     Route::patch('transaksi/{transaksi}/items/{item}', [TransaksiItemController::class, 'update']);
     Route::delete('transaksi/{transaksi}/items/{item}', [TransaksiItemController::class, 'destroy']);
+    Route::post('transaksi/{transaksi}/diskon', [TransaksiController::class, 'diskon']);
     Route::post('transaksi/{transaksi}/bayar', [TransaksiController::class, 'bayar']);
     Route::post('transaksi/{transaksi}/batal', [TransaksiController::class, 'batal']);
 
