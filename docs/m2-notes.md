@@ -58,14 +58,18 @@ Detail endpoint + contoh request/response: lihat `docs/kontrak-api-kasir-v1-draf
 
 ## Temuan Saat Pengerjaan
 
-- **Supabase tidak bisa diakses** saat M2 dikerjakan (error
-  `FATAL: (ENOTFOUND) tenant/user ... not found` dari pooler). Kemungkinan
-  project di-pause (kebiasaan free tier) atau kredensial berubah.
-  **Tindak lanjut:** setelah Supabase bangun, jalankan `php artisan migrate`
-  sekali untuk membuat tabel `personal_access_tokens` (migration Sanctum baru),
-  dan `php artisan db:seed` bila ingin data contoh. Seluruh verifikasi M2
-  dilakukan via test suite (SQLite in-memory) + `migrate:fresh --seed` terhadap
-  SQLite lokal — keduanya hijau.
+- **Supabase sempat tidak bisa diakses** saat M2 dikerjakan (error
+  `FATAL: (ENOTFOUND) tenant/user ... not found` dari pooler), sehingga seluruh
+  verifikasi M2 dilakukan via test suite (SQLite in-memory) — hijau semua.
+  **Sudah diselesaikan (14 Juli 2026):** setelah project aktif kembali,
+  ternyata **session pooler (port 5432) tetap menolak tenant**, sedangkan
+  **transaction pooler (port 6543) di host yang sama berfungsi normal**.
+  `DB_PORT` di `.env` diganti `5432 → 6543` (catatan penting: `.env` tidak
+  di-commit — anggota tim lain yang kena error yang sama perlu mengubah ini
+  manual, atau cek connection string terbaru di dashboard Supabase → Connect).
+  Setelah itu `php artisan migrate` (tabel `personal_access_tokens`) dan
+  `php artisan db:seed` sudah dijalankan ke Supabase, dan `POST /api/login`
+  dites end-to-end sukses mengembalikan token.
 - Bug seeder M1 (`'name'` vs `'nama'`) diperbaiki sesuai §2.2; user seed
   `test@example.com` sekarang bernama "Test User" dan ber-role `manager`
   (password: `password`). Ditambah user kasir `kasir@gressoy.test` (password:
