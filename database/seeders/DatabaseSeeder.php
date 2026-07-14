@@ -17,15 +17,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Fix bug M1: key sebelumnya 'name' (bawaan skeleton) padahal kolom
-        // di tabel users adalah 'nama', sehingga override diam-diam diabaikan.
+        // Password default factory: 'password'
         User::factory()->create([
-            'nama' => 'Test User',
-            'email' => 'test@example.com',
+            'nama' => 'Manager Gressoy',
+            'email' => 'manager@gressoy.test',
             'role' => 'manager',
         ]);
 
-        // Password default factory: 'password'
         User::factory()->create([
             'nama' => 'Kasir Gressoy',
             'email' => 'kasir@gressoy.test',

@@ -70,10 +70,11 @@ Detail endpoint + contoh request/response: lihat `docs/kontrak-api-kasir-v1-draf
   Setelah itu `php artisan migrate` (tabel `personal_access_tokens`) dan
   `php artisan db:seed` sudah dijalankan ke Supabase, dan `POST /api/login`
   dites end-to-end sukses mengembalikan token.
-- Bug seeder M1 (`'name'` vs `'nama'`) diperbaiki sesuai §2.2; user seed
-  `test@example.com` sekarang bernama "Test User" dan ber-role `manager`
-  (password: `password`). Ditambah user kasir `kasir@gressoy.test` (password:
-  `password`).
+- Bug seeder M1 (`'name'` vs `'nama'`) diperbaiki sesuai §2.2. User seed
+  skeleton lama (`test@example.com`) diganti akun manager yang konsisten
+  dengan pola akun kasir: `Manager Gressoy` / `manager@gressoy.test`
+  ber-role `manager`, plus `Kasir Gressoy` / `kasir@gressoy.test` ber-role
+  `kasir` (password keduanya: `password`).
 
 ## Checklist Definition of Done
 
