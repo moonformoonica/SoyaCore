@@ -78,9 +78,11 @@ Detail endpoint + contoh request/response: lihat `docs/kontrak-api-kasir-v1-draf
 
 ## Checklist Definition of Done
 
-- [x] `php artisan migrate:fresh --seed` berjalan tanpa error (diverifikasi ke
-      SQLite lokal karena Supabase down; seeder menghasilkan 1 manager aktif,
-      1 kasir aktif, 2 kategori, 4 menu).
+- [x] `php artisan migrate:fresh --seed` berjalan tanpa error (dijalankan ke
+      Supabase; seeder menghasilkan 1 manager aktif, 1 kasir aktif, dan data
+      menu asli GresSOY: 6 kategori, 93 baris menu — tiap kombinasi
+      nama × ukuran/varian jadi satu baris karena harga beda per ukuran;
+      komposisi minuman disimpan di kolom `rasa`).
 - [x] `POST /api/login` dengan kredensial seeder mengembalikan token (dites di
       `AuthTest`).
 - [x] Endpoint tanpa token → 401; endpoint manager-only dengan token kasir → 403.
