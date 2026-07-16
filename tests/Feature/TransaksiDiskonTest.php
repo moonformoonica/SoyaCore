@@ -49,12 +49,18 @@ class TransaksiDiskonTest extends TestCase
     {
         $id = $this->buatTransaksi([
             'customer' => ['nama' => 'Budi', 'no_wa' => '0812 3456 7890'],
-            'nomor_meja' => '5',
         ]);
 
         // Tambah 2 item berbeda: 2x10000 + 1x15000 = 35000
-        $this->postJson("/api/transaksi/{$id}/items", ['menu_id' => $this->susu->id, 'qty' => 2])
-            ->assertOk();
+        // (nomor_meja/platform/catatan kini atribut level item — revisi ERD)
+        $respon = $this->postJson("/api/transaksi/{$id}/items", [
+            'menu_id' => $this->susu->id,
+            'qty' => 2,
+            'nomor_meja' => '5',
+        ])->assertOk();
+        $this->assertSame('5', $respon->json('data.items.0.nomor_meja'));
+        $this->assertSame('kasir', $respon->json('data.items.0.sumber'));
+
         $respon = $this->postJson("/api/transaksi/{$id}/items", ['menu_id' => $this->tahu->id, 'qty' => 1])
             ->assertOk();
 
@@ -173,21 +179,28 @@ class TransaksiDiskonTest extends TestCase
             ->assertJsonPath('data.total', 10000);
     }
 
-    public function test_diskon_nominal_diclamp_saat_item_dihapus(): void
+    public function test_diskon_nominal_terdistribusi_per_item_dan_porsi_item_terhapus_ikut_hilang(): void
     {
         $id = $this->buatTransaksi();
         $itemSusu = $this->postJson("/api/transaksi/{$id}/items", ['menu_id' => $this->susu->id, 'qty' => 1])
             ->json('data.items.0.id');
         $this->postJson("/api/transaksi/{$id}/items", ['menu_id' => $this->tahu->id, 'qty' => 1]);
 
-        // subtotal 25000, diskon nominal 20000
-        $this->postJson("/api/transaksi/{$id}/diskon", ['tipe' => 'custom_nilai', 'nilai' => 20000])->assertOk();
+        // subtotal 25000, diskon nominal 20000 -> distribusi proporsional:
+        // susu (10000) dapat 8000, tahu (15000, item terakhir) dapat sisa 12000
+        $respon = $this->postJson("/api/transaksi/{$id}/diskon", ['tipe' => 'custom_nilai', 'nilai' => 20000])
+            ->assertOk();
+        $this->assertSame(20000, $respon->json('data.diskon_nilai'));
+        $this->assertSame(8000, $respon->json('data.items.0.diskon_nilai'));
+        $this->assertSame(12000, $respon->json('data.items.1.diskon_nilai'));
+        $this->assertSame(5000, $respon->json('data.total'));
 
-        // hapus item 10000 -> subtotal 15000 < diskon 20000 -> clamp, total 0
+        // per revisi ERD, diskon melekat di item: hapus item susu ->
+        // porsi diskonnya (8000) ikut hilang, sisa diskon 12000 di tahu
         $respon = $this->deleteJson("/api/transaksi/{$id}/items/{$itemSusu}")->assertOk();
         $this->assertSame(15000, $respon->json('data.subtotal'));
-        $this->assertSame(15000, $respon->json('data.diskon_nilai'));
-        $this->assertSame(0, $respon->json('data.total'));
+        $this->assertSame(12000, $respon->json('data.diskon_nilai'));
+        $this->assertSame(3000, $respon->json('data.total'));
     }
 
     public function test_bayar_tanpa_item_ditolak(): void

@@ -8,7 +8,6 @@ use App\Http\Requests\StoreTransaksiRequest;
 use App\Http\Requests\TerapkanDiskonRequest;
 use App\Http\Resources\TransaksiResource;
 use App\Models\Transaksi;
-use App\Services\DiskonEngine;
 use App\Services\TransaksiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -21,7 +20,7 @@ class TransaksiController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Transaksi::with(['customer', 'user'])->latest();
+        $query = Transaksi::with(['customer', 'user', 'detailTransaksi.menu'])->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
@@ -44,13 +43,8 @@ class TransaksiController extends Controller
             'customer_id' => $customer?->id,
             'user_id' => $request->user()->id,
             'kode_pesanan' => $this->service->generateKodePesanan(),
-            'nomor_meja' => $data['nomor_meja'] ?? null,
-            'sumber' => 'kasir',
-            'platform' => $data['platform'] ?? null,
-            'subtotal' => 0,
             'total' => 0,
             'status' => 'pending',
-            'catatan' => $data['catatan'] ?? null,
         ]);
 
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
@@ -61,18 +55,12 @@ class TransaksiController extends Controller
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
     }
 
-    public function diskon(
-        TerapkanDiskonRequest $request,
-        Transaksi $transaksi,
-        DiskonEngine $engine,
-    ): TransaksiResource {
+    public function diskon(TerapkanDiskonRequest $request, Transaksi $transaksi): TransaksiResource
+    {
         $this->service->pastikanPending($transaksi);
 
         $data = $request->validated();
-        $hasil = $engine->hitung($transaksi->subtotal, $data['tipe'], $data['nilai']);
-
-        $transaksi->forceFill($hasil)->save();
-        $this->service->recalculateTotals($transaksi);
+        $this->service->terapkanDiskon($transaksi, $data['tipe'], $data['nilai']);
 
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
     }

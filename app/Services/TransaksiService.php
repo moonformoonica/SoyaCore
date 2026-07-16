@@ -6,38 +6,66 @@ use App\Exceptions\ApiException;
 use App\Models\Customer;
 use App\Models\Transaksi;
 use App\Support\NomorWa;
+use Illuminate\Support\Collection;
 
+/**
+ * Per revisi ERD 15 Juli 2026: subtotal, diskon, nomor_meja, sumber,
+ * platform, dan catatan disimpan per baris `detail_transaksi`; tabel
+ * `transaksi` hanya menyimpan agregat `total`.
+ *
+ * Semantik diskon tetap level transaksi (sesuai spec M2 §5.4) tapi
+ * PENYIMPANANNYA per item:
+ * - diskon persen  -> direplikasi ke semua item, dihitung dari subtotal item
+ * - diskon nominal -> didistribusi proporsional terhadap subtotal item
+ */
 class TransaksiService
 {
+    public function __construct(private readonly DiskonEngine $diskonEngine)
+    {
+    }
+
     /**
-     * Satu-satunya tempat penghitungan subtotal/total transaksi —
-     * dipanggil setiap kali item atau diskon berubah.
-     *
-     * subtotal = SUM(detail_transaksi.subtotal)
-     * total    = subtotal - diskon_nilai (min 0)
-     *
-     * Jika diskon persen aktif, diskon_nilai dihitung ulang dari subtotal
-     * terbaru. Jika diskon nominal (custom_nilai) aktif dan subtotal turun
-     * di bawah nominal (misal item dihapus), diskon_nilai di-clamp ke
-     * subtotal supaya total tidak pernah negatif.
+     * Satu-satunya tempat penghitungan total transaksi — dipanggil setiap
+     * kali item berubah. Diskon yang sedang aktif di item diterapkan ulang
+     * terhadap subtotal terbaru:
+     * - persen aktif  -> diskon_nilai tiap item dihitung ulang
+     * - nominal aktif -> sisa nominal (SUM diskon_nilai item yang masih ada,
+     *   di-clamp ke subtotal) didistribusi ulang — konsekuensinya, menghapus
+     *   item ikut menghapus porsi diskon nominal item tersebut
      */
     public function recalculateTotals(Transaksi $transaksi): Transaksi
     {
-        $subtotal = (int) $transaksi->detailTransaksi()->sum('subtotal');
+        $items = $transaksi->detailTransaksi()->get();
 
-        if ($transaksi->diskon_persen > 0) {
-            $diskonNilai = (int) round($subtotal * $transaksi->diskon_persen / 100);
+        $persen = (int) $items->max('diskon_persen');
+
+        if ($persen > 0) {
+            $this->tulisDiskonPersen($items, $persen);
         } else {
-            $diskonNilai = min((int) $transaksi->diskon_nilai, $subtotal);
+            $nominal = min((int) $items->sum('diskon_nilai'), (int) $items->sum('subtotal'));
+            $this->tulisDiskonNominal($items, $nominal);
         }
 
-        $transaksi->forceFill([
-            'subtotal' => $subtotal,
-            'diskon_nilai' => $diskonNilai,
-            'total' => max(0, $subtotal - $diskonNilai),
-        ])->save();
+        return $this->simpanTotal($transaksi, $items);
+    }
 
-        return $transaksi;
+    /**
+     * Terapkan/ubah diskon (menggantikan diskon sebelumnya, tidak menumpuk).
+     */
+    public function terapkanDiskon(Transaksi $transaksi, string $tipe, int $nilai): Transaksi
+    {
+        $items = $transaksi->detailTransaksi()->get();
+        $subtotal = (int) $items->sum('subtotal');
+
+        $hasil = $this->diskonEngine->hitung($subtotal, $tipe, $nilai);
+
+        if ($hasil['diskon_persen'] > 0) {
+            $this->tulisDiskonPersen($items, $hasil['diskon_persen']);
+        } else {
+            $this->tulisDiskonNominal($items, $hasil['diskon_nilai']);
+        }
+
+        return $this->simpanTotal($transaksi, $items);
     }
 
     /**
@@ -60,7 +88,7 @@ class TransaksiService
      */
     public function generateKodePesanan(): string
     {
-        $urutanHariIni = Transaksi::where('sumber', 'kasir')
+        $urutanHariIni = Transaksi::where('kode_pesanan', 'like', '#K%')
             ->whereDate('created_at', now()->toDateString())
             ->count() + 1;
 
@@ -88,5 +116,39 @@ class TransaksiService
             ['no_wa' => $noWa],
             ['nama' => $data['nama']],
         );
+    }
+
+    private function tulisDiskonPersen(Collection $items, int $persen): void
+    {
+        foreach ($items as $item) {
+            $item->forceFill([
+                'diskon_persen' => $persen,
+                'diskon_nilai' => (int) round($item->subtotal * $persen / 100),
+            ])->save();
+        }
+    }
+
+    private function tulisDiskonNominal(Collection $items, int $nominal): void
+    {
+        $bagian = $this->diskonEngine->distribusi(
+            $items->pluck('subtotal', 'id')->all(),
+            $nominal,
+        );
+
+        foreach ($items as $item) {
+            $item->forceFill([
+                'diskon_persen' => 0,
+                'diskon_nilai' => $bagian[$item->id] ?? 0,
+            ])->save();
+        }
+    }
+
+    private function simpanTotal(Transaksi $transaksi, Collection $items): Transaksi
+    {
+        $total = max(0, (int) $items->sum('subtotal') - (int) $items->sum('diskon_nilai'));
+
+        $transaksi->forceFill(['total' => $total])->save();
+
+        return $transaksi;
     }
 }

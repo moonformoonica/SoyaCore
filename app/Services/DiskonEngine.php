@@ -92,6 +92,42 @@ class DiskonEngine
     }
 
     /**
+     * Distribusi proporsional diskon nominal ke item-item (per revisi ERD,
+     * diskon disimpan per baris detail_transaksi). Semua item kecuali yang
+     * terakhir dapat bagian floor proporsional; sisanya diberikan ke item
+     * terakhir supaya jumlah distribusi tepat sama dengan nominal.
+     *
+     * @param  array<int|string, int>  $itemSubtotals  [id item => subtotal]
+     * @return array<int|string, int>  [id item => bagian diskon]
+     */
+    public function distribusi(array $itemSubtotals, int $nominal): array
+    {
+        $subtotal = array_sum($itemSubtotals);
+
+        if ($subtotal <= 0 || $nominal <= 0) {
+            return array_map(fn () => 0, $itemSubtotals);
+        }
+
+        $hasil = [];
+        $sisa = $nominal;
+        $keys = array_keys($itemSubtotals);
+        $terakhir = count($keys) - 1;
+
+        foreach ($keys as $i => $key) {
+            if ($i === $terakhir) {
+                $hasil[$key] = $sisa;
+                break;
+            }
+
+            $bagian = intdiv($itemSubtotals[$key] * $nominal, $subtotal);
+            $hasil[$key] = $bagian;
+            $sisa -= $bagian;
+        }
+
+        return $hasil;
+    }
+
+    /**
      * @return array{diskon_persen: int, diskon_nilai: int}
      */
     private function persen(int $subtotal, int $persen): array

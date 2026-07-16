@@ -8,6 +8,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class TransaksiResource extends JsonResource
 {
     /**
+     * Per revisi ERD: subtotal & diskon disimpan per item, jadi angka
+     * level transaksi di response ini dihitung sebagai agregat item
+     * (kecuali `total` yang tersimpan di kolom transaksi).
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -16,10 +20,6 @@ class TransaksiResource extends JsonResource
             'id' => $this->id,
             'kode_pesanan' => $this->kode_pesanan,
             'status' => $this->status,
-            'sumber' => $this->sumber,
-            'nomor_meja' => $this->nomor_meja,
-            'platform' => $this->platform,
-            'catatan' => $this->catatan,
             'customer' => $this->whenLoaded('customer', fn () => $this->customer === null ? null : [
                 'id' => $this->customer->id,
                 'nama' => $this->customer->nama,
@@ -30,9 +30,9 @@ class TransaksiResource extends JsonResource
                 'nama' => $this->user->nama,
             ]),
             'items' => DetailTransaksiResource::collection($this->whenLoaded('detailTransaksi')),
-            'subtotal' => $this->subtotal,
-            'diskon_persen' => $this->diskon_persen,
-            'diskon_nilai' => $this->diskon_nilai,
+            'subtotal' => (int) $this->detailTransaksi->sum('subtotal'),
+            'diskon_persen' => (int) ($this->detailTransaksi->max('diskon_persen') ?? 0),
+            'diskon_nilai' => (int) $this->detailTransaksi->sum('diskon_nilai'),
             'total' => $this->total,
             'metode_bayar' => $this->metode_bayar,
             'point_earned' => $this->point_earned,

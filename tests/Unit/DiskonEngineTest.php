@@ -53,6 +53,28 @@ class DiskonEngineTest extends TestCase
         $this->assertSame(['diskon_persen' => 0, 'diskon_nilai' => 7000], $hasil);
     }
 
+    public function test_distribusi_nominal_proporsional_dan_jumlahnya_tepat(): void
+    {
+        // 20000 dari subtotal 25000: item 10000 dapat floor(8000),
+        // item terakhir dapat sisa 12000 — jumlah tepat 20000
+        $hasil = $this->engine->distribusi([1 => 10000, 2 => 15000], 20000);
+
+        $this->assertSame([1 => 8000, 2 => 12000], $hasil);
+        $this->assertSame(20000, array_sum($hasil));
+    }
+
+    public function test_distribusi_nominal_penuh_setara_subtotal_tiap_item(): void
+    {
+        $hasil = $this->engine->distribusi([1 => 10000, 2 => 15000], 25000);
+
+        $this->assertSame([1 => 10000, 2 => 15000], $hasil);
+    }
+
+    public function test_distribusi_nol_mengosongkan_semua_item(): void
+    {
+        $this->assertSame([1 => 0, 2 => 0], $this->engine->distribusi([1 => 10000, 2 => 15000], 0));
+    }
+
     public function test_custom_nilai_melebihi_subtotal_ditolak(): void
     {
         try {

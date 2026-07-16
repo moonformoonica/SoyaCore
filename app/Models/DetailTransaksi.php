@@ -16,6 +16,12 @@ class DetailTransaksi extends Model
         'harga_satuan',
         'subtotal',
         'is_reward',
+        'nomor_meja',
+        'sumber',
+        'platform',
+        'diskon_persen',
+        'diskon_nilai',
+        'catatan',
     ];
 
     protected $casts = [
@@ -23,6 +29,8 @@ class DetailTransaksi extends Model
         'harga_satuan' => 'integer',
         'subtotal' => 'integer',
         'is_reward' => 'boolean',
+        'diskon_persen' => 'integer',
+        'diskon_nilai' => 'integer',
     ];
 
     public function transaksi(): BelongsTo

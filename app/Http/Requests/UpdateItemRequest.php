@@ -18,6 +18,9 @@ class UpdateItemRequest extends FormRequest
     {
         return [
             'qty' => ['required', 'integer', 'min:1'],
+            'nomor_meja' => ['nullable', 'string', 'max:20'],
+            'platform' => ['nullable', 'string', 'max:50'],
+            'catatan' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

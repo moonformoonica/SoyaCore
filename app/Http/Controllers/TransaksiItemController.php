@@ -39,17 +39,18 @@ class TransaksiItemController extends Controller
             ->first();
 
         if ($item !== null) {
-            $item->update([
+            $item->update(array_merge([
                 'qty' => $item->qty + $data['qty'],
                 'subtotal' => ($item->qty + $data['qty']) * $item->harga_satuan,
-            ]);
+            ], $this->fieldTambahan($data)));
         } else {
-            $transaksi->detailTransaksi()->create([
+            $transaksi->detailTransaksi()->create(array_merge([
                 'menu_id' => $menu->id,
                 'qty' => $data['qty'],
                 'harga_satuan' => $menu->harga, // snapshot harga saat ini
                 'subtotal' => $data['qty'] * $menu->harga,
-            ]);
+                'sumber' => 'kasir',
+            ], $this->fieldTambahan($data)));
         }
 
         $this->service->recalculateTotals($transaksi);
@@ -63,11 +64,11 @@ class TransaksiItemController extends Controller
 
         $detail = $transaksi->detailTransaksi()->findOrFail($item);
 
-        $qty = $request->validated('qty');
-        $detail->update([
-            'qty' => $qty,
-            'subtotal' => $qty * $detail->harga_satuan,
-        ]);
+        $data = $request->validated();
+        $detail->update(array_merge([
+            'qty' => $data['qty'],
+            'subtotal' => $data['qty'] * $detail->harga_satuan,
+        ], $this->fieldTambahan($data)));
 
         $this->service->recalculateTotals($transaksi);
 
@@ -83,5 +84,16 @@ class TransaksiItemController extends Controller
         $this->service->recalculateTotals($transaksi);
 
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
+    }
+
+    /**
+     * Field opsional level item (per revisi ERD): hanya di-set bila dikirim.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function fieldTambahan(array $data): array
+    {
+        return array_intersect_key($data, array_flip(['nomor_meja', 'platform', 'catatan']));
     }
 }

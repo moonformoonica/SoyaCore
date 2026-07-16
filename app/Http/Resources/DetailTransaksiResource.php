@@ -22,6 +22,12 @@ class DetailTransaksiResource extends JsonResource
             'harga_satuan' => $this->harga_satuan,
             'subtotal' => $this->subtotal,
             'is_reward' => $this->is_reward,
+            'nomor_meja' => $this->nomor_meja,
+            'sumber' => $this->sumber,
+            'platform' => $this->platform,
+            'diskon_persen' => $this->diskon_persen,
+            'diskon_nilai' => $this->diskon_nilai,
+            'catatan' => $this->catatan,
         ];
     }
 }
