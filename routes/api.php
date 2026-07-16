@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\TransaksiController;
@@ -40,5 +42,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('menu', MenuController::class)
             ->only(['store', 'update', 'destroy'])
             ->parameters(['menu' => 'menu']);
+
+        // Reporting dashboard + export (manager-only)
+        Route::prefix('dashboard')->group(function () {
+            Route::get('meta', [DashboardController::class, 'meta']);
+            Route::get('ringkasan', [DashboardController::class, 'ringkasan']);
+            Route::get('time-series', [DashboardController::class, 'timeSeries']);
+            Route::get('revenue-ukuran', [DashboardController::class, 'revenueUkuran']);
+            Route::get('produk-terlaris', [DashboardController::class, 'produkTerlaris']);
+            Route::get('platform', [DashboardController::class, 'platform']);
+            Route::get('loyalty', [DashboardController::class, 'loyalty']);
+            Route::get('rfm', [DashboardController::class, 'rfm']);
+            Route::get('switch', [DashboardController::class, 'switch']);
+        });
+
+        Route::get('laporan/export', [ExportController::class, 'export']);
     });
 });
