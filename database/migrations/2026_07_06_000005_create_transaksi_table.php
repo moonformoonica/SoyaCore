@@ -8,6 +8,10 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * Sesuai ERD revisi: tabel transaksi hanya menyimpan agregat `total`.
+     * Atribut nomor_meja, sumber, platform, subtotal, diskon_persen,
+     * diskon_nilai, dan catatan berada di tabel detail_transaksi.
      */
     public function up(): void
     {
@@ -15,18 +19,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_id')->nullable()->constrained('customer'); // nullable: walk-in
             $table->foreignId('user_id')->nullable()->constrained('users'); // kasir yang memproses
-            $table->string('kode_pesanan'); // contoh: #A23
-            $table->string('nomor_meja')->nullable();
-            $table->string('sumber'); // 'self_order' | 'kasir'
-            $table->string('platform')->nullable(); // catatan manual (Shopee/GoJek/Grab), tanpa logic
-            $table->unsignedInteger('subtotal');
-            $table->unsignedInteger('diskon_persen')->default(0);
-            $table->unsignedInteger('diskon_nilai')->default(0);
-            $table->unsignedInteger('total'); // subtotal - diskon_nilai
+            $table->string('kode_pesanan'); // contoh: #K001 (kasir) / #A23 (self-order)
+            $table->unsignedInteger('total'); // agregat: SUM(detail.subtotal) - SUM(detail.diskon_nilai)
             $table->string('metode_bayar')->nullable(); // 'cash' | 'qris'
             $table->string('status')->default('pending'); // 'pending' | 'lunas' | 'batal'
             $table->unsignedInteger('point_earned')->default(0);
-            $table->text('catatan')->nullable();
             $table->timestamp('waktu_lunas')->nullable();
             $table->timestamps();
         });

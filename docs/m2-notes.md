@@ -58,13 +58,21 @@ Detail endpoint + contoh request/response: lihat `docs/kontrak-api-kasir-v1-draf
 ## Revisi Skema Transaksi (15 Juli 2026 — keputusan Monica)
 
 Mengikuti **ERD revisi**, kolom `nomor_meja`, `sumber`, `platform`,
-`subtotal`, `diskon_persen`, `diskon_nilai`, `catatan` **dipindah dari
-`transaksi` ke `detail_transaksi`** (migration
-`2026_07_15_000001_move_transaksi_fields_to_detail_transaksi`). Tabel
-`transaksi` kini hanya menyimpan `total` sebagai agregat uang. Keputusan ini
-menggantikan analisis brief M2 §2 (yang semula menganggap posisi kolom di
-gambar ERD sebagai artefak layout drawio) — dikonfirmasi langsung oleh
-Monica bahwa ERD revisi adalah acuan final.
+`subtotal`, `diskon_persen`, `diskon_nilai`, `catatan` berada di
+`detail_transaksi` (level item), sedangkan tabel `transaksi` hanya menyimpan
+`total` sebagai agregat uang. Keputusan ini menggantikan analisis brief M2
+§2 (yang semula menganggap posisi kolom di gambar ERD sebagai artefak layout
+drawio) — dikonfirmasi langsung oleh Monica bahwa ERD revisi adalah acuan
+final.
+
+Definisi final ini langsung ditulis di migration `create` masing-masing
+tabel (`2026_07_06_000005_create_transaksi_table` dan
+`2026_07_06_000006_create_detail_transaksi_table`), sehingga
+`migrate:fresh` menghasilkan skema yang benar tanpa migration tambahan.
+Migration transisi terpisah (`move_transaksi_fields_to_detail_transaksi`)
+sempat dibuat untuk mengubah DB Supabase yang sudah terlanjur berisi skema
+lama, lalu dihapus agar folder migration tetap bersih; baris bookkeeping-nya
+juga dibersihkan dari tabel `migrations` Supabase.
 
 Konsekuensi yang menyertai (semua sudah diimplementasikan + dites):
 
