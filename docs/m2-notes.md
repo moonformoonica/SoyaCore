@@ -37,10 +37,9 @@ Detail endpoint + contoh request/response: lihat `docs/kontrak-api-kasir-v1-draf
 5. **Kode pesanan kasir: `#K` + urutan harian 3 digit** (`#K001`, `#K002`, reset
    tiap hari) — tidak bentrok dengan format `#A23` self-order.
 6. **Diskon nominal melebihi subtotal saat DITERAPKAN → ditolak 422**
-   (`diskon_melebihi_subtotal`). Tapi bila subtotal turun SETELAH diskon nominal
-   diterapkan (misal item dihapus), `diskon_nilai` di-clamp ke subtotal sehingga
-   `total` minimal 0 — dipilih karena lebih aman daripada membiarkan total
-   negatif atau memblokir penghapusan item.
+   (`diskon_melebihi_subtotal`), sehingga `total` tidak pernah negatif.
+   (Perilaku setelah item dihapus berubah per revisi skema 15 Juli —
+   lihat bagian "Revisi Skema" di bawah.)
 7. **Diskon 0% / 0 rupiah dianggap "tidak ada diskon"** dan valid (menghapus
    diskon sebelumnya). Diskon baru selalu MENGGANTIKAN yang lama, tidak menumpuk.
 8. **`diskon_persen` integer** (kolom `unsignedInteger`), jadi `custom_persen`
@@ -55,6 +54,37 @@ Detail endpoint + contoh request/response: lihat `docs/kontrak-api-kasir-v1-draf
 12. **Format error validasi**: `{"error": "validasi_gagal", "message": <error
     pertama>, "details": {per-field}}` — field `details` adalah tambahan di atas
     format standar v1 untuk memudahkan debugging frontend.
+
+## Revisi Skema Transaksi (15 Juli 2026 — keputusan Monica)
+
+Mengikuti **ERD revisi**, kolom `nomor_meja`, `sumber`, `platform`,
+`subtotal`, `diskon_persen`, `diskon_nilai`, `catatan` **dipindah dari
+`transaksi` ke `detail_transaksi`** (migration
+`2026_07_15_000001_move_transaksi_fields_to_detail_transaksi`). Tabel
+`transaksi` kini hanya menyimpan `total` sebagai agregat uang. Keputusan ini
+menggantikan analisis brief M2 §2 (yang semula menganggap posisi kolom di
+gambar ERD sebagai artefak layout drawio) — dikonfirmasi langsung oleh
+Monica bahwa ERD revisi adalah acuan final.
+
+Konsekuensi yang menyertai (semua sudah diimplementasikan + dites):
+
+- `POST /api/transaksi` kini hanya menerima `customer`;
+  `nomor_meja`/`platform`/`catatan` pindah ke payload tambah/ubah item.
+  `sumber` di-set server per item (`kasir`).
+- Endpoint diskon tetap level transaksi (spec M2 §5.4), tapi hasilnya
+  **disimpan per item**: persen direplikasi ke tiap item; nominal
+  didistribusi proporsional terhadap subtotal item (sisa pembulatan ke item
+  terakhir, `DiskonEngine::distribusi()`).
+- **Menghapus item ikut menghapus porsi diskon nominal item itu** —
+  menggantikan perilaku lama "clamp diskon ke subtotal" (keputusan lama #6).
+  `total` tetap tidak pernah negatif.
+- `subtotal`/`diskon_persen`/`diskon_nilai` di response transaksi adalah
+  agregat item (dihitung, tidak tersimpan di tabel `transaksi`).
+- Generator kode pesanan tidak bisa lagi filter kolom `sumber` di
+  `transaksi` → memakai pola `kode_pesanan LIKE '#K%'`.
+- Migration sudah dijalankan ke Supabase dan struktur kolom terverifikasi;
+  alur penuh (login → transaksi → item → diskon 20% → bayar) dites
+  end-to-end terhadap Supabase, hasil benar.
 
 ## Temuan Saat Pengerjaan
 

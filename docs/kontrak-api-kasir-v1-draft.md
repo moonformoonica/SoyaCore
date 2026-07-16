@@ -83,10 +83,7 @@ Body (semua opsional):
 
 ```json
 {
-  "customer": { "nama": "Budi", "no_wa": "0812 3456 7890" },
-  "nomor_meja": "5",
-  "platform": "GoJek",
-  "catatan": "less sugar"
+  "customer": { "nama": "Budi", "no_wa": "0812 3456 7890" }
 }
 ```
 
@@ -94,7 +91,10 @@ Body (semua opsional):
   lalu find-or-create by `no_wa`.
 - `kode_pesanan` digenerate server: `#K` + urutan harian 3 digit (`#K001`, `#K002`, …) —
   dibedakan dari format `#A23` self-order (M3).
-- `sumber` selalu `kasir`, `user_id` = user yang login, status awal `pending`.
+- `user_id` = user yang login, status awal `pending`.
+- **Per revisi ERD 15 Juli 2026**: `nomor_meja`, `platform`, `catatan`, dan
+  `sumber` adalah atribut level **item** (tabel `detail_transaksi`) — dikirim
+  saat tambah item, bukan saat membuat transaksi.
 
 Response `201`: objek transaksi lengkap (lihat bentuk di bawah).
 
@@ -113,40 +113,57 @@ Response `200`:
     "id": 1,
     "kode_pesanan": "#K001",
     "status": "pending",
-    "sumber": "kasir",
-    "nomor_meja": "5",
-    "platform": null,
-    "catatan": null,
     "customer": { "id": 1, "nama": "Budi", "no_wa": "081234567890" },
     "kasir": { "id": 2, "nama": "Kasir Gressoy" },
     "items": [
       {
-        "id": 1, "menu_id": 1, "nama": "Susu Kedelai Botol",
-        "rasa": "Original", "ukuran": "250ml",
-        "qty": 2, "harga_satuan": 10000, "subtotal": 20000, "is_reward": false
+        "id": 1, "menu_id": 1, "nama": "Original",
+        "rasa": "Soya Original Premium + Brown Sugar", "ukuran": "Reguler",
+        "qty": 2, "harga_satuan": 17000, "subtotal": 34000, "is_reward": false,
+        "nomor_meja": "5", "sumber": "kasir", "platform": null,
+        "diskon_persen": 0, "diskon_nilai": 0, "catatan": null
       }
     ],
-    "subtotal": 20000,
+    "subtotal": 34000,
     "diskon_persen": 0,
     "diskon_nilai": 0,
-    "total": 20000,
+    "total": 34000,
     "metode_bayar": null,
     "point_earned": 0,
     "waktu_lunas": null,
-    "created_at": "2026-07-14T10:00:00+00:00"
+    "created_at": "2026-07-15T10:00:00+00:00"
   }
 }
 ```
 
+> `subtotal`, `diskon_persen`, dan `diskon_nilai` level transaksi adalah
+> **agregat dari item** (per revisi ERD kolom-kolom ini tersimpan di
+> `detail_transaksi`); hanya `total` yang tersimpan di tabel `transaksi`.
+
 ### POST /api/transaksi/{id}/items — tambah item
 
-Body: `{ "menu_id": 1, "qty": 2 }` — **tanpa harga** (server snapshot `menu.harga`
-ke `harga_satuan`). Menu yang sama (non-reward) digabung: qty ditambahkan ke baris
-yang sudah ada. Error: `menu_tidak_tersedia` (422) untuk menu tak ada / nonaktif.
+Body:
+
+```json
+{
+  "menu_id": 1,
+  "qty": 2,
+  "nomor_meja": "5",
+  "platform": null,
+  "catatan": "less sugar"
+}
+```
+
+- `nomor_meja` / `platform` / `catatan` opsional (atribut level item, per
+  revisi ERD). `sumber` di-set server = `kasir`.
+- **Tanpa harga** — server snapshot `menu.harga` ke `harga_satuan`.
+- Menu yang sama (non-reward) digabung: qty ditambahkan ke baris yang sudah ada.
+- Error: `menu_tidak_tersedia` (422) untuk menu tak ada / nonaktif.
 
 ### PATCH /api/transaksi/{id}/items/{item} — ubah qty
 
-Body: `{ "qty": 3 }` (≥ 1). Subtotal item & total transaksi dihitung ulang.
+Body: `{ "qty": 3 }` (≥ 1), boleh sekalian `nomor_meja`/`platform`/`catatan`.
+Subtotal item & total transaksi dihitung ulang.
 
 ### DELETE /api/transaksi/{id}/items/{item} — hapus item
 
@@ -166,6 +183,16 @@ Body: `{ "tipe": "preset" | "custom_persen" | "custom_nilai", "nilai": <int> }`
 `diskon_persen_invalid`, `diskon_nilai_invalid`, `diskon_melebihi_subtotal` (semua 422).
 
 Mengirim diskon baru **menggantikan** diskon sebelumnya (bukan menumpuk).
+
+**Penyimpanan per item (revisi ERD 15 Juli 2026):** endpoint ini tetap
+level transaksi, tapi hasilnya disimpan di tiap baris `detail_transaksi`:
+
+- persen → tiap item diberi `diskon_persen` yang sama, `diskon_nilai` item =
+  `round(subtotal_item × persen / 100)`.
+- nominal → didistribusi **proporsional** terhadap subtotal item (item
+  terakhir menerima sisa pembulatan supaya jumlahnya tepat).
+- Konsekuensi: **menghapus item ikut menghapus porsi diskon nominal item
+  itu** (diskon melekat di baris item, bukan di transaksi).
 
 ### POST /api/transaksi/{id}/bayar — finalisasi
 
