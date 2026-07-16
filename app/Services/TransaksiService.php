@@ -20,9 +20,7 @@ use Illuminate\Support\Collection;
  */
 class TransaksiService
 {
-    public function __construct(private readonly DiskonEngine $diskonEngine)
-    {
-    }
+    public function __construct(private readonly DiskonEngine $diskonEngine) {}
 
     /**
      * Satu-satunya tempat penghitungan total transaksi — dipanggil setiap

@@ -98,7 +98,7 @@ class DiskonEngine
      * terakhir supaya jumlah distribusi tepat sama dengan nominal.
      *
      * @param  array<int|string, int>  $itemSubtotals  [id item => subtotal]
-     * @return array<int|string, int>  [id item => bagian diskon]
+     * @return array<int|string, int> [id item => bagian diskon]
      */
     public function distribusi(array $itemSubtotals, int $nominal): array
     {

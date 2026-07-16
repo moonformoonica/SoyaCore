@@ -14,9 +14,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TransaksiController extends Controller
 {
-    public function __construct(private readonly TransaksiService $service)
-    {
-    }
+    public function __construct(private readonly TransaksiService $service) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {

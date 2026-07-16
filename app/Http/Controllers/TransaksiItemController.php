@@ -12,9 +12,7 @@ use App\Services\TransaksiService;
 
 class TransaksiItemController extends Controller
 {
-    public function __construct(private readonly TransaksiService $service)
-    {
-    }
+    public function __construct(private readonly TransaksiService $service) {}
 
     public function store(TambahItemRequest $request, Transaksi $transaksi): TransaksiResource
     {

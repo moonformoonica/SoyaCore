@@ -13,7 +13,7 @@ class DiskonEngineTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->engine = new DiskonEngine();
+        $this->engine = new DiskonEngine;
     }
 
     public function test_preset_20_persen_dihitung_benar(): void
