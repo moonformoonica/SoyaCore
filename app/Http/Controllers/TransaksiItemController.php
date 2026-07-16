@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\Http\Requests\TambahItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Http\Resources\TransaksiResource;
+use App\Models\DetailTransaksi;
 use App\Models\Menu;
 use App\Models\Transaksi;
 use App\Services\TransaksiService;
@@ -31,6 +32,7 @@ class TransaksiItemController extends Controller
 
         // Menu yang sama (non-reward) digabung: qty ditambah, snapshot
         // harga_satuan yang lama dipertahankan selama transaksi pending.
+        /** @var DetailTransaksi|null $item */
         $item = $transaksi->detailTransaksi()
             ->where('menu_id', $menu->id)
             ->where('is_reward', false)
