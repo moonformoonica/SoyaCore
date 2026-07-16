@@ -1,0 +1,62 @@
+# Blueprint deploy SoyaCore ke Render (M3).
+# Pakai: Render Dashboard -> New -> Blueprint -> arahkan ke repo ini.
+services:
+  - type: web
+    name: soyacore-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+
+    # PENTING: Supabase project ini ada di aws-1-ap-south-1 (Mumbai).
+    # Singapore adalah region Render terdekat -> latency app<->DB paling kecil.
+    # Salah pilih (mis. oregon/frankfurt) bisa menambah ~200ms per query, dan
+    # endpoint dashboard melakukan beberapa query agregat per request.
+    region: singapore
+
+    # Dipakai Render untuk cek service hidup. Route /up sudah ada bawaan
+    # Laravel 12 (lihat bootstrap/app.php). URL ini juga yang dipakai
+    # cron keep-alive untuk mencegah cold start free tier.
+    healthCheckPath: /up
+
+    envVars:
+      - key: APP_NAME
+        value: SoyaCore
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: 'false'
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+
+      # sync: false = TIDAK disimpan di repo; isi manual di dashboard Render
+      # (Environment). Jangan pernah commit nilai-nilai ini.
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        sync: false
+      # 6543 = transaction pooler Supabase. Jangan pakai 5432 (session pooler)
+      # — koneksi app yang pendek-pendek cocoknya lewat transaction pooler.
+      - key: DB_PORT
+        value: '6543'
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSLMODE
+        value: require
+
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
