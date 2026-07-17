@@ -19,12 +19,17 @@ class Transaksi extends Model
         'status',
         'point_earned',
         'waktu_lunas',
+        'loyalty_applied_at',
+        'kode_redeem',
+        'poin_ditukar',
     ];
 
     protected $casts = [
         'total' => 'integer',
         'point_earned' => 'integer',
         'waktu_lunas' => 'datetime',
+        'loyalty_applied_at' => 'datetime',
+        'poin_ditukar' => 'integer',
     ];
 
     public function customer(): BelongsTo

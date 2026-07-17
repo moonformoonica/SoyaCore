@@ -11,13 +11,11 @@ class Loyalty extends Model
 
     protected $fillable = [
         'customer_id',
-        'stempel',
-        'total_gratis',
+        'poin', // saldo poin aktual (1 poin per Rp 1.000, model M3)
     ];
 
     protected $casts = [
-        'stempel' => 'integer',
-        'total_gratis' => 'integer',
+        'poin' => 'integer',
     ];
 
     public function customer(): BelongsTo
