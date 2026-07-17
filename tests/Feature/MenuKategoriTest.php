@@ -31,7 +31,7 @@ class MenuKategoriTest extends TestCase
         Sanctum::actingAs($this->kasir());
 
         $this->getJson('/api/kategori')->assertOk()->assertJsonCount(1, 'data');
-        $this->getJson('/api/menu')->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson('/api/menu-internal')->assertOk()->assertJsonCount(1, 'data');
     }
 
     public function test_kasir_tidak_boleh_menulis_kategori_atau_menu(): void
@@ -119,11 +119,11 @@ class MenuKategoriTest extends TestCase
 
         Sanctum::actingAs($this->kasir());
 
-        $this->getJson("/api/menu?kategori_id={$snack->id}")
+        $this->getJson("/api/menu-internal?kategori_id={$snack->id}")
             ->assertOk()
             ->assertJsonCount(2, 'data');
 
-        $this->getJson("/api/menu?kategori_id={$snack->id}&is_active=1")
+        $this->getJson("/api/menu-internal?kategori_id={$snack->id}&is_active=1")
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.nama', 'Tahu Bakso');

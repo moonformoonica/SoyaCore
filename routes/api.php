@@ -4,23 +4,34 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\LoyaltyController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\TransaksiItemController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+// Publik — kontrak v1 self-order (konsumen: SoyaScan, tanpa auth)
+Route::get('/menu', [MenuController::class, 'katalog']);
+Route::post('/order', [OrderController::class, 'store']);
+Route::get('/loyalty/{nomorWa}', [LoyaltyController::class, 'show']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    // Read: kasir & manager (dibutuhkan saat menyusun transaksi)
+    // Read: kasir & manager (dibutuhkan saat menyusun transaksi).
+    // Catatan: list menu internal (flat + filter, termasuk nonaktif) pindah
+    // ke /api/menu-internal karena GET /api/menu kini milik katalog publik
+    // kontrak v1.
     Route::apiResource('kategori', KategoriController::class)
         ->only(['index', 'show'])
         ->parameters(['kategori' => 'kategori']);
+    Route::get('menu-internal', [MenuController::class, 'index']);
     Route::apiResource('menu', MenuController::class)
-        ->only(['index', 'show'])
+        ->only(['show'])
         ->parameters(['menu' => 'menu']);
 
     // Alur transaksi kasir (kasir & manager)
@@ -31,7 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('transaksi/{transaksi}/items/{item}', [TransaksiItemController::class, 'update']);
     Route::delete('transaksi/{transaksi}/items/{item}', [TransaksiItemController::class, 'destroy']);
     Route::post('transaksi/{transaksi}/diskon', [TransaksiController::class, 'diskon']);
+    Route::post('transaksi/{transaksi}/redeem-poin', [TransaksiController::class, 'redeemPoin']);
     Route::post('transaksi/{transaksi}/bayar', [TransaksiController::class, 'bayar']);
+    // alias sesuai penamaan M3 — action yang sama dengan /bayar
+    Route::post('transaksi/{transaksi}/tandai-lunas', [TransaksiController::class, 'bayar']);
     Route::post('transaksi/{transaksi}/batal', [TransaksiController::class, 'batal']);
 
     // Write: hanya manager

@@ -4,17 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
 use App\Http\Requests\BayarRequest;
+use App\Http\Requests\RedeemPoinRequest;
 use App\Http\Requests\StoreTransaksiRequest;
 use App\Http\Requests\TerapkanDiskonRequest;
 use App\Http\Resources\TransaksiResource;
 use App\Models\Transaksi;
+use App\Services\LoyaltyService;
 use App\Services\TransaksiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class TransaksiController extends Controller
 {
-    public function __construct(private readonly TransaksiService $service) {}
+    public function __construct(
+        private readonly TransaksiService $service,
+        private readonly LoyaltyService $loyaltyService,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -63,6 +69,22 @@ class TransaksiController extends Controller
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
     }
 
+    /**
+     * Redeem Poin (M3) — hanya saat pending, satu redemption per transaksi.
+     */
+    public function redeemPoin(RedeemPoinRequest $request, Transaksi $transaksi): TransaksiResource
+    {
+        $this->loyaltyService->redeemPoin($transaksi, $request->validated('kode_redeem'));
+
+        return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
+    }
+
+    /**
+     * Tandai Lunas (alias: bayar). Status -> lunas, lalu earning poin
+     * LoyalSeed: intdiv(total, 1000), idempotent via loyalty_applied_at.
+     * user_id diisi kasir yang MEMPROSES pembayaran (penting untuk
+     * self-order yang dibuat tanpa kasir).
+     */
     public function bayar(BayarRequest $request, Transaksi $transaksi): TransaksiResource
     {
         $this->service->pastikanPending($transaksi);
@@ -75,12 +97,16 @@ class TransaksiController extends Controller
             );
         }
 
-        $transaksi->update([
-            'metode_bayar' => $request->validated('metode_bayar'),
-            'status' => 'lunas',
-            'waktu_lunas' => now(),
-            'point_earned' => 1, // update tabel loyalty adalah scope LoyalSeed (M3)
-        ]);
+        DB::transaction(function () use ($request, $transaksi) {
+            $transaksi->update([
+                'metode_bayar' => $request->validated('metode_bayar'),
+                'status' => 'lunas',
+                'waktu_lunas' => now(),
+                'user_id' => $request->user()->id,
+            ]);
+
+            $this->loyaltyService->earnPoinFor($transaksi);
+        });
 
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
     }

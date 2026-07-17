@@ -35,6 +35,8 @@ class TransaksiResource extends JsonResource
             'diskon_nilai' => (int) $this->detailTransaksi->sum('diskon_nilai'),
             'total' => $this->total,
             'metode_bayar' => $this->metode_bayar,
+            'kode_redeem' => $this->kode_redeem,
+            'poin_ditukar' => $this->poin_ditukar,
             'point_earned' => $this->point_earned,
             'waktu_lunas' => $this->waktu_lunas?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),

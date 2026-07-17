@@ -81,12 +81,12 @@ class TransaksiDiskonTest extends TestCase
         $this->assertSame(5000, $respon->json('data.diskon_nilai'));
         $this->assertSame(30000, $respon->json('data.total'));
 
-        // Bayar cash -> lunas
+        // Bayar cash -> lunas; poin LoyalSeed = intdiv(total 30000, 1000) = 30
         $respon = $this->postJson("/api/transaksi/{$id}/bayar", ['metode_bayar' => 'cash'])
             ->assertOk();
         $this->assertSame('lunas', $respon->json('data.status'));
         $this->assertSame('cash', $respon->json('data.metode_bayar'));
-        $this->assertSame(1, $respon->json('data.point_earned'));
+        $this->assertSame(30, $respon->json('data.point_earned'));
         $this->assertNotNull($respon->json('data.waktu_lunas'));
     }
 
@@ -232,7 +232,8 @@ class TransaksiDiskonTest extends TestCase
         $this->buatTransaksi(['customer' => ['nama' => 'Budi', 'no_wa' => '0812-3456-7890 ']]);
 
         $this->assertSame(1, Customer::count());
-        $this->assertSame('081234567890', Customer::first()->no_wa);
+        // normalisasi M3: format 62 (0812... -> 62812...)
+        $this->assertSame('6281234567890', Customer::first()->no_wa);
     }
 
     public function test_filter_list_transaksi_per_status(): void
