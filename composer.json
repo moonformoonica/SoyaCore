@@ -48,7 +48,7 @@
         ],
         "dev:preview": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#fdba74\" \"php artisan serve --host=0.0.0.0 --port=8000\" \"ngrok http 8000 --log=stdout\" --names=server,ngrok --kill-others"
+            "npx concurrently -c \"#93c5fd,#fdba74\" \"php artisan serve --host=0.0.0.0 --port=8000\" \"ngrok http --url=defamingly-nongelatinizing-payton.ngrok-free.dev 8000 --log=stdout\" --names=server,ngrok --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",

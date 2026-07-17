@@ -46,9 +46,14 @@ Cocok juga untuk tes scan QR beneran dari HP — HP harus di WiFi yang sama.
    ngrok config add-authtoken <token>
    ```
    Token disimpan ngrok di config lokal OS — **JANGAN PERNAH** masuk `.env` atau ter-commit ke repo.
-4. **Sangat disarankan**: klaim **satu free static domain** di dashboard ngrok
-   (menu Domains) — supaya URL publik TIDAK berubah tiap restart, jadi Ghefira
-   tidak perlu update env var tiap sesi.
+4. **Static domain: SUDAH ADA.** Akun ngrok Monica sudah punya free dev
+   domain permanen — `defamingly-nongelatinizing-payton.ngrok-free.dev` —
+   dan script `dev:preview` sudah di-pin ke domain itu. URL publik TIDAK
+   berubah walau di-restart, jadi Ghefira cukup set env var SEKALI:
+
+   ```env
+   VITE_API_BASE_URL=https://defamingly-nongelatinizing-payton.ngrok-free.dev/api
+   ```
 
 ### Menjalankan (tiap sesi)
 
