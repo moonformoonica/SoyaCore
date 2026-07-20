@@ -6,10 +6,10 @@
 
 ## Kapan pakai yang mana?
 
-| Situasi | Pakai |
-|---|---|
+| Situasi                                | Pakai                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
 | Satu WiFi (mis. WFO bareng di Gressoy) | **Opsi A — LAN** (lebih cepat, tidak butuh internet keluar, bisa tes scan QR dari HP) |
-| Beda lokasi / WFH | **Opsi B — ngrok** |
+| Beda lokasi / WFH                      | **Opsi B — ngrok**                                                                    |
 
 Database tetap Supabase (sudah dikonfigurasi di `.env` Monica) — dua opsi
 ini hanya soal bagaimana SoyaScan menjangkau API-nya.
@@ -42,18 +42,18 @@ Cocok juga untuk tes scan QR beneran dari HP — HP harus di WiFi yang sama.
 1. Daftar akun gratis di **ngrok.com**.
 2. Install ngrok CLI (Windows: download installer dari situs ngrok; Mac: `brew install ngrok`).
 3. Ambil **authtoken** dari dashboard ngrok, lalu jalankan sekali:
-   ```bash
-   ngrok config add-authtoken <token>
-   ```
-   Token disimpan ngrok di config lokal OS — **JANGAN PERNAH** masuk `.env` atau ter-commit ke repo.
+    ```bash
+    ngrok config add-authtoken <token>
+    ```
+    Token disimpan ngrok di config lokal OS — **JANGAN PERNAH** masuk `.env` atau ter-commit ke repo.
 4. **Static domain: SUDAH ADA.** Akun ngrok Monica sudah punya free dev
    domain permanen — `defamingly-nongelatinizing-payton.ngrok-free.dev` —
    dan script `dev:preview` sudah di-pin ke domain itu. URL publik TIDAK
    berubah walau di-restart, jadi Ghefira cukup set env var SEKALI:
 
-   ```env
-   VITE_API_BASE_URL=https://defamingly-nongelatinizing-payton.ngrok-free.dev/api
-   ```
+    ```env
+    VITE_API_BASE_URL=https://defamingly-nongelatinizing-payton.ngrok-free.dev/api
+    ```
 
 ### Menjalankan (tiap sesi)
 
@@ -100,10 +100,10 @@ ngrok, maka URL-nya tetap sama terus.) Restart `npm run dev` setiap ganti
 **2. Endpoint yang sudah bisa dites NYATA sekarang** (lihat detail lengkap +
 bentuk response di `docs/kontrak-api-v1.md`):
 
-| Endpoint | Auth | Fungsi |
-|---|---|---|
-| `GET /api/menu` | tanpa auth | Menu aktif per kategori |
-| `POST /api/order` | tanpa auth | Buat pesanan self-order |
+| Endpoint                      | Auth       | Fungsi                                                    |
+| ----------------------------- | ---------- | --------------------------------------------------------- |
+| `GET /api/menu`               | tanpa auth | Menu aktif per kategori                                   |
+| `POST /api/order`             | tanpa auth | Buat pesanan self-order                                   |
 | `GET /api/loyalty/{nomor_wa}` | tanpa auth | Cek saldo poin (⚠️ bentuk BARU: `{nomor_wa, nama, poin}`) |
 
 **3. Verifikasi koneksi berhasil:** buka Network tab / console di browser,
