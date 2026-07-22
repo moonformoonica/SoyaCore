@@ -70,7 +70,7 @@ Meta cakupan data (dihitung **live**). Tidak memakai envelope.
   "total_baris": 882,
   "ukuran": ["1000 ml", "250 ml", "500 ml", "Cup", "Hot", "Large", "Pack", "Reguler"],
   "platform": ["GoFood", "GrabFood", "QRIS", "ShopeeFood", "Transfer", "Tunai"],
-  "segmen": ["Butuh Perhatian", "Hampir Hilang", "Pelanggan Loyal", "Pelanggan Potensial"]
+  "segmen": ["Butuh Perhatian", "Loyal", "Pelanggan Baru", "Potensial"]
 }
 ```
 
@@ -130,10 +130,21 @@ tanggal Senin awal minggu (`YYYY-MM-DD`), `bulanan` → `YYYY-MM`, `tahunan` →
 Group by `ukuran` dalam window, urut `total_revenue` desc. Saat window = rentang
 penuh, hasil ini **identik** dengan tabel referensi `laporan_revenue_ukuran`.
 
+> **KHUSUS MINUMAN.** Dessert & cookies (ukuran `Cup` dan `Pack`) tidak dihitung
+> di endpoint ini. Jadi jumlah `total_revenue` di sini **lebih kecil** dari
+> `data.total_revenue` di `/ringkasan` — Rp 21.192.000 vs Rp 26.257.000 untuk
+> periode penuh; selisih Rp 5.065.000 adalah revenue dessert & cookies. Ini
+> disengaja, bukan salah hitung. Endpoint lain (`/ringkasan`,
+> `/produk-terlaris`, `/platform`) tetap menghitung semua item.
+>
+> Field `catatan` dikirim khusus di endpoint ini — tampilkan apa adanya di
+> dekat chart supaya user paham cakupannya.
+
 ```json
 {
   "periode": { "grain": "harian", "start": "2026-06-01", "end": "2026-07-30" },
   "data_tersedia": true,
+  "catatan": "Khusus minuman — dessert & cookies (Cup/Pack) tidak termasuk.",
   "data": [
     { "ukuran": "Reguler", "jumlah_terjual": 360, "total_revenue": 8047000, "jumlah_transaksi": 323, "rata_rata_transaksi": 24913 },
     { "ukuran": "Large", "jumlah_terjual": 193, "total_revenue": 5182000, "jumlah_transaksi": 173, "rata_rata_transaksi": 29954 }
@@ -217,22 +228,37 @@ Poin loyalty dalam window. `data.top_pelanggan` urut poin desc; params `limit`
 {
   "periode_label": "1 Jun 2026 – 30 Jul 2026",
   "ringkasan_segmen": {
-    "Butuh Perhatian": 111,
-    "Pelanggan Potensial": 104,
-    "Pelanggan Loyal": 90,
-    "Hampir Hilang": 40
+    "Pelanggan Baru": 122,
+    "Butuh Perhatian": 108,
+    "Potensial": 94,
+    "Loyal": 21
   },
   "data": [
     {
-      "id": 4, "nama_pelanggan": "Achmad", "recency": 1, "frequency": 4,
-      "monetary": 85000, "r_score": 3, "f_score": 3, "m_score": 3,
-      "rfm_total": 9, "segmen": "Pelanggan Loyal"
+      "id": 7, "nama_pelanggan": "Aden", "recency": 27, "frequency": 17,
+      "total_pcs_dibeli": 18, "monetary": 513000, "total_poin_loyalty": 348,
+      "frequency_skor": 17.4, "r_score": 3, "f_score": 4, "m_score": 4,
+      "rfm_total": 11, "segmen": "Loyal"
     }
   ]
 }
 ```
 
-Nilai `segmen`: `Pelanggan Loyal`, `Pelanggan Potensial`, `Butuh Perhatian`, `Hampir Hilang`.
+Nilai `segmen`: `Loyal`, `Potensial`, `Butuh Perhatian`, `Pelanggan Baru`.
+
+> **BREAKING (data revisi Juni–Juli 2026).** Penamaan segmen berubah:
+> `Pelanggan Loyal` → `Loyal`, `Pelanggan Potensial` → `Potensial`, dan
+> `Hampir Hilang` **dihapus**, diganti `Pelanggan Baru`. Kalau frontend
+> meng-hardcode nama/warna segmen, sesuaikan. Lebih aman ambil daftarnya
+> dari `GET /api/dashboard/meta` (field `segmen`) yang selalu live dari DB.
+
+Tiga field baru di objek data:
+
+| Field | Arti |
+|---|---|
+| `total_pcs_dibeli` | Jumlah pcs. Beda dari `frequency` yang menghitung **kunjungan** — 1 kunjungan bisa banyak pcs. |
+| `total_poin_loyalty` | Akumulasi poin LoyalSeed (1 poin per Rp 1.000; item non-minuman tidak dapat poin). |
+| `frequency_skor` | Frekuensi terbobot = `0,6 × frequency + 0,4 × total_pcs_dibeli`. Desimal. Dasar `f_score`, supaya pembeli borongan tidak kalah dari yang sering datang tapi beli sedikit. |
 
 ---
 
@@ -272,13 +298,22 @@ Download workbook `.xlsx` multi-sheet. Params sama: `grain`/`start`/`end`.
 |---|---|---|
 | Ringkasan | Blok KPI + label periode & grain | window |
 | Detail Transaksi | Baris `laporan_transaksi` (header Bahasa Indonesia) | window |
-| Revenue per Ukuran | Group by ukuran | window |
+| Revenue per Ukuran | Group by ukuran + catatan cakupan | window, **minuman saja** |
 | Time Series | Bucket sesuai grain | window |
 | RFM Pelanggan | Snapshot RFM + catatan periode tetap | statis periode-penuh |
 | Rekomendasi Switch | Snapshot switch + catatan periode tetap | statis periode-penuh |
 
 Kolom uang berupa integer rupiah. Window kosong tetap menghasilkan `.xlsx` valid
 (sebagian besar kosong, hanya header).
+
+Sheet **Revenue per Ukuran** dan **RFM Pelanggan** diawali satu baris catatan
+cakupan, jadi **header tabel ada di baris 2 dan data mulai baris 3** — bukan
+header di baris 1 seperti sheet lain. Penting kalau file ini dibaca ulang
+otomatis (mis. `pandas.read_excel(..., skiprows=1)`).
+
+Sheet **RFM Pelanggan** memakai 12 kolom: Nama Pelanggan, Recency (hari),
+Kunjungan, Total Pcs, Monetary (Rp), Total Poin, Skor Frekuensi, R, F, M,
+RFM Total, Segmen.
 
 ---
 

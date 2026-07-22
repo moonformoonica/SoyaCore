@@ -71,6 +71,44 @@ Tanpa/token salah → `401 {"error": "unauthenticated"}`.
 
 ---
 
+## Pencarian Customer (halaman Pesanan)
+
+### GET /api/customers/cari — auto-detect pelanggan lama/baru
+
+Role: kasir, manager. **Read-only** — tidak membuat/mengubah/menghapus apa pun.
+
+Query param (minimal salah satu dari `no_wa` / `nama` wajib):
+
+| Param | Keterangan |
+|---|---|
+| `no_wa` | Dinormalisasi dulu (`0812…`, `+62 812…`, `812…` → `62812…`), lalu dicocokkan **persis** |
+| `nama` | Pencarian **parsial** (contains), min 2 karakter; wildcard `%` dan `_` di-escape jadi teks literal |
+| `limit` | 1–25, default 10 |
+
+Response `200`:
+
+```json
+{
+  "data": [
+    { "id": 1, "nama": "Budi Santoso", "no_wa": "6281234567890", "poin": 400 }
+  ]
+}
+```
+
+- **Tidak ketemu → `200` dengan `data: []`, bukan `404`.** Pelanggan baru adalah
+  state normal saat kasir masih mengetik, jadi frontend cukup cek `data.length`:
+  ada isi → ver2 (pelanggan lama, tampilkan nama + poin), kosong → ver1 (input baru).
+- Customer tanpa baris `loyalty` dilaporkan `poin: 0` (bukan error).
+- Query kosong (tanpa `no_wa` maupun `nama`) → `422 validasi_gagal` — endpoint ini
+  bukan dump seluruh customer.
+
+Beda dengan `GET /api/loyalty/{nomorWa}` (publik, SoyaScan): endpoint tersebut
+tanpa auth, hanya exact-match `no_wa`, dan `404` kalau tidak ketemu. Untuk
+halaman Pesanan pakai `/api/customers/cari` — butuh auth karena mengembalikan
+data pelanggan yang bisa dienumerasi lewat pencarian nama.
+
+---
+
 ## Alur Transaksi Kasir
 
 Status transaksi: `pending → lunas` atau `pending → batal` (satu arah).
