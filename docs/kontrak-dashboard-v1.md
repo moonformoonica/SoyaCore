@@ -4,7 +4,33 @@
 > manager (Ghefira). Semua endpoint bersifat **read-only reporting**, dihitung
 > dari layer data historis terpisah (`laporan_*`), tidak menyentuh POS live.
 
-Semua endpoint di bawah prefix `/api`, **manager-only** (Sanctum + `role:manager`).
+Semua endpoint di bawah prefix `/api` dan wajib login (Sanctum).
+
+## Hak Akses per Role
+
+Sebagian dashboard kini boleh dibuka **kasir**, sisanya tetap manager-only.
+
+| Endpoint | kasir | manager |
+|---|:---:|:---:|
+| `GET /api/dashboard/meta` | ✅ | ✅ |
+| `GET /api/dashboard/ringkasan` | ✅ | ✅ |
+| `GET /api/dashboard/produk-terlaris` | ✅ | ✅ |
+| `GET /api/dashboard/time-series` | ❌ | ✅ |
+| `GET /api/dashboard/revenue-ukuran` | ❌ | ✅ |
+| `GET /api/dashboard/platform` | ❌ | ✅ |
+| `GET /api/dashboard/loyalty` | ❌ | ✅ |
+| `GET /api/dashboard/rfm` | ❌ | ✅ |
+| `GET /api/dashboard/switch` | ❌ | ✅ |
+| `GET /api/laporan/export` | ❌ | ✅ |
+
+Prinsipnya: kasir boleh memantau **performa harian**, tapi tidak boleh melihat
+data **per-pelanggan** (loyalty, RFM, switch) maupun meng-export laporan.
+
+> **Catatan buat frontend.** Jangan arahkan kasir ke halaman yang isinya
+> endpoint manager-only — hasilnya cuma layar kosong dengan error 403.
+> Role ada di `GET /api/me` (field `user.role`), pakai itu untuk menyembunyikan
+> menu/tab-nya. Kalau kasir mengetik URL-nya langsung, redirect ke halaman
+> Pesanan.
 
 ## Autentikasi
 
@@ -15,7 +41,7 @@ Authorization: Bearer <token>
 ```
 
 - Tanpa token / token invalid → `401 { "error": "unauthenticated", "message": "..." }`
-- Token non-manager (mis. kasir) → `403 { "error": "tidak_berwenang", "message": "..." }`
+- Role tidak mencukupi (mis. kasir buka `/rfm`) → `403 { "error": "tidak_berwenang", "message": "..." }`
 
 ## Cakupan Data
 
@@ -322,5 +348,5 @@ RFM Total, Segmen.
 | Kode | HTTP | Kapan |
 |---|---|---|
 | `unauthenticated` | 401 | Tanpa/invalid token |
-| `tidak_berwenang` | 403 | Bukan role manager |
+| `tidak_berwenang` | 403 | Role tidak mencukupi (lihat tabel Hak Akses per Role) |
 | `validasi_gagal` | 422 | `grain` tak dikenal, format tanggal salah, `end` < `start`, dll. |

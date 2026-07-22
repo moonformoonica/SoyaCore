@@ -52,6 +52,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('transaksi/{transaksi}/tandai-lunas', [TransaksiController::class, 'bayar']);
     Route::post('transaksi/{transaksi}/batal', [TransaksiController::class, 'batal']);
 
+    // Dashboard porsi kasir — cukup untuk memantau performa harian sendiri.
+    // Sengaja dibatasi: tidak ada data per-pelanggan (RFM/loyalty/switch) dan
+    // tidak ada export. `meta` ikut karena date-picker kedua halaman di bawah
+    // butuh rentang tanggal; isinya cuma daftar tanggal/ukuran/platform/segmen.
+    Route::prefix('dashboard')->group(function () {
+        Route::get('meta', [DashboardController::class, 'meta']);
+        Route::get('ringkasan', [DashboardController::class, 'ringkasan']);
+        Route::get('produk-terlaris', [DashboardController::class, 'produkTerlaris']);
+    });
+
     // Write: hanya manager
     Route::middleware('role:manager')->group(function () {
         Route::apiResource('kategori', KategoriController::class)
@@ -61,13 +71,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->only(['store', 'update', 'destroy'])
             ->parameters(['menu' => 'menu']);
 
-        // Reporting dashboard + export (manager-only)
+        // Reporting lanjutan + export (manager-only)
         Route::prefix('dashboard')->group(function () {
-            Route::get('meta', [DashboardController::class, 'meta']);
-            Route::get('ringkasan', [DashboardController::class, 'ringkasan']);
             Route::get('time-series', [DashboardController::class, 'timeSeries']);
             Route::get('revenue-ukuran', [DashboardController::class, 'revenueUkuran']);
-            Route::get('produk-terlaris', [DashboardController::class, 'produkTerlaris']);
             Route::get('platform', [DashboardController::class, 'platform']);
             Route::get('loyalty', [DashboardController::class, 'loyalty']);
             Route::get('rfm', [DashboardController::class, 'rfm']);
