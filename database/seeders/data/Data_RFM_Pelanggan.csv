@@ -1,0 +1,346 @@
+Nama Pelanggan,Recency,Frekuensi_Kedatangan,Total_Pcs_Dibeli,Monetary,Total_Poin_Loyalty,Frequency,R_Score,F_Score,M_Score,RFM_Total,Segmen
+.,7,1,1,17000,17,1.0,4,1,1,6,Pelanggan Baru
+Abdullah,48,2,3,119000,89,2.4,1,3,4,8,Butuh Perhatian
+Abi,16,1,1,15000,0,1.0,3,1,1,5,Pelanggan Baru
+Achmad,1,4,4,85000,0,4.0,4,4,3,11,Potensial
+Ade,7,1,1,30000,30,1.0,4,1,1,6,Pelanggan Baru
+Adel,44,2,2,40000,25,2.0,1,2,2,5,Butuh Perhatian
+Aden,27,17,18,513000,348,17.4,3,4,4,11,Loyal
+Adrian,2,6,6,150000,120,6.0,4,4,4,12,Loyal
+Agnes,30,2,2,52000,52,2.0,2,2,3,7,Butuh Perhatian
+Agung,56,1,1,21000,21,1.0,1,1,1,3,Pelanggan Baru
+Agus,50,1,1,15000,0,1.0,1,1,1,3,Pelanggan Baru
+Agustinus,45,2,2,42000,42,2.0,1,2,2,5,Butuh Perhatian
+Aii,9,1,1,39000,39,1.0,4,1,2,7,Pelanggan Baru
+Aisyah,3,1,1,25000,25,1.0,4,1,1,6,Pelanggan Baru
+Ajeng,3,3,4,82000,67,3.4,4,4,3,11,Potensial
+Aka,6,2,2,40000,25,2.0,4,2,2,8,Potensial
+Alba,7,2,2,49000,49,2.0,4,2,3,9,Potensial
+Aldi,52,1,2,30000,0,1.4,1,2,1,4,Pelanggan Baru
+Alfian,18,4,4,104000,104,4.0,3,4,4,11,Potensial
+Alif,3,1,1,30000,30,1.0,4,1,2,7,Pelanggan Baru
+Alifah,30,2,3,52000,22,2.4,2,3,3,8,Butuh Perhatian
+Alika,43,2,2,48000,33,2.0,1,2,2,5,Butuh Perhatian
+Alsa,1,3,3,65000,65,3.0,4,3,3,10,Potensial
+Alvib,58,3,3,206000,206,3.0,1,3,4,8,Butuh Perhatian
+Alvina,2,2,6,96000,51,3.6,4,4,4,12,Potensial
+Alya,29,4,4,77000,62,4.0,2,4,3,9,Butuh Perhatian
+Alysia,39,1,1,21000,21,1.0,2,1,1,4,Pelanggan Baru
+Amanda,2,3,4,94000,94,3.4,4,4,4,12,Potensial
+Amar,16,6,6,139000,124,6.0,3,4,4,11,Potensial
+Amira,29,3,3,61000,46,3.0,2,3,3,8,Butuh Perhatian
+Andi,49,1,1,30000,30,1.0,1,1,2,4,Pelanggan Baru
+Andre,24,1,3,75000,75,1.8,3,2,3,8,Pelanggan Baru
+Anet,15,2,2,40000,25,2.0,3,2,2,7,Potensial
+Angel,27,5,5,106000,91,5.0,3,4,4,11,Potensial
+Anggi,6,3,3,51000,51,3.0,4,3,3,10,Potensial
+Anggit,17,3,3,59000,44,3.0,3,3,3,9,Potensial
+Anggun,6,2,2,42000,42,2.0,4,2,2,8,Potensial
+Anin,23,2,2,95000,95,2.0,3,2,4,9,Potensial
+Anindya,22,3,3,61000,46,3.0,3,3,3,9,Potensial
+Annida,52,1,1,74000,74,1.0,1,1,3,5,Pelanggan Baru
+Annisa,29,4,4,97000,97,4.0,2,4,4,10,Butuh Perhatian
+Annisaa,21,4,5,109000,94,4.4,3,4,4,11,Potensial
+Annissa,24,2,2,51000,51,2.0,3,2,3,8,Potensial
+Anzila,14,3,3,79000,79,3.0,4,3,3,10,Potensial
+Aprilia,43,1,1,17000,17,1.0,1,1,1,3,Pelanggan Baru
+Ara,32,3,3,60000,30,3.0,2,3,3,8,Butuh Perhatian
+Ardhon,56,2,2,104000,89,2.0,1,2,4,7,Butuh Perhatian
+Ardi,32,3,7,115000,25,4.6,2,4,4,10,Butuh Perhatian
+Ardina,15,4,4,111000,56,4.0,3,4,4,11,Potensial
+Arga,36,2,2,46000,46,2.0,2,2,2,6,Butuh Perhatian
+Argnnva19,9,1,1,89000,89,1.0,4,1,3,8,Pelanggan Baru
+Arin,3,2,3,57000,27,2.4,4,3,3,10,Potensial
+Arlinta,27,3,3,57000,42,3.0,3,3,3,9,Potensial
+Arum,11,5,6,132000,87,5.4,4,4,4,12,Potensial
+Arumi,11,1,2,34000,34,1.4,4,2,2,8,Pelanggan Baru
+Aruna,2,2,2,51000,51,2.0,4,2,3,9,Potensial
+Asep,46,2,2,32000,17,2.0,1,2,2,5,Butuh Perhatian
+Ata,46,2,2,36000,21,2.0,1,2,2,5,Butuh Perhatian
+Aurora,20,1,1,15000,0,1.0,3,1,1,5,Pelanggan Baru
+Avni,15,1,1,89000,89,1.0,3,1,3,7,Pelanggan Baru
+Aya,39,3,4,73000,43,3.4,2,4,3,9,Butuh Perhatian
+Ayas,30,4,4,90000,75,4.0,2,4,4,10,Butuh Perhatian
+Ayu,39,2,2,50000,50,2.0,2,2,3,7,Butuh Perhatian
+Ayus,41,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Azmi,52,2,2,46000,46,2.0,1,2,2,5,Butuh Perhatian
+Bayu,16,1,1,22000,22,1.0,3,1,1,5,Pelanggan Baru
+Bela,7,1,1,25000,25,1.0,4,1,1,6,Pelanggan Baru
+Bella,1,7,7,178000,178,7.0,4,4,4,12,Loyal
+Bintang,13,4,4,116000,116,4.0,4,4,4,12,Potensial
+Bre,1,2,2,45000,30,2.0,4,2,2,8,Potensial
+Bu,7,2,2,53000,53,2.0,4,2,3,9,Potensial
+Caca,18,1,1,30000,30,1.0,3,1,2,6,Pelanggan Baru
+Cahya,39,2,2,32000,17,2.0,2,2,2,6,Butuh Perhatian
+Cahyo,60,2,2,38000,38,2.0,1,2,2,5,Butuh Perhatian
+Catherine,30,2,2,60000,60,2.0,2,2,3,7,Butuh Perhatian
+Chelsea,17,4,4,311000,311,4.0,3,4,4,11,Loyal
+Cici,1,1,2,34000,34,1.4,4,2,2,8,Pelanggan Baru
+Cindy,37,2,2,56000,56,2.0,2,2,3,7,Butuh Perhatian
+Cio,6,8,8,224000,224,8.0,4,4,4,12,Loyal
+Citra,21,6,7,154000,139,6.4,3,4,4,11,Loyal
+Clarissa,27,4,5,95000,50,4.4,3,4,4,11,Potensial
+Cyntya,13,2,2,36000,21,2.0,4,2,2,8,Potensial
+Daffa,8,2,2,32000,17,2.0,4,2,2,8,Potensial
+Davina,21,1,1,21000,21,1.0,3,1,1,5,Pelanggan Baru
+Dea,21,5,6,115000,85,5.4,3,4,4,11,Potensial
+Dedep,53,2,2,50000,50,2.0,1,2,3,6,Butuh Perhatian
+Deni,42,1,1,25000,25,1.0,1,1,1,3,Pelanggan Baru
+Denny,31,8,12,292000,292,9.6,2,4,4,10,Butuh Perhatian
+Desinta,15,2,2,45000,45,2.0,3,2,2,7,Potensial
+Dessy,8,1,1,21000,21,1.0,4,1,1,6,Pelanggan Baru
+Devina,25,2,2,50000,50,2.0,3,2,3,8,Potensial
+Diah,45,1,1,15000,0,1.0,1,1,1,3,Pelanggan Baru
+Dian,28,4,5,117000,102,4.4,3,4,4,11,Potensial
+Didin,30,3,3,73000,73,3.0,2,3,3,8,Butuh Perhatian
+Dini,7,8,19,450000,390,12.4,4,4,4,12,Loyal
+Dinne,21,1,3,45000,0,1.8,3,2,2,7,Pelanggan Baru
+Dio,18,3,3,65000,50,3.0,3,3,3,9,Potensial
+Divan,29,3,3,66000,51,3.0,2,3,3,8,Butuh Perhatian
+Diyah,41,1,1,17000,17,1.0,2,1,1,4,Pelanggan Baru
+Donita,22,1,1,27000,27,1.0,3,1,1,5,Pelanggan Baru
+Dunan,30,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Eksal,34,2,3,55000,55,2.4,2,3,3,8,Butuh Perhatian
+El,60,1,1,25000,25,1.0,1,1,1,3,Pelanggan Baru
+Elin,51,2,2,46000,46,2.0,1,2,2,5,Butuh Perhatian
+Elisabeth,15,2,3,45000,0,2.4,3,3,2,8,Potensial
+Elva,41,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Emy,22,2,2,42000,42,2.0,3,2,2,7,Potensial
+Enggar,24,2,2,36000,21,2.0,3,2,2,7,Potensial
+Eris,34,2,2,40000,25,2.0,2,2,2,6,Butuh Perhatian
+Erlan,46,1,1,17000,17,1.0,1,1,1,3,Pelanggan Baru
+Erlita,55,4,4,95000,80,4.0,1,4,4,9,Butuh Perhatian
+Ersya,53,3,3,60000,45,3.0,1,3,3,7,Butuh Perhatian
+Fahri,34,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Fahrul,43,2,2,45000,45,2.0,1,2,2,5,Butuh Perhatian
+Faizal,7,2,2,42000,42,2.0,4,2,2,8,Potensial
+Fajar,36,2,2,163000,163,2.0,2,2,4,8,Butuh Perhatian
+Fami,31,1,1,17000,17,1.0,2,1,1,4,Pelanggan Baru
+Fani,2,2,2,46000,46,2.0,4,2,2,8,Potensial
+Fanii,1,4,4,72000,42,4.0,4,4,3,11,Potensial
+Fanya,29,1,2,42000,42,1.4,2,2,2,6,Pelanggan Baru
+Farah,41,1,1,20000,20,1.0,2,1,1,4,Pelanggan Baru
+Farel,21,1,1,25000,25,1.0,3,1,1,5,Pelanggan Baru
+Faris,39,2,2,40000,25,2.0,2,2,2,6,Butuh Perhatian
+Fathia,38,2,2,40000,25,2.0,2,2,2,6,Butuh Perhatian
+Fathiya,48,2,4,78000,63,2.8,1,3,3,7,Butuh Perhatian
+Fatimah,27,1,1,21000,21,1.0,3,1,1,5,Pelanggan Baru
+Fatma,45,3,3,52000,22,3.0,1,3,3,7,Butuh Perhatian
+Felisiana,27,1,1,25000,25,1.0,3,1,1,5,Pelanggan Baru
+Femi,17,2,2,51000,51,2.0,3,2,3,8,Potensial
+Feni,52,2,2,32000,17,2.0,1,2,2,5,Butuh Perhatian
+Fia,29,1,2,30000,0,1.4,2,2,2,6,Pelanggan Baru
+Fiko,30,3,3,70000,55,3.0,2,3,3,8,Butuh Perhatian
+Fina,50,1,1,15000,0,1.0,1,1,1,3,Pelanggan Baru
+Fira,17,3,3,68000,68,3.0,3,3,3,9,Potensial
+Firman,44,2,2,47000,47,2.0,1,2,2,5,Butuh Perhatian
+Fitri,50,2,2,49000,49,2.0,1,2,3,6,Butuh Perhatian
+Fresti,37,1,1,29000,29,1.0,2,1,1,4,Pelanggan Baru
+Gayuh,31,2,2,52000,52,2.0,2,2,3,7,Butuh Perhatian
+Gina,2,1,1,27000,27,1.0,4,1,1,6,Pelanggan Baru
+Grissel,22,2,2,45000,30,2.0,3,2,2,7,Potensial
+Hainan,22,1,2,34000,34,1.4,3,2,2,7,Pelanggan Baru
+Haira,44,2,2,40000,25,2.0,1,2,2,5,Butuh Perhatian
+Happy,23,2,2,40000,25,2.0,3,2,2,7,Potensial
+Haro,6,7,7,159000,129,7.0,4,4,4,12,Loyal
+Helen,37,1,2,54000,54,1.4,2,2,3,7,Pelanggan Baru
+Henny,48,4,8,236000,236,5.6,1,4,4,9,Butuh Perhatian
+Herly,60,2,2,37000,22,2.0,1,2,2,5,Butuh Perhatian
+Huan,20,1,1,25000,25,1.0,3,1,1,5,Pelanggan Baru
+Huda,24,1,1,17000,17,1.0,3,1,1,5,Pelanggan Baru
+Ibra,2,3,3,114000,99,3.0,4,3,4,11,Potensial
+Ica,11,3,3,75000,60,3.0,4,3,3,10,Potensial
+Icul,11,2,2,52000,52,2.0,4,2,3,9,Potensial
+Ida,16,1,2,30000,0,1.4,3,2,2,7,Pelanggan Baru
+Ifal,37,3,6,100000,25,4.2,2,4,4,10,Butuh Perhatian
+Ifat,4,2,6,104000,29,3.6,4,4,4,12,Potensial
+Ifka,25,3,3,51000,21,3.0,3,3,3,9,Potensial
+Igna,13,1,1,17000,17,1.0,4,1,1,6,Pelanggan Baru
+Iin,51,1,1,25000,25,1.0,1,1,1,3,Pelanggan Baru
+Ika,4,4,7,113000,38,5.2,4,4,4,12,Potensial
+Imam,39,1,1,95000,95,1.0,2,1,4,7,Pelanggan Baru
+Imei,59,1,2,34000,34,1.4,1,2,2,5,Pelanggan Baru
+Indah,4,2,2,55000,55,2.0,4,2,3,9,Potensial
+Indra,41,2,2,47000,47,2.0,2,2,2,6,Butuh Perhatian
+Indriyani,31,1,1,15000,0,1.0,2,1,1,4,Pelanggan Baru
+Iren,50,1,1,20000,20,1.0,1,1,1,3,Pelanggan Baru
+Ita,8,2,2,50000,50,2.0,4,2,3,9,Potensial
+Iwan,36,4,10,162000,102,6.4,2,4,4,10,Butuh Perhatian
+Iza,31,1,1,21000,21,1.0,2,1,1,4,Pelanggan Baru
+Jay,16,3,3,90000,90,3.0,3,3,4,10,Potensial
+Jean,4,1,1,15000,0,1.0,4,1,1,6,Pelanggan Baru
+Jehan,9,2,2,89000,74,2.0,4,3,3,10,Potensial
+Jeje,7,8,8,392000,377,8.0,4,4,4,12,Loyal
+Jennifer,23,1,1,17000,17,1.0,3,1,1,5,Pelanggan Baru
+Jesyln,49,2,3,75000,75,2.4,1,3,3,7,Butuh Perhatian
+Jimmy,55,4,6,238000,178,4.8,1,4,4,9,Butuh Perhatian
+Jingga,34,2,2,30000,0,2.0,2,3,2,7,Butuh Perhatian
+Joan,21,1,1,17000,17,1.0,3,1,1,5,Pelanggan Baru
+Jovita,17,1,1,15000,0,1.0,3,1,1,5,Pelanggan Baru
+Kakak,3,7,7,160000,145,7.0,4,4,4,12,Loyal
+Karin,37,3,4,84000,54,3.4,2,4,3,9,Butuh Perhatian
+Karina,46,1,1,25000,25,1.0,1,1,1,3,Pelanggan Baru
+Kezia,15,4,5,100000,70,4.4,3,4,4,11,Potensial
+Kezya,60,1,1,29000,29,1.0,1,1,1,3,Pelanggan Baru
+Khurotul,13,1,1,22000,22,1.0,4,1,1,6,Pelanggan Baru
+Kika,37,2,2,43000,43,2.0,2,3,2,7,Butuh Perhatian
+Kiki,44,2,3,59000,59,2.4,1,3,3,7,Butuh Perhatian
+Krisma,16,1,1,74000,74,1.0,3,1,3,7,Pelanggan Baru
+Laeli,60,2,2,163000,163,2.0,1,3,4,8,Butuh Perhatian
+Lala,6,7,11,321000,291,8.6,4,4,4,12,Loyal
+Lambert,24,4,7,121000,61,5.2,3,4,4,11,Potensial
+Langit,23,3,5,89000,29,3.8,3,4,3,10,Potensial
+Lani,41,3,5,83000,68,3.8,2,4,3,9,Butuh Perhatian
+Laras,58,1,1,21000,21,1.0,1,1,1,3,Pelanggan Baru
+Laura,57,1,1,17000,17,1.0,1,1,1,3,Pelanggan Baru
+Legita,39,5,5,103000,103,5.0,2,4,4,10,Butuh Perhatian
+Lia,28,10,10,193000,118,10.0,2,4,4,10,Butuh Perhatian
+Lina,49,2,3,152000,152,2.4,1,3,4,8,Butuh Perhatian
+Linda,35,2,3,69000,39,2.4,2,3,3,8,Butuh Perhatian
+Lintang,1,4,4,99000,69,4.0,4,4,4,12,Potensial
+Lukman,15,3,3,67000,67,3.0,3,3,3,9,Potensial
+Maaruf,10,1,1,25000,25,1.0,4,1,1,6,Pelanggan Baru
+Martinus,44,1,1,30000,30,1.0,1,1,2,4,Pelanggan Baru
+Masti,23,1,1,30000,30,1.0,3,1,2,6,Pelanggan Baru
+Matthew,59,4,4,95000,80,4.0,1,4,4,9,Butuh Perhatian
+Maulia,45,1,1,25000,25,1.0,1,1,1,3,Pelanggan Baru
+Maya,41,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Meilinda,29,3,3,52000,22,3.0,2,3,3,8,Butuh Perhatian
+Mifta,45,5,5,171000,171,5.0,1,4,4,9,Butuh Perhatian
+Miftaksidiq,6,2,2,104000,104,2.0,4,3,4,11,Potensial
+Mimi,32,6,12,382000,382,8.4,2,4,4,10,Butuh Perhatian
+Mita,17,3,4,68000,68,3.4,3,4,3,10,Potensial
+Mitha,39,2,2,42000,42,2.0,2,3,2,7,Butuh Perhatian
+Momragnala,48,2,3,104000,74,2.4,1,3,4,8,Butuh Perhatian
+Monic,31,7,9,226000,181,7.8,2,4,4,10,Butuh Perhatian
+Monna,25,2,2,98000,98,2.0,3,3,4,10,Potensial
+Mozes,41,2,4,87000,87,2.8,2,3,3,8,Butuh Perhatian
+Muhammad Hanan,30,2,2,32000,17,2.0,2,3,2,7,Butuh Perhatian
+Muti,24,1,1,25000,25,1.0,3,1,1,5,Pelanggan Baru
+Mutiara,25,1,1,15000,0,1.0,3,1,1,5,Pelanggan Baru
+NN,23,3,3,79000,64,3.0,3,3,3,9,Potensial
+Nabila,48,1,1,25000,25,1.0,1,1,1,3,Pelanggan Baru
+Nadia,15,9,10,226000,166,9.4,3,4,4,11,Loyal
+Nadya,13,4,5,118000,118,4.4,4,4,4,12,Potensial
+Najma,39,2,2,70000,55,2.0,2,3,3,8,Butuh Perhatian
+Naki,41,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Namira,49,2,2,46000,46,2.0,1,3,2,6,Butuh Perhatian
+Nana,15,1,1,25000,25,1.0,3,1,1,5,Pelanggan Baru
+Naomi,49,1,1,30000,30,1.0,1,1,2,4,Pelanggan Baru
+Nasha,13,1,1,15000,0,1.0,4,1,1,6,Pelanggan Baru
+Nashaty,35,1,1,15000,0,1.0,2,1,1,4,Pelanggan Baru
+Nata,18,2,2,32000,17,2.0,3,3,2,8,Potensial
+Natasya,36,1,1,15000,0,1.0,2,1,1,4,Pelanggan Baru
+Naya,41,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Ncat,17,3,3,90000,90,3.0,3,3,4,10,Potensial
+Nendra,16,5,9,216000,141,6.6,3,4,4,11,Loyal
+Neni,50,2,3,104000,74,2.4,1,3,4,8,Butuh Perhatian
+Nia,1,18,23,555000,405,20.0,4,4,4,12,Loyal
+Niaa,1,1,1,25000,25,1.0,4,1,1,6,Pelanggan Baru
+Nicola,48,2,2,66000,66,2.0,1,3,3,7,Butuh Perhatian
+Nina,3,3,3,56000,41,3.0,4,3,3,10,Potensial
+Ning,8,1,1,30000,30,1.0,4,1,2,7,Pelanggan Baru
+Nisa,36,3,19,741000,741,9.4,2,4,4,10,Butuh Perhatian
+Nonita,31,10,24,440000,230,15.6,2,4,4,10,Butuh Perhatian
+Nositaria,8,6,10,268000,268,7.6,4,4,4,12,Loyal
+Nourma,60,1,1,17000,17,1.0,1,1,1,3,Pelanggan Baru
+Noval,6,7,7,179000,164,7.0,4,4,4,12,Loyal
+Novi,44,2,2,32000,17,2.0,1,3,2,6,Butuh Perhatian
+Novii,44,1,1,15000,0,1.0,1,1,1,3,Pelanggan Baru
+Novri,2,1,1,25000,25,1.0,4,1,1,6,Pelanggan Baru
+Novrida,16,2,3,75000,75,2.4,3,3,3,9,Potensial
+Nur,24,1,1,22000,22,1.0,3,1,1,5,Pelanggan Baru
+Nurul,38,2,2,51000,51,2.0,2,3,3,8,Butuh Perhatian
+Ochi,22,1,1,17000,17,1.0,3,1,1,5,Pelanggan Baru
+Oki,20,2,2,40000,25,2.0,3,3,2,8,Potensial
+Oktania,16,1,1,27000,27,1.0,3,1,1,5,Pelanggan Baru
+Olin,7,2,2,30000,0,2.0,4,3,2,9,Potensial
+Pandhu,56,2,2,40000,40,2.0,1,3,2,6,Butuh Perhatian
+Prima,25,2,3,45000,0,2.4,3,3,2,8,Potensial
+Pristia,29,2,2,42000,42,2.0,2,3,2,7,Butuh Perhatian
+Pugi,1,5,5,167000,167,5.0,4,4,4,12,Loyal
+Puji,15,4,5,99000,84,4.4,3,4,4,11,Potensial
+Pusat Gadai,55,1,1,17000,17,1.0,1,1,1,3,Pelanggan Baru
+Puspi,58,1,1,25000,25,1.0,1,1,1,3,Pelanggan Baru
+Putra,29,1,2,30000,0,1.4,2,2,2,6,Pelanggan Baru
+Putri,7,11,11,231000,186,11.0,4,4,4,12,Loyal
+Rachel,52,5,9,157000,52,6.6,1,4,4,9,Butuh Perhatian
+Raihan,49,2,2,40000,25,2.0,1,3,2,6,Butuh Perhatian
+Rani,56,1,2,34000,34,1.4,1,2,2,5,Pelanggan Baru
+Rara,31,8,8,216000,201,8.0,2,4,4,10,Butuh Perhatian
+Raras,41,2,2,51000,51,2.0,2,3,3,8,Butuh Perhatian
+Resta,15,1,2,34000,34,1.4,3,2,2,7,Pelanggan Baru
+Retno,3,3,5,93000,93,3.8,4,4,4,12,Potensial
+Ridho,58,3,3,65000,50,3.0,1,3,3,7,Butuh Perhatian
+Rika,24,3,3,80000,25,3.0,3,3,3,9,Potensial
+Riko,57,2,3,49000,34,2.4,1,3,3,7,Butuh Perhatian
+Rini,55,2,2,70000,55,2.0,1,3,3,7,Butuh Perhatian
+Rintan,55,3,9,141000,21,5.4,1,4,4,9,Butuh Perhatian
+Riri,31,4,4,91000,76,4.0,2,4,4,10,Butuh Perhatian
+Risa,29,2,2,32000,17,2.0,2,3,2,7,Butuh Perhatian
+Riska,41,1,1,25000,25,1.0,2,1,1,4,Pelanggan Baru
+Riski,1,1,1,21000,21,1.0,4,1,1,6,Pelanggan Baru
+Rohmat,8,4,4,104000,104,4.0,4,4,4,12,Potensial
+Roni,41,2,2,40000,25,2.0,2,3,2,7,Butuh Perhatian
+Rony,53,1,1,15000,0,1.0,1,1,1,3,Pelanggan Baru
+Roro,9,1,1,34000,34,1.0,4,1,2,7,Pelanggan Baru
+Rudi,36,1,1,17000,17,1.0,2,1,1,4,Pelanggan Baru
+Rumaisha,23,2,2,50000,50,2.0,3,3,3,9,Potensial
+Rumbay,49,1,2,50000,50,1.4,1,2,3,6,Pelanggan Baru
+Sabil,21,1,1,25000,25,1.0,3,1,1,5,Pelanggan Baru
+Saleh,52,3,4,75000,30,3.4,1,4,3,8,Butuh Perhatian
+Salma,25,2,2,47000,32,2.0,3,3,2,8,Potensial
+Samia,36,1,1,89000,89,1.0,2,2,3,7,Pelanggan Baru
+Sani,2,1,1,30000,30,1.0,4,2,2,8,Pelanggan Baru
+Sansan,41,1,1,30000,30,1.0,2,2,2,6,Pelanggan Baru
+Saraswati,7,2,2,32000,17,2.0,4,3,2,9,Potensial
+Sari,32,4,5,93000,93,4.4,2,4,4,10,Butuh Perhatian
+Sasa,2,1,1,34000,34,1.0,4,2,2,8,Pelanggan Baru
+Satya,13,7,7,142000,97,7.0,4,4,4,12,Potensial
+Sekar,21,4,4,76000,61,4.0,3,4,3,10,Potensial
+Seni,50,2,2,39000,39,2.0,1,3,2,6,Butuh Perhatian
+Sharen,1,17,20,512000,467,18.2,4,4,4,12,Loyal
+Sifaa,59,1,1,15000,0,1.0,1,2,1,4,Pelanggan Baru
+Sinta,8,4,4,88000,58,4.0,4,4,3,11,Potensial
+Sisil,14,1,1,27000,27,1.0,4,2,1,7,Pelanggan Baru
+Siska,1,4,4,112000,112,4.0,4,4,4,12,Potensial
+Sofi,59,2,2,40000,25,2.0,1,3,2,6,Butuh Perhatian
+Suci,51,1,1,21000,21,1.0,1,2,1,4,Pelanggan Baru
+Syifa,45,1,1,20000,20,1.0,1,2,1,4,Pelanggan Baru
+Talitha,30,2,2,50000,50,2.0,2,3,3,8,Butuh Perhatian
+Tarso,29,1,1,27000,27,1.0,2,2,1,5,Pelanggan Baru
+Tata,15,6,7,127000,67,6.4,3,4,4,11,Potensial
+Tia,6,3,3,89000,89,3.0,4,3,3,10,Potensial
+Tiffa,50,3,3,47000,17,3.0,1,3,2,6,Butuh Perhatian
+Tina,29,1,1,15000,0,1.0,2,2,1,5,Pelanggan Baru
+Tisa,53,1,1,22000,22,1.0,1,2,1,4,Pelanggan Baru
+Titan,6,2,2,89000,74,2.0,4,3,3,10,Potensial
+Tivani,22,3,3,67000,67,3.0,3,3,3,9,Potensial
+Tiwa,6,9,10,529000,529,9.4,4,4,4,12,Loyal
+Tyas,6,6,6,189000,189,6.0,4,4,4,12,Loyal
+Ulfah,24,2,2,44000,29,2.0,3,3,2,8,Potensial
+Uli,25,2,2,46000,46,2.0,3,3,2,8,Potensial
+Umi,31,2,2,50000,50,2.0,2,3,3,8,Butuh Perhatian
+Valentinus,22,2,3,47000,17,2.4,3,3,2,8,Potensial
+Velin,48,1,1,23000,23,1.0,1,2,1,4,Pelanggan Baru
+Vera,24,4,4,80000,50,4.0,3,4,3,10,Potensial
+Via,21,1,1,21000,21,1.0,3,2,1,6,Pelanggan Baru
+Vidya,6,2,2,42000,42,2.0,4,3,2,9,Potensial
+Vita,20,2,4,74000,44,2.8,3,3,3,9,Potensial
+Wann,48,2,2,55000,55,2.0,1,3,3,7,Butuh Perhatian
+Wanti,14,1,1,15000,0,1.0,4,2,1,7,Pelanggan Baru
+Wulan,55,3,6,90000,0,4.2,1,4,4,9,Butuh Perhatian
+Xin,38,2,2,37000,22,2.0,2,3,2,7,Butuh Perhatian
+Yeti,57,5,5,91000,46,5.0,1,4,4,9,Butuh Perhatian
+Yoga,38,1,1,15000,0,1.0,2,2,1,5,Pelanggan Baru
+Yola,41,1,2,30000,0,1.4,2,2,2,6,Pelanggan Baru
+Yolanda,14,1,1,15000,0,1.0,3,2,1,6,Pelanggan Baru
+Yuli,41,3,3,61000,46,3.0,2,4,3,9,Butuh Perhatian
+Yuya,30,3,11,190000,0,6.2,2,4,4,10,Butuh Perhatian
+Zahra,58,3,3,57000,42,3.0,1,4,3,8,Butuh Perhatian
+Zaroh,53,2,2,32000,17,2.0,1,3,2,6,Butuh Perhatian
+Zaza,56,1,3,45000,0,1.8,1,2,2,5,Pelanggan Baru
+Zefa,10,1,1,25000,25,1.0,4,2,1,7,Pelanggan Baru
+Zeta,34,2,2,40000,25,2.0,2,3,2,7,Butuh Perhatian
+Ziya,8,1,3,45000,0,1.8,4,2,2,8,Pelanggan Baru
+Zoraya,11,4,4,118000,103,4.0,4,4,4,12,Potensial

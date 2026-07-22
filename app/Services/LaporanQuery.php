@@ -16,6 +16,18 @@ use Illuminate\Support\Carbon;
 class LaporanQuery
 {
     /**
+     * Ukuran milik dessert & cookies (Kembang Tahu Tahwa, Soy Milk Pudding,
+     * Vegan Cookies Peanut). Dipakai HANYA oleh revenueUkuran() yang memang
+     * dibatasi ke minuman — laporan lain (ringkasan, produk terlaris,
+     * platform) tetap menghitung semua item.
+     *
+     * Pemetaan ukuran <-> non-minuman bersifat satu-satu di data Gressoy:
+     * hanya tiga produk itu yang memakai Cup/Pack, dan ketiganya tidak
+     * pernah memakai ukuran lain.
+     */
+    private const UKURAN_NON_MINUMAN = ['Cup', 'Pack'];
+
+    /**
      * Resolusi window: kalau start/end tidak diberikan, pakai rentang penuh
      * yang tersedia di laporan_transaksi. Bila tabel kosong, fallback null.
      *
@@ -97,6 +109,7 @@ class LaporanQuery
     public function revenueUkuran(?string $start, ?string $end): array
     {
         $rows = $this->base($start, $end)
+            ->whereNotIn('ukuran', self::UKURAN_NON_MINUMAN)
             ->selectRaw('ukuran, sum(qty) as jumlah_terjual, sum(total) as total_revenue, count(*) as jumlah_transaksi')
             ->groupBy('ukuran')
             ->orderByRaw('sum(total) desc')

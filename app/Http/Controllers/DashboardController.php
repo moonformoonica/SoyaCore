@@ -53,12 +53,21 @@ class DashboardController extends Controller
         return $this->envelope($request->grain(), $start, $end, $ada, $this->query->timeSeries($start, $end, $request->grain()));
     }
 
+    /**
+     * Khusus minuman — dessert & cookies (Cup/Pack) tidak dihitung, jadi
+     * totalnya memang lebih kecil dari /ringkasan. Dikirim lewat `catatan`
+     * supaya frontend bisa menampilkannya dan selisih itu tidak dikira bug.
+     */
     public function revenueUkuran(LaporanRequest $request): JsonResponse
     {
         [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
         $ada = $this->query->adaData($start, $end);
 
-        return $this->envelope($request->grain(), $start, $end, $ada, $this->query->revenueUkuran($start, $end));
+        return $this->envelope(
+            $request->grain(), $start, $end, $ada,
+            $this->query->revenueUkuran($start, $end),
+            'Khusus minuman — dessert & cookies (Cup/Pack) tidak termasuk.',
+        );
     }
 
     public function produkTerlaris(LaporanRequest $request): JsonResponse
@@ -134,15 +143,18 @@ class DashboardController extends Controller
 
     /**
      * Envelope konsisten untuk endpoint yang bisa difilter tanggal.
+     * $catatan diisi kalau cakupan data endpoint itu perlu dijelaskan
+     * ke user (mis. revenue per ukuran yang khusus minuman).
      *
      * @param  array<string, mixed>|list<mixed>  $data
      */
-    private function envelope(string $grain, ?string $start, ?string $end, bool $adaData, array $data): JsonResponse
+    private function envelope(string $grain, ?string $start, ?string $end, bool $adaData, array $data, ?string $catatan = null): JsonResponse
     {
-        return response()->json([
+        return response()->json(array_filter([
             'periode' => ['grain' => $grain, 'start' => $start, 'end' => $end],
             'data_tersedia' => $adaData,
+            'catatan' => $catatan,
             'data' => $data,
-        ]);
+        ], fn ($v) => $v !== null));
     }
 }

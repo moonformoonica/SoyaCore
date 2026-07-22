@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\KategoriController;
@@ -33,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('menu', MenuController::class)
         ->only(['show'])
         ->parameters(['menu' => 'menu']);
+
+    // Auto-detect pelanggan lama/baru di halaman Pesanan — read-only.
+    Route::get('customers/cari', [CustomerController::class, 'cari']);
 
     // Alur transaksi kasir (kasir & manager)
     Route::apiResource('transaksi', TransaksiController::class)

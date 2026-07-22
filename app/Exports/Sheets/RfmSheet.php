@@ -27,12 +27,17 @@ class RfmSheet implements FromArray, WithTitle
         $rows = [
             ['Catatan: snapshot periode penuh '.self::PERIODE_LABEL.' — tidak difilter tanggal.'],
             [],
-            ['Nama Pelanggan', 'Recency', 'Frequency', 'Monetary', 'R', 'F', 'M', 'RFM Total', 'Segmen'],
+            [
+                'Nama Pelanggan', 'Recency (hari)', 'Kunjungan', 'Total Pcs',
+                'Monetary (Rp)', 'Total Poin', 'Skor Frekuensi',
+                'R', 'F', 'M', 'RFM Total', 'Segmen',
+            ],
         ];
 
         foreach (LaporanRfm::query()->orderByDesc('rfm_total')->orderBy('nama_pelanggan')->get() as $r) {
             $rows[] = [
-                $r->nama_pelanggan, $r->recency, $r->frequency, $r->monetary,
+                $r->nama_pelanggan, $r->recency, $r->frequency, $r->total_pcs_dibeli,
+                $r->monetary, $r->total_poin_loyalty, $r->frequency_skor,
                 $r->r_score, $r->f_score, $r->m_score, $r->rfm_total, $r->segmen,
             ];
         }

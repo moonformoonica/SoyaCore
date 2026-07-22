@@ -20,6 +20,14 @@ class DashboardLaporanTest extends TestCase
 
     private const FULL_REVENUE = 26257000;
 
+    /**
+     * Revenue per ukuran hanya mencakup minuman — dessert & cookies
+     * (Cup/Pack) sengaja dikecualikan, jadi lebih kecil dari FULL_REVENUE.
+     */
+    private const MINUMAN_REVENUE = 21192000;
+
+    private const NON_MINUMAN_REVENUE = 5065000;
+
     private const FULL_ROWS = 882;
 
     protected function setUp(): void
@@ -80,7 +88,17 @@ class DashboardLaporanTest extends TestCase
         $response = $this->getJson('/api/dashboard/revenue-ukuran')->assertOk();
 
         $this->assertSame($expected, $response->json('data'));
-        $this->assertSame(self::FULL_REVENUE, array_sum(array_column($response->json('data'), 'total_revenue')));
+        $this->assertSame(self::MINUMAN_REVENUE, array_sum(array_column($response->json('data'), 'total_revenue')));
+
+        // Cakupan minuman-saja harus dijelaskan ke frontend, bukan diam-diam.
+        $this->assertNotNull($response->json('catatan'));
+
+        // Selisih terhadap /ringkasan memang sebesar revenue dessert & cookies.
+        $this->assertSame(self::FULL_REVENUE - self::MINUMAN_REVENUE, self::NON_MINUMAN_REVENUE);
+        $this->assertEmpty(array_intersect(
+            ['Cup', 'Pack'],
+            array_column($response->json('data'), 'ukuran'),
+        ));
     }
 
     public function test_time_series_bulanan_dua_bucket(): void
@@ -126,14 +144,18 @@ class DashboardLaporanTest extends TestCase
             ->assertJsonStructure(['ringkasan_segmen', 'data'])
             ->assertJsonCount(345, 'data');
 
-        $this->getJson('/api/dashboard/rfm?segmen=Pelanggan Loyal')
+        // Penamaan segmen berubah di data revisi Juni–Juli 2026:
+        // "Pelanggan Loyal" -> "Loyal", "Pelanggan Potensial" -> "Potensial",
+        // "Hampir Hilang" diganti "Pelanggan Baru".
+        $this->getJson('/api/dashboard/rfm?segmen=Loyal')
             ->assertOk()
-            ->assertJsonPath('data.0.segmen', 'Pelanggan Loyal');
+            ->assertJsonPath('data.0.segmen', 'Loyal')
+            ->assertJsonCount(21, 'data');
 
         $this->getJson('/api/dashboard/switch')
             ->assertOk()
             ->assertJsonPath('periode_label', '1 Jun 2026 – 30 Jul 2026')
-            ->assertJsonCount(33, 'data');
+            ->assertJsonCount(35, 'data');
     }
 
     public function test_semua_route_butuh_token_manager(): void
