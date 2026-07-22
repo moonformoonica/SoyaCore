@@ -158,29 +158,72 @@ class DashboardLaporanTest extends TestCase
             ->assertJsonCount(35, 'data');
     }
 
-    public function test_semua_route_butuh_token_manager(): void
+    /**
+     * Porsi dashboard yang boleh dibuka kasir — performa harian saja.
+     *
+     * @return list<string>
+     */
+    private static function pathKasir(): array
     {
-        $paths = [
-            '/api/dashboard/meta', '/api/dashboard/ringkasan', '/api/dashboard/time-series',
-            '/api/dashboard/revenue-ukuran', '/api/dashboard/produk-terlaris', '/api/dashboard/platform',
-            '/api/dashboard/loyalty', '/api/dashboard/rfm', '/api/dashboard/switch', '/api/laporan/export',
+        return [
+            '/api/dashboard/meta',
+            '/api/dashboard/ringkasan',
+            '/api/dashboard/produk-terlaris',
         ];
+    }
 
-        // Tanpa token -> 401
-        foreach ($paths as $p) {
+    /**
+     * Sisanya manager-only: seluruh data per-pelanggan + export.
+     *
+     * @return list<string>
+     */
+    private static function pathManager(): array
+    {
+        return [
+            '/api/dashboard/time-series', '/api/dashboard/revenue-ukuran',
+            '/api/dashboard/platform', '/api/dashboard/loyalty',
+            '/api/dashboard/rfm', '/api/dashboard/switch', '/api/laporan/export',
+        ];
+    }
+
+    public function test_semua_route_dashboard_butuh_login(): void
+    {
+        foreach ([...self::pathKasir(), ...self::pathManager()] as $p) {
             $this->getJson($p)->assertStatus(401);
         }
+    }
 
-        // Token kasir -> 403
+    public function test_kasir_boleh_ringkasan_dan_produk_terlaris(): void
+    {
         Sanctum::actingAs($this->kasir());
-        foreach ($paths as $p) {
-            $this->getJson($p)->assertStatus(403);
-        }
 
-        // Token manager -> 200 (export di-fake supaya tidak render file di loop)
+        foreach (self::pathKasir() as $p) {
+            $this->getJson($p)->assertOk();
+        }
+    }
+
+    /**
+     * Batas aksesnya harus tetap ketat: data per-pelanggan (RFM, loyalty,
+     * switch) dan export tidak boleh bocor ke kasir.
+     */
+    public function test_kasir_ditolak_di_laporan_lanjutan_dan_export(): void
+    {
+        Sanctum::actingAs($this->kasir());
+
+        foreach (self::pathManager() as $p) {
+            $this->getJson($p)
+                ->assertStatus(403)
+                ->assertJsonPath('error', 'tidak_berwenang');
+        }
+    }
+
+    public function test_manager_boleh_semua(): void
+    {
+        // Export di-fake supaya tidak render file di loop.
         Excel::fake();
         Sanctum::actingAs($this->manager());
-        foreach ($paths as $p) {
+
+        foreach ([...self::pathKasir(), ...self::pathManager()] as $p) {
             $this->getJson($p)->assertOk();
         }
     }
