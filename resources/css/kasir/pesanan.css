@@ -1,0 +1,292 @@
+.pes-layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+
+/* ===== LEFT: kategori + menu grid ===== */
+.pes-left { min-width: 0; }
+
+/* ===== Pesanan masuk dari SoyaScan (self-order) ===== */
+.pes-masuk {
+    background: #F4F8F2; border: 1px solid #D9E7DB; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 14px;
+}
+.pes-masuk-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.pes-masuk-head .pm-judul {
+    font-size: 13px; font-weight: 700; color: #2F6B3F;
+    display: inline-flex; align-items: center; gap: 7px;
+}
+.pes-masuk-head .pm-badge {
+    background: #2E7D32; color: #fff; border-radius: 999px;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; min-width: 20px; text-align: center;
+}
+.pes-masuk-head .pm-note { font-size: 11px; color: #7E9683; }
+
+.pes-masuk-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+
+.pm-card {
+    flex-shrink: 0; width: 232px; background: #fff; border: 1px solid #E3ECE4;
+    border-left: 3px solid #F7C85C; border-radius: 8px; padding: 11px 12px;
+    display: flex; flex-direction: column; gap: 7px;
+}
+.pm-card.active { border-left-color: #2E7D32; background: #F7FDF8; box-shadow: 0 0 0 2px #CDE8D3; }
+
+.pm-card .pm-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pm-card .pm-kode { font-size: 14px; font-weight: 700; color: #1F1F1F; }
+.pm-card .pm-meja {
+    font-size: 10.5px; font-weight: 600; color: #C77700;
+    background: #FFF3E0; border-radius: 5px; padding: 2px 7px; white-space: nowrap;
+}
+.pm-card .pm-nama { font-size: 11.5px; color: #3F3F46; font-weight: 600; }
+.pm-card .pm-items {
+    font-size: 11px; color: #7A7A7A; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.pm-card .pm-bot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pm-card .pm-total { font-size: 13px; font-weight: 700; color: #2F6B3F; }
+.pm-card .pm-bayar { font-size: 10.5px; color: #7A7A7A; }
+.pm-card .pm-proses {
+    border: none; background: #2E7D32; color: #fff; border-radius: 6px;
+    padding: 6px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background .2s;
+}
+.pm-card .pm-proses:hover { background: #256428; }
+.pm-card.active .pm-proses { background: #7A7A7A; cursor: default; }
+
+.pm-waktu { font-size: 10.5px; color: #ABABAB; }
+
+.pes-kategori-row {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px;
+}
+.pes-kategori-pill {
+    flex-shrink: 0; background: #fff; border: 1px solid #ECECEC; border-radius: 10px;
+    padding: 8px 14px; cursor: pointer; text-align: center; width: 180px;
+}
+.pes-kategori-pill .k-nama { font-size: 12px; font-weight: 600; color: #3F3F46; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pes-kategori-pill .k-jumlah { font-size: 11px; color: #ABABAB; margin-top: 2px; }
+.pes-kategori-pill.active { background: #FFF3E0; border-color: #F7C85C; }
+.pes-kategori-pill.active .k-nama { color: #C77700; }
+
+.pes-search {
+    display: flex; align-items: center; gap: 8px; background: #fff;
+    border: 1px solid #ECECEC; border-radius: 8px; padding: 9px 12px; margin-bottom: 14px;
+}
+.pes-search input { border: none; outline: none; flex: 1; font-family: inherit; font-size: 13px; }
+.pes-search svg { width: 16px; height: 16px; color: #ABABAB; flex-shrink: 0; }
+
+.pes-menu-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.pes-menu-card {
+    background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    display: flex; flex-direction: column; height: 100%;
+}
+.pes-menu-card .m-kategori { font-size: 10px; color: #ABABAB; text-transform: uppercase; letter-spacing: .03em; }
+.pes-menu-card .m-nama { font-size: 13px; font-weight: 600; color: #1F1F1F; margin: 6px 0; line-height: 1.4; }
+.pes-menu-card .m-ukuran { font-size: 11px; color: #7A7A7A; line-height: 1.6; margin-bottom: 10px; }
+.pes-menu-card .m-harga { font-size: 13px; font-weight: 700; color: #2F6B3F; margin-bottom: 12px; }
+.pes-menu-card.inactive { opacity: .45; pointer-events: none; }
+
+.pes-qty-stepper { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; }
+.pes-qty-stepper button {
+    width: 26px; height: 26px; border-radius: 6px; border: 1px solid #ECECEC;
+    background: #F6F6F6; cursor: pointer; font-size: 14px; color: #3F3F46;
+}
+.pes-qty-stepper button.pes-add-btn { width: auto; padding: 0 10px; background: #F7C85C; color: #fff; border: none; font-weight: 600; font-size: 12px; }
+.pes-qty-stepper .qty-value { font-size: 13px; font-weight: 600; min-width: 20px; text-align: center; }
+
+.pes-empty { text-align: center; padding: 40px; color: #ABABAB; font-size: 13px; grid-column: 1 / -1; }
+
+/* ===== RIGHT: cart panel ===== */
+.pes-right {
+    background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+}
+.pes-right h3 { font-size: 15px; color: #14532d; margin: 0 0 14px; }
+.pes-section { margin-bottom: 16px; }
+.pes-section-label { font-size: 12px; font-weight: 600; color: #3F3F46; margin-bottom: 8px; display: block; }
+
+.pes-input, .pes-select {
+    width: 100%; padding: 9px 10px; border: 1px solid #ECECEC; border-radius: 8px;
+    font-family: inherit; font-size: 13px; margin-bottom: 8px;
+}
+.pes-input:disabled { background: #F6F6F6; color: #ABABAB; }
+.pes-locked-note { font-size: 11px; color: #ABABAB; margin-top: 10px; line-height: 1.5; }
+
+.pes-toggle-row { display: flex; gap: 8px; }
+.pes-toggle-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 6px; border-radius: 8px; border: 1px solid #ECECEC; background: #fff;
+    cursor: pointer; font-size: 11px; color: #3F3F46;
+}
+.pes-toggle-btn.active { background: #E3F5E8; border-color: #2F6B3F; color: #2F6B3F; }
+.pes-toggle-btn i { font-size: 16px; }
+
+/* ===== PELANGGAN: cari (ver1 ketemu) / daftar baru (ver2) ===== */
+.pes-cust-search-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.pes-cust-search {
+    flex: 1; display: flex; align-items: center; gap: 8px; background: #fff;
+    border: 1px solid #ECECEC; border-radius: 8px; padding: 9px 12px; min-width: 0;
+}
+.pes-cust-search input { border: none; outline: none; flex: 1; min-width: 0; font-family: inherit; font-size: 13px; }
+.pes-cust-search svg { width: 16px; height: 16px; color: #ABABAB; flex-shrink: 0; }
+.pes-cust-add-btn {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 8px; border: none;
+    background: #F7C85C; color: #fff; cursor: pointer; font-size: 14px;
+}
+.pes-cust-add-btn:disabled { background: #ABABAB; cursor: not-allowed; }
+
+/* Hasil pencarian pelanggan (nama / no WA) — bisa lebih dari satu */
+.pes-cust-results { margin-bottom: 8px; }
+.pes-cust-results:empty { display: none; }
+.pes-cust-result {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: #fff; border: 1px solid #ECECEC; border-radius: 8px;
+    padding: 9px 12px; margin-bottom: 6px; cursor: pointer; transition: .15s;
+}
+.pes-cust-result:hover { border-color: #2E7D32; background: #F6FBF7; }
+.pes-cust-result .cr-nama { font-size: 13px; font-weight: 600; color: #1F1F1F; }
+.pes-cust-result .cr-meta { font-size: 11px; color: #7A7A7A; margin-top: 2px; }
+.pes-cust-result .cr-poin {
+    flex-shrink: 0; font-size: 11px; font-weight: 600; color: #C77700;
+    background: #FFF3E0; border-radius: 5px; padding: 2px 8px;
+}
+.pes-cust-hint { font-size: 11px; color: #ABABAB; margin-bottom: 8px; }
+
+.pes-cust-found {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: #F6FBF7; border: 1px solid #DCEFE1; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+}
+.pes-cust-found-info { min-width: 0; }
+.pes-cust-found .cf-nama { font-size: 13px; font-weight: 600; color: #1F1F1F; }
+.pes-cust-found .cf-meta { font-size: 11px; color: #7A7A7A; margin-top: 2px; }
+.pes-cust-ganti-btn {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 6px; border: none;
+    background: none; color: #ABABAB; cursor: pointer; font-size: 12px;
+}
+.pes-cust-ganti-btn:hover { background: #ECECEC; color: #3F3F46; }
+
+/* Tombol Loyalty di kartu pelanggan */
+.pes-loyalty-btn {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+    border: none; background: #2E7D32; color: #fff; border-radius: 7px;
+    padding: 8px 14px; font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: .15s;
+}
+.pes-loyalty-btn:hover { background: #256428; }
+.pes-loyalty-btn:disabled { background: #C7D2C9; cursor: not-allowed; }
+
+/* ===== Modal Redeem Poin ===== */
+.pes-redeem-backdrop {
+    position: fixed; inset: 0; background: rgba(17,24,39,.5);
+    display: none; align-items: center; justify-content: center; z-index: 900; padding: 20px;
+}
+.pes-redeem-backdrop.open { display: flex; }
+
+.pes-redeem-modal {
+    background: #fff; border-radius: 12px; width: 100%; max-width: 400px;
+    max-height: 86vh; overflow-y: auto; padding: 18px;
+}
+
+.pes-redeem-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.pes-redeem-head h3 { margin: 0; font-size: 15px; color: #14532d; }
+.pes-redeem-close {
+    border: none; background: none; color: #ABABAB; cursor: pointer; font-size: 15px;
+    width: 26px; height: 26px; border-radius: 6px;
+}
+.pes-redeem-close:hover { background: #ECECEC; color: #3F3F46; }
+
+.pes-redeem-cust {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: #F6FBF7; border: 1px solid #DCEFE1; border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 12px;
+}
+.pes-redeem-cust .rc-nama { font-size: 13px; font-weight: 600; color: #1F1F1F; }
+.pes-redeem-cust .rc-poin { font-size: 12px; font-weight: 700; color: #C77700; }
+
+.pes-redeem-note {
+    font-size: 12px; color: #B26A00; background: #FFF7E6; border-radius: 7px;
+    padding: 9px 11px; margin-bottom: 12px; display: none; line-height: 1.5;
+}
+.pes-redeem-note.show { display: block; }
+.pes-redeem-note.error { color: #B91C1C; background: #FEF2F2; }
+
+.pes-redeem-list { display: flex; flex-direction: column; gap: 8px; }
+
+.pes-redeem-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    border: 1.5px solid #ECECEC; background: #fff; border-radius: 9px;
+    padding: 11px 13px; cursor: pointer; font-family: inherit; text-align: left; transition: .15s;
+}
+.pes-redeem-item:hover:not(:disabled) { border-color: #2E7D32; background: #F6FBF7; }
+.pes-redeem-item:disabled { opacity: .5; cursor: not-allowed; }
+
+.pes-redeem-item .ri-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pes-redeem-item .ri-label { font-size: 13px; font-weight: 600; color: #1F1F1F; }
+.pes-redeem-item .ri-syarat { font-size: 11px; color: #7A7A7A; }
+.pes-redeem-item .ri-poin {
+    flex-shrink: 0; font-size: 11.5px; font-weight: 700; color: #C77700;
+    background: #FFF3E0; border-radius: 5px; padding: 3px 9px;
+}
+
+.pes-cust-new { margin-bottom: 0; }
+
+.pes-cart-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; max-height: 260px; overflow-y: auto; }
+.pes-cart-empty { text-align: center; padding: 20px; color: #ABABAB; font-size: 12px; }
+.pes-cart-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pes-cart-item .ci-info { min-width: 0; flex: 1; }
+.pes-cart-item .ci-nama { font-size: 12px; font-weight: 600; color: #1F1F1F; }
+.pes-cart-item .ci-harga { font-size: 11px; color: #7A7A7A; }
+.pes-cart-item .ci-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.pes-cart-item .ci-actions button {
+    width: 22px; height: 22px; border-radius: 5px; border: 1px solid #ECECEC;
+    background: #F6F6F6; cursor: pointer; font-size: 12px;
+}
+.pes-cart-item .ci-remove { color: #B3261E; border: none; background: none; margin-left: 4px; cursor: pointer; }
+
+.pes-diskon-note { font-size: 11px; color: #ABABAB; margin: 0 0 10px; line-height: 1.4; }
+
+.pes-diskon-preset {
+    padding: 9px 0; border-radius: 8px; border: 1px solid #ECECEC;
+    background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; color: #3F3F46;
+}
+.pes-diskon-preset.active { background: #F7C85C; border-color: #F7C85C; color: #fff; }
+
+.pes-diskon-gmaps { display: block; width: 100%; margin-bottom: 8px; }
+
+.pes-diskon-presets { display: flex; gap: 6px; margin-bottom: 10px; }
+.pes-diskon-presets .pes-diskon-preset { flex: 1; }
+
+.pes-diskon-terapkan-btn {
+    width: 100%; padding: 11px; border: none; border-radius: 8px; background: #2F6B3F;
+    color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.pes-diskon-terapkan-btn:hover { background: #275A34; }
+
+.pes-summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #3F3F46; }
+.pes-summary-row.total { font-weight: 700; font-size: 15px; color: #1F1F1F; border-top: 1px solid #ECECEC; margin-top: 6px; padding-top: 10px; }
+.pes-summary-row.diskon { color: #B3261E; }
+
+.pes-bayar-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px; background: #2F6B3F;
+    color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 6px;
+}
+.pes-bayar-btn:disabled { background: #ABABAB; cursor: not-allowed; }
+.pes-batal-btn {
+    width: 100%; padding: 9px; border: none; border-radius: 8px; background: none;
+    color: #B3261E; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px;
+}
+
+.pes-error { background: #fdecea; color: #b3261e; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; display: none; }
+.pes-success-note { background: #E3F5E8; color: #2F6B3F; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; display: none; }
+
+@media (max-width: 1000px) {
+    .pes-layout { grid-template-columns: 1fr; }
+    .pes-right { position: static; max-height: none; }
+}
+
+@media (max-width: 700px) {
+    .pes-menu-grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,24 @@
+.layout{
+    display:flex;
+    align-items:stretch;
+    min-height:100vh;   /* biar kalau konten PENDEK, layout tetap minimal 1 layar */
+    background:#f4f8f2;
+}
+
+.main{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.content{
+
+    flex:1;
+
+    padding:30px;
+
+}

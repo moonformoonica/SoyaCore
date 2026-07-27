@@ -1,0 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+body{
+    background:#F7F8FA;
+}
+
+.transaction-page{
+    padding:0 30px 30px;
+    margin-top:-25px;
+}
+
+.menu-header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:30px;
+}
+
+.menu-header h1{
+    font-size:34px;
+    font-weight:700;
+    color:#212B36;
+    margin:0;
+    line-height:1.2;
+}
+
+.menu-header p{
+    margin-top:8px;
+    color:#6B7280;
+    font-size:15px;
+}
+
+.btn-add{
+    background:#F7C85C;
+    color:#fff;
+    padding:12px 20px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:600;
+    transition:.25s;
+    margin-top:10px;
+}
+
+.btn-add:hover{
+    background:#F7C85C;
+}
+
+.menu-filters {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.menu-search{
+    width:340px;
+    height:46px;
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    padding:0 16px;
+    background:white;
+}
+
+.menu-search i{
+    color:#9CA3AF;
+    margin-right:12px;
+}
+
+.menu-search input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.menu-search svg {
+    width: 16px;
+    height: 16px;
+    color: #ABABAB;
+    flex-shrink: 0;
+}
+
+/* ===========================
+        CUSTOM SELECT (Kategori)
+=========================== */
+
+.menu-filters .custom-select{
+    position:relative;
+    width:180px;
+}
+
+.menu-filters .custom-select-trigger{
+    width:100%;
+    height:46px;
+    padding:0 16px;
+    background:#FFFFFF;
+    color:#374151;
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    transition:.2s ease;
+}
+
+.menu-filters .custom-select-trigger:hover{
+    border-color:#F7C85C;
+}
+
+.menu-filters .custom-select.open .custom-select-trigger{
+    border-color:#F7C85C;
+    box-shadow:0 0 0 4px rgba(247,200,92,.18);
+}
+
+.menu-filters .custom-select-trigger svg{
+    transition:transform .2s ease;
+    flex-shrink:0;
+}
+
+.menu-filters .custom-select.open .custom-select-trigger svg{
+    transform:rotate(180deg);
+}
+
+.menu-filters .custom-options{
+    position:absolute;
+    top:calc(100% + 8px);
+    left:0;
+    width:100%;
+    background:#ffffff;
+    border-radius:10px;
+    list-style:none;
+    padding:6px;
+    box-shadow:0 8px 20px rgba(0,0,0,.12);
+    display:none;
+    z-index:20;
+    max-height:260px;
+    overflow-y:auto;
+}
+
+.menu-filters .custom-select.open .custom-options{
+    display:block;
+}
+
+.menu-filters .custom-options li{
+    padding:10px 14px;
+    border-radius:8px;
+    font-size:14px;
+    color:#4b5563;
+    cursor:pointer;
+    transition:.15s ease;
+}
+
+.menu-filters .custom-options li:hover{
+    background:#F7C85C;
+    color:#ffffff;
+}
+
+.menu-filters .custom-options li.selected{
+    background:#F2A93C;
+    color:#ffffff;
+    font-weight:600;
+}
+
+.menu-table-wrap {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.menu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 720px;
+}
+
+.menu-table thead th {
+    background: #7FB77E;
+    color: #2F6B3F;
+    text-align: center;
+    padding: 18px 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.menu-table tbody td {
+    padding: 7px 14px;
+    border-bottom: 1px solid #F2F2F2;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.menu-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.menu-table td:nth-child(5){
+    max-width:220px;
+}
+
+.menu-table tbody tr:hover {
+    background: #FAFAFA;
+}
+
+.menu-nama {
+    font-weight: 600;
+    color: #1F1F1F;
+}
+
+.menu-rasa{
+    width:220px;
+    white-space:normal;
+    overflow-wrap:break-word;
+    line-height:1.5;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-tersedia {
+    background: #E3F5E8;
+    color: #2F6B3F;
+}
+
+.status-habis {
+    background: #FDECEA;
+    color: #B3261E;
+}
+
+.action-btns {
+    display: flex;
+    gap: 6px;
+}
+
+.action-btns button,
+.action-btns a {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid #ECECEC;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #3F3F46;
+    text-decoration: none;
+}
+
+.action-btns .btn-delete:hover {
+    background: #FDECEA;
+    color: #B3261E;
+    border-color: #FDECEA;
+}
+
+.action-btns .btn-edit:hover {
+    background: #E3F5E8;
+    color: #2F6B3F;
+    border-color: #E3F5E8;
+}
+
+.menu-empty,
+.menu-loading {
+    text-align: center;
+    padding: 40px;
+    color: #ABABAB;
+    font-size: 13px;
+}
+
+.menu-error {
+    background: #FDECEA;
+    color: #B3261E;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    display: none;
+}
+
+/* ===========================
+   Modal Hapus
+=========================== */
+
+.confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.confirm-overlay.open {
+    display: flex;
+}
+
+.confirm-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px;
+    width: 90%;
+    max-width: 380px;
+}
+
+.confirm-box h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #1F1F1F;
+}
+
+.confirm-box p {
+    font-size: 13px;
+    color: #6B6B6B;
+    margin-bottom: 20px;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.confirm-actions button {
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    background: #F1F1F1;
+    color: #3F3F46;
+}
+
+.btn-danger {
+    background: #B3261E;
+    color: #fff;
+}

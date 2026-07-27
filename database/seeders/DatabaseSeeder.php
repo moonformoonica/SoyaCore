@@ -87,13 +87,13 @@ class DatabaseSeeder extends Seeder
     {
         // Password default factory: 'password'
         User::factory()->create([
-            'nama' => 'Manager Gressoy',
+            'nama' => 'Ghefira',
             'email' => 'manager@gressoy.test',
             'role' => 'manager',
         ]);
 
         User::factory()->create([
-            'nama' => 'Kasir Gressoy',
+            'nama' => 'Evan',
             'email' => 'kasir@gressoy.test',
             'role' => 'kasir',
         ]);

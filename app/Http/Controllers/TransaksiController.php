@@ -34,7 +34,14 @@ class TransaksiController extends Controller
             $query->whereDate('created_at', $request->query('tanggal'));
         }
 
-        return TransaksiResource::collection($query->paginate(15));
+        // Dipakai kartu statistik kasir untuk scope "transaksi milik sendiri".
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
+        }
+
+        $perPage = min((int) $request->query('per_page', 15), 200) ?: 15;
+
+        return TransaksiResource::collection($query->paginate($perPage));
     }
 
     public function store(StoreTransaksiRequest $request): TransaksiResource

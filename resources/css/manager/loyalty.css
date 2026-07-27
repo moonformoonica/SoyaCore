@@ -1,0 +1,205 @@
+:root{
+  --lm-bg:#F4F6F8;
+  --lm-line:#E7E9EC;
+  --lm-ink:#1E2328;
+  --lm-ink-soft:#8B929A;
+  --lm-green:#3E8E4D;
+  --lm-green-dark:#2F6B37;
+  --lm-amber:#E8A33D;
+  --lm-amber-tint:#FCEBCF;
+  --lm-white:#fff;
+  --lm-radius:14px;
+}
+
+/* Bungkus semua style di bawah prefix .loyalty-manager supaya tidak bentrok
+   dengan class lain yang sudah ada di project kamu */
+.loyalty-manager{
+  font-family:'Inter',sans-serif;
+  color:var(--lm-ink);
+  padding:1px 30px 30px;
+}
+.loyalty-manager *{box-sizing:border-box;}
+
+.loyalty-manager .page-head{margin-bottom:20px;}
+.loyalty-manager .page-head h1{
+  font-family:'Inter',sans-serif;
+  font-weight:700; font-size:34px; padding:0; color:#212B36;
+}
+.loyalty-manager .page-head p{margin-top:8px; color:var(--lm-ink-soft); font-size:15px;}
+
+/* ---------- STAT CARDS ---------- */
+.loyalty-manager .stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:18px;
+  margin:16px 0 24px;
+}
+.loyalty-manager .stat-card{
+  background:var(--lm-white);
+  border:1px solid var(--lm-line);
+  border-radius:var(--lm-radius);
+  padding:18px 20px;
+}
+.loyalty-manager .stat-card h3{margin:0 0 12px; font-size:13px; font-weight:600; color:#4b515a;}
+.loyalty-manager .stat-card .val{font-family:'Inter',sans-serif; font-weight:700; font-size:26px; margin:0 0 6px;}
+.loyalty-manager .stat-card .delta{font-size:12.5px; color:var(--lm-ink-soft);}
+.loyalty-manager .stat-card .delta.up{color:var(--lm-green);}
+
+/* ---------- SECTION HEAD ---------- */
+.loyalty-manager .section-head{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  margin:0 0 12px;
+}
+.loyalty-manager .section-head h2{
+  font-family:'Inter',sans-serif; font-weight:700; font-size:19px; margin:0; color:#212B36;
+}
+.loyalty-manager .section-sub{margin:6px 0 0; font-size:13px; color:var(--lm-ink-soft);}
+.loyalty-manager .btn{
+  border:none; border-radius:9px; padding:9px 16px;
+  font-family:'Inter'; font-weight:600; font-size:13px;
+  cursor:pointer; display:flex; align-items:center; gap:6px;
+}
+.loyalty-manager .btn-add{background:var(--lm-green); color:#fff;}
+.loyalty-manager .btn-add:hover{background:var(--lm-green-dark);}
+
+/* ---------- REWARD CATALOG ---------- */
+.loyalty-manager .rewards{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:24px;}
+.loyalty-manager .reward-card{
+  background:rgba(247, 200, 92, 0.2); border:1px solid #F0BC3F; border-radius:var(--lm-radius);
+  padding:20px; position:relative;
+}
+.loyalty-manager .reward-card h4{margin:0 0 4px; font-size:15px; font-weight:700; color:#212B36;}
+.loyalty-manager .reward-card p{margin:0 0 12px; font-size:12.5px; color:var(--lm-ink-soft); line-height:1.5;}
+.loyalty-manager .reward-points{font-size:13.5px; font-weight:700; color:var(--lm-green-dark); display:block; margin-bottom:10px;}
+.loyalty-manager .reward-tags{display:flex; flex-wrap:wrap; gap:6px;}
+.loyalty-manager .reward-tag{
+  font-size:10.5px; font-weight:600; padding:4px 9px; border-radius:999px;
+  background:#fff; color:#B26A00; border:1px solid #F7C85C;
+}
+.loyalty-manager .reward-actions{position:absolute; top:16px; right:16px; display:flex; gap:6px;}
+.loyalty-manager .reward-actions button{
+  width:26px; height:26px; border-radius:7px; border:1px solid var(--lm-line);
+  background:var(--lm-white); cursor:pointer; display:flex; align-items:center; justify-content:center; color:#666; font-size:12px;
+}
+.loyalty-manager .reward-actions button:hover{background:var(--lm-bg);}
+
+.loyalty-manager .reward-form-card{
+  background:var(--lm-white); border:1.5px dashed #C7CBD1; border-radius:var(--lm-radius);
+  padding:20px; display:flex; flex-direction:column; gap:10px;
+}
+.loyalty-manager .reward-form-card label{font-size:11px; font-weight:600; color:var(--lm-ink-soft);}
+.loyalty-manager .reward-form-card input,
+.loyalty-manager .reward-form-card select,
+.loyalty-manager .reward-form-card textarea{
+  border:1px solid var(--lm-line); border-radius:8px; padding:8px 10px; font-family:'Inter'; font-size:13px;
+}
+.loyalty-manager .reward-form-card .hint{font-size:11.5px; color:var(--lm-ink-soft); margin:0;}
+.loyalty-manager .reward-form-card .actions{display:flex; gap:8px; margin-top:2px;}
+.loyalty-manager .reward-form-card .actions button{flex:1; border:none; border-radius:8px; padding:9px 0; font-weight:700; font-size:13px; cursor:pointer;}
+.loyalty-manager .save-btn{background:#1E2328; color:#fff;}
+.loyalty-manager .cancel-btn{background:var(--lm-bg); color:#1E2328;}
+
+/* inline edit form embedded in an existing reward-card */
+.loyalty-manager .reward-card .edit-form{
+  display:flex; flex-direction:column; gap:8px; margin-top:4px;
+}
+.loyalty-manager .reward-card .edit-form label{font-size:10.5px; font-weight:600; color:var(--lm-ink-soft);}
+.loyalty-manager .reward-card .edit-form input{
+  border:1px solid var(--lm-line); border-radius:7px; padding:7px 9px; font-family:'Inter'; font-size:12.5px;
+}
+.loyalty-manager .reward-card .edit-form .actions{display:flex; gap:8px; margin-top:2px;}
+.loyalty-manager .reward-card .edit-form .actions button{
+  flex:1; border:none; border-radius:7px; padding:7px 0; font-size:12px; font-weight:700; cursor:pointer;
+}
+
+/* ---------- CEK POIN PELANGGAN (kasir) ---------- */
+.loyalty-manager .lm-cek-poin{
+  background:var(--lm-white); border:1px solid var(--lm-line); border-radius:var(--lm-radius);
+  padding:16px 18px; margin-bottom:22px;
+}
+.loyalty-manager .lm-cek-poin-title{
+  font-family:'Inter',sans-serif; font-weight:700; font-size:16px; margin:0; color:#212B36;
+}
+.loyalty-manager .lm-cek-poin-sub{
+  margin:3px 0 12px; font-size:12.5px; color:var(--lm-ink-soft);
+}
+.loyalty-manager .lm-cek-poin-search{
+  display:flex; align-items:center; gap:8px; background:var(--lm-bg);
+  border:1px solid var(--lm-line); border-radius:8px; padding:10px 14px; max-width:360px;
+}
+.loyalty-manager .lm-cek-poin-search i{color:var(--lm-ink-soft); font-size:13px;}
+.loyalty-manager .lm-cek-poin-search input{
+  border:none; outline:none; background:none; flex:1; font-family:'Inter'; font-size:13.5px;
+}
+.loyalty-manager .lm-cek-poin-result{margin-top:14px; display:flex; flex-direction:column; align-items:flex-start; gap:8px;}
+/* Belum ada hasil pencarian — jangan sisakan ruang kosong di bawah input */
+.loyalty-manager .lm-cek-poin-result:empty{display:none;}
+.loyalty-manager .lm-cek-poin-loading,
+.loyalty-manager .lm-cek-poin-empty{margin:0; font-size:13px; color:var(--lm-ink-soft);}
+.loyalty-manager .lm-cek-poin-card{
+  display:inline-flex; flex-direction:column; gap:4px; background:#F6FBF7;
+  border:1px solid #DCEFE1; border-radius:10px; padding:12px 16px;
+}
+.loyalty-manager .lm-cek-poin-card .cf-nama{font-size:14px; font-weight:700; color:var(--lm-ink);}
+.loyalty-manager .lm-cek-poin-card .cf-meta{font-size:12.5px; color:var(--lm-ink-soft);}
+.loyalty-manager .lm-cek-poin-card .cf-meta strong{color:var(--lm-green-dark);}
+
+/* ---------- SETTINGS CARD ---------- */
+.loyalty-manager .settings-card{
+  background:var(--lm-white); border:1px solid var(--lm-line); border-radius:var(--lm-radius);
+  padding:20px 22px; margin-bottom:22px;
+  display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap;
+}
+.loyalty-manager .settings-card .field label{font-size:11px; font-weight:600; color:var(--lm-ink-soft); display:block; margin-bottom:6px;}
+.loyalty-manager .settings-card .field input{
+  border:1px solid var(--lm-line); border-radius:8px; padding:9px 12px; font-family:'Inter'; font-size:13.5px; width:170px;
+}
+.loyalty-manager .settings-card .info{color:var(--lm-ink-soft); font-size:12.5px; margin-left:auto;}
+
+/* ---------- TABLE ---------- */
+.loyalty-manager .table-card{
+  background:var(--lm-white);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 5px 14px rgba(0,0,0,.05);
+}
+.loyalty-manager table{width:100%; border-collapse:collapse;}
+.loyalty-manager thead{background:#7FB77E;}
+.loyalty-manager th{
+  text-align:center; padding:18px; font-size:15px; font-weight:600; color:#2F6B3F;
+}
+.loyalty-manager td{padding:7px 18px; text-align:center; font-size:14px; border-bottom:1px solid #F0F0F0;}
+.loyalty-manager tbody tr:last-child td{border-bottom:none;}
+.loyalty-manager .poin-plus{color:var(--lm-green-dark); font-weight:700;}
+
+/* ---------- PAGINATION RIWAYAT ---------- */
+.loyalty-manager .lm-history-footer{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; flex-wrap:wrap; padding:14px 18px;
+}
+.loyalty-manager .lm-history-footer:empty{display:none;}
+.loyalty-manager .lm-history-info{font-size:13px; color:var(--lm-ink-soft);}
+.loyalty-manager .lm-pagination{display:flex; gap:6px;}
+.loyalty-manager .lm-pagination button{
+  min-width:34px; height:34px; padding:0 10px;
+  border:1px solid var(--lm-line); background:#fff; border-radius:8px;
+  font-family:'Inter'; font-size:13px; color:var(--lm-ink); cursor:pointer; transition:.15s;
+}
+.loyalty-manager .lm-pagination button:hover:not(:disabled):not(.active){background:var(--lm-bg);}
+.loyalty-manager .lm-pagination button.active{
+  background:var(--lm-green); border-color:var(--lm-green); color:#fff; font-weight:700;
+}
+.loyalty-manager .lm-pagination button:disabled{opacity:.45; cursor:not-allowed;}
+
+/* ---------- TOAST ---------- */
+.loyalty-manager .toast{
+  position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+  background:var(--lm-ink); color:#fff; padding:12px 20px; border-radius:10px; font-size:13px;
+  opacity:0; transition:opacity .25s ease, transform .25s ease; pointer-events:none; z-index:60;
+}
+.loyalty-manager .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+@media (max-width:1100px){
+  .loyalty-manager .stats{grid-template-columns:repeat(2,1fr);}
+  .loyalty-manager .rewards{grid-template-columns:1fr;}
+}

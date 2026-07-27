@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+.sidebar{
+    width:270px;
+    background:#f0f7ee; 
+    padding:30px 24px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+
+    border-right:1px solid #DCEAD5; 
+
+    flex-shrink:0;
+}
+
+.logo{
+
+    text-align:center;
+
+    margin-bottom:45px;
+
+}
+
+.logo img{
+
+    width:200px;
+    max-width:100%;
+
+}
+
+.menu{
+
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+
+}
+
+.menu a{
+
+    height:52px;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    color:#3F3F46;
+
+    display:flex;
+    align-items:center;
+
+    gap:14px;
+
+    padding:0 18px;
+
+    font-size:15px;
+
+    transition:.25s;
+
+}
+
+.menu a i{
+
+    width:18px;
+
+    text-align:center;
+
+    color:#7A7A7A;
+
+}
+
+.menu a:hover{
+    background:#E3EFDC;  
+}
+
+.menu a.active{
+
+    background:#7FB77E;
+
+    color:#2F6B3F;
+
+    font-weight:600;
+
+}
+
+.menu a.active i{
+
+    color:#2F6B3F;
+
+}
+
+
+/* ===========================
+        COLLAPSE SIDEBAR
+=========================== */
+
+.sidebar{
+    transition:width .3s ease, padding .3s ease;
+}
+
+.sidebar.collapsed{
+    width:90px;
+    padding:30px 15px;
+}
+
+.sidebar.collapsed .logo img{
+    width:55px;
+}
+
+.sidebar.collapsed span{
+    display:none;
+}
+
+.sidebar.collapsed .menu a,
+.sidebar.collapsed .bottom-menu a{
+    justify-content:center;
+    padding:0;
+}
+
+.sidebar.collapsed .menu a i,
+.sidebar.collapsed .bottom-menu a i{
+    margin:0;
+    font-size:18px;
+}
+
+.sidebar.collapsed .logo{
+    margin-bottom:35px;
+}
+
+@media (max-width: 640px){
+
+    .sidebar.collapsed{
+        width:64px;
+        padding:20px 8px;
+    }
+
+    .sidebar.collapsed .logo img{
+        width:36px;
+    }
+
+    .sidebar.collapsed .menu a,
+    .sidebar.collapsed .bottom-menu a{
+        height:44px;
+    }
+}

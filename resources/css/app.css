@@ -1,4 +1,14 @@
 @import 'tailwindcss';
+@import './sidebar.css';
+@import './header.css';
+@import './dashboard.css';
+@import './manager/transaksi.css';
+@import './profil.css';
+@import './login.css';
+@import './sidebar.css';
+@import './menu/index.css';
+
+
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -8,4 +18,72 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* ===========================
+        SEARCH BOX
+=========================== */
+
+.search-box{
+
+    width:340px;
+
+    height:46px;
+
+    border:1px solid #E5E7EB;
+
+    border-radius:10px;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:0 16px;
+
+    background:white;
+
+}
+
+.search-box i{
+
+    color:#9CA3AF;
+
+    margin-right:12px;
+
+}
+
+.search-box svg{
+
+    width:18px;
+
+    height:18px;
+
+    color:#9CA3AF;
+
+    margin-right:12px;
+
+    flex-shrink:0;
+
+}
+
+.search-box input{
+
+    flex:1;
+
+    border:none;
+
+    outline:none;
+
+    font-size:14px;
+
+    font-family:'Inter',sans-serif;
+
+    background:transparent;
+
+}
+
+.search-box input::placeholder{
+
+    color:#9CA3AF;
+
 }
