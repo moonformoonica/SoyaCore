@@ -18,6 +18,7 @@ class Transaksi extends Model
         'metode_bayar',
         'status',
         'point_earned',
+        'rupiah_per_poin',
         'waktu_lunas',
         'loyalty_applied_at',
         'kode_redeem',
@@ -27,6 +28,7 @@ class Transaksi extends Model
     protected $casts = [
         'total' => 'integer',
         'point_earned' => 'integer',
+        'rupiah_per_poin' => 'integer',
         'waktu_lunas' => 'datetime',
         'loyalty_applied_at' => 'datetime',
         'poin_ditukar' => 'integer',

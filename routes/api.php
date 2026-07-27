@@ -8,6 +8,7 @@ use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\LoyaltyController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PengaturanLoyaltyController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\TransaksiItemController;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +53,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('transaksi/{transaksi}/tandai-lunas', [TransaksiController::class, 'bayar']);
     Route::post('transaksi/{transaksi}/batal', [TransaksiController::class, 'batal']);
 
+    // Pengaturan loyalty — BACA saja di sini. Kasir ikut butuh: rate dipakai
+    // menampilkan estimasi poin di struk, katalog dipakai merender tombol
+    // redeem (termasuk menyembunyikan reward yang dinonaktifkan manager).
+    Route::get('pengaturan/loyalty', [PengaturanLoyaltyController::class, 'show']);
+    Route::get('pengaturan/loyalty/katalog', [PengaturanLoyaltyController::class, 'katalog']);
+
     // Dashboard porsi kasir — cukup untuk memantau performa harian sendiri.
     // Sengaja dibatasi: tidak ada data per-pelanggan (RFM/loyalty/switch) dan
     // tidak ada export. `meta` ikut karena date-picker kedua halaman di bawah
@@ -70,6 +77,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('menu', MenuController::class)
             ->only(['store', 'update', 'destroy'])
             ->parameters(['menu' => 'menu']);
+
+        // Setting rate poin & biaya poin katalog redeem (LoyalSeed).
+        // Berdampak langsung ke uang, jadi sengaja manager-only.
+        Route::patch('pengaturan/loyalty', [PengaturanLoyaltyController::class, 'update']);
+        Route::patch('pengaturan/loyalty/katalog/{kode}', [PengaturanLoyaltyController::class, 'updateKatalog']);
 
         // Reporting lanjutan + export (manager-only)
         Route::prefix('dashboard')->group(function () {

@@ -38,6 +38,8 @@ class TransaksiResource extends JsonResource
             'kode_redeem' => $this->kode_redeem,
             'poin_ditukar' => $this->poin_ditukar,
             'point_earned' => $this->point_earned,
+            // rate yang dipakai saat poin dihitung — null selama masih pending
+            'rupiah_per_poin' => $this->rupiah_per_poin,
             'waktu_lunas' => $this->waktu_lunas?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

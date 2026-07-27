@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\ApiException;
 use App\Models\Loyalty;
 use App\Models\Menu;
+use App\Models\PengaturanLoyalty;
 use App\Models\Transaksi;
 use App\Support\LoyaltyRedemptionCatalog;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +16,13 @@ use Illuminate\Support\Facades\DB;
  * Prinsip yang dikunci sejak M1:
  * - Poin HANYA bertambah saat status berubah jadi lunas (anti-fraud),
  *   tidak pernah saat order dibuat (pending).
- * - Rate: 1 poin per Rp 1.000 dari total yang benar-benar dibayar
- *   (sudah dikurangi diskon/redeem), pembulatan ke bawah (intdiv).
+ * - Rate: 1 poin per `rupiah_per_poin` dari total yang benar-benar dibayar
+ *   (sudah dikurangi diskon/redeem), pembulatan ke bawah (intdiv). Rate-nya
+ *   disetel manager lewat PengaturanLoyalty, default Rp 1.000.
  * - Redeem hanya saat pending, dan HANYA SATU redemption per transaksi.
+ *
+ * Perubahan rate TIDAK retroaktif: poin yang sudah masuk saldo tetap, dan
+ * rate yang dipakai tiap transaksi ikut disnapshot di kolom transaksinya.
  */
 class LoyaltyService
 {
@@ -35,7 +40,10 @@ class LoyaltyService
         }
 
         DB::transaction(function () use ($transaksi) {
-            $poinDidapat = intdiv((int) $transaksi->total, 1000);
+            // Dibaca sekali di sini, lalu disnapshot — kalau manager mengubah
+            // rate setelah ini, transaksi ini tetap bisa diaudit.
+            $rupiahPerPoin = PengaturanLoyalty::rupiahPerPoin();
+            $poinDidapat = intdiv((int) $transaksi->total, $rupiahPerPoin);
 
             // Transaksi kasir walk-in boleh tanpa customer — poin tetap
             // dicatat di transaksi (audit), tapi tidak ada saldo yang naik.
@@ -47,6 +55,7 @@ class LoyaltyService
 
             $transaksi->forceFill([
                 'point_earned' => $poinDidapat,
+                'rupiah_per_poin' => $rupiahPerPoin,
                 'loyalty_applied_at' => now(),
             ])->save();
         });
@@ -72,6 +81,16 @@ class LoyaltyService
             throw new ApiException(
                 'kode_redeem_invalid',
                 "Kode redeem '{$kodeRedeem}' tidak ada di katalog.",
+                422,
+            );
+        }
+
+        // Dinonaktifkan manager lewat Settings — bedakan dari kode ngawur
+        // supaya kasir tahu ini reward yang memang sedang dimatikan.
+        if ($item['is_active'] === false) {
+            throw new ApiException(
+                'kode_redeem_nonaktif',
+                "{$item['label']} sedang dinonaktifkan oleh manager dan belum bisa ditukar.",
                 422,
             );
         }
