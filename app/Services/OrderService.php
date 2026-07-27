@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 class OrderService
 {
     /**
-     * @param  array{nama: string, nomor_wa: string, nomor_meja: string, items: array<int, array{menu_id: mixed, qty: mixed}>}  $data
+     * @param  array{nama: string, nomor_wa: string, nomor_meja: string, metode_bayar?: string|null, items: array<int, array{menu_id: mixed, qty: mixed}>}  $data
      */
     public function buatOrder(array $data): Transaksi
     {
@@ -52,6 +52,11 @@ class OrderService
                 'user_id' => null, // belum ada kasir yang menangani
                 'kode_pesanan' => $this->generateKodePesananSelfOrder(),
                 'total' => $total,
+                // Pilihan pelanggan (boleh null). Bukan konfirmasi final —
+                // kasir mengoverwrite ini saat Tandai Lunas (BayarRequest
+                // tetap wajib metode_bayar), jadi ini sekadar niat bayar
+                // yang bisa dilihat/di-prefill kasir.
+                'metode_bayar' => $data['metode_bayar'] ?? null,
                 'status' => 'pending',
             ]);
 

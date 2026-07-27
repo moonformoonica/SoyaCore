@@ -96,6 +96,7 @@ pembayaran & pelunasan terjadi di kasir.
   "nama": "Budi",
   "nomor_wa": "081234567890",
   "nomor_meja": "5",
+  "metode_bayar": "qris",
   "items": [
     { "menu_id": 1, "qty": 2 },
     { "menu_id": 7, "qty": 1 }
@@ -108,9 +109,16 @@ pembayaran & pelunasan terjadi di kasir.
 | `nama` | string | ya | Nama pelanggan |
 | `nomor_wa` | string | ya | Nomor WhatsApp, dinormalisasi server ke format 62 |
 | `nomor_meja` | string | **ya** (revisi v1.1) | Nomor meja dari form SoyaScan |
+| `metode_bayar` | string | tidak | Pilihan bayar pelanggan. Nilai **`"cash"`** atau **`"qris"`** — perhatikan ini nilai tersimpan, walau UI menampilkan "Tunai/QRIS". Kalau tidak dikirim → `null`. |
 | `items` | array | ya, min. 1 item | Daftar item pesanan |
 | `items[].menu_id` | integer | ya | ID menu dari GET /api/menu |
 | `items[].qty` | integer | ya, ≥ 1 | Jumlah |
+
+> **`metode_bayar` di sini = niat bayar pelanggan, belum final.** Kasir tetap
+> mengonfirmasi metode saat Tandai Lunas (§4, `POST .../bayar` yang **wajib**
+> `metode_bayar`), dan nilai itulah yang jadi sumber kebenaran akhir. Field ini
+> berguna supaya kasir bisa melihat/prefill pilihan pelanggan. Nilai selain
+> `cash`/`qris` (mis. `"tunai"`) ditolak `422 validasi_gagal`.
 
 **PENTING: client TIDAK PERNAH mengirim harga.** `total` dihitung server dari
 `menu.harga` saat pesanan dibuat, dan harga satuan di-snapshot ke `detail_transaksi.harga_satuan`.
@@ -126,6 +134,7 @@ Asia/Jakarta; melewati 99 lanjut `#A100` dst).
   "status": "pending",
   "nomor_meja": "12",
   "total": 45000,
+  "metode_bayar": "qris",
   "items": [
     { "nama_menu": "Original", "qty": 2, "harga_satuan": 15000, "subtotal": 30000 },
     { "nama_menu": "Coffee Kopi", "qty": 1, "harga_satuan": 15000, "subtotal": 15000 }

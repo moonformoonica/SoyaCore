@@ -25,6 +25,8 @@ class OrderController extends Controller
             'status' => $transaksi->status,
             'nomor_meja' => $nomorMeja,
             'total' => $transaksi->total,
+            'metode_bayar' => $transaksi->metode_bayar, // null kalau pelanggan tidak memilih
+
             'items' => $transaksi->detailTransaksi->map(fn ($d) => [
                 'nama_menu' => $d->menu->nama,
                 'qty' => $d->qty,

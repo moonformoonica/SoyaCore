@@ -24,6 +24,11 @@ class StoreOrderRequest extends FormRequest
             'nama' => ['required', 'string', 'max:255'],
             'nomor_wa' => ['required', 'string', 'max:25'],
             'nomor_meja' => ['required', 'string', 'max:20'],
+            // Pilihan pelanggan di halaman Pesanan. Nilai tersimpan 'cash'|'qris'
+            // (bukan 'tunai') — samakan dengan /bayar. nullable: klien lama yang
+            // belum kirim field ini tetap jalan; kasir tetap mengonfirmasi
+            // metode final saat Tandai Lunas.
+            'metode_bayar' => ['nullable', 'in:cash,qris'],
             // sengaja TANPA 'required': items hilang/kosong ditangani
             // OrderService dengan kode error kontrak v1 'items_kosong'
             'items' => ['array'],

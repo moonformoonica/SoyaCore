@@ -76,6 +76,35 @@ class OrderApiTest extends TestCase
         $this->assertSame(0, Loyalty::first()->poin);
     }
 
+    public function test_metode_bayar_pilihan_pelanggan_tersimpan(): void
+    {
+        foreach (['cash', 'qris'] as $metode) {
+            $this->postJson('/api/order', $this->payload(['metode_bayar' => $metode]))
+                ->assertCreated()
+                ->assertJsonPath('metode_bayar', $metode);
+
+            $this->assertSame($metode, Transaksi::latest('id')->first()->metode_bayar);
+        }
+    }
+
+    public function test_metode_bayar_opsional_default_null(): void
+    {
+        // Klien lama yang belum kirim metode_bayar tetap boleh order.
+        $this->postJson('/api/order', $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('metode_bayar', null);
+
+        $this->assertNull(Transaksi::first()->metode_bayar);
+    }
+
+    public function test_metode_bayar_nilai_invalid_ditolak(): void
+    {
+        // 'tunai' adalah label UI, bukan nilai tersimpan — harus ditolak.
+        $this->postJson('/api/order', $this->payload(['metode_bayar' => 'tunai']))
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'validasi_gagal');
+    }
+
     public function test_harga_kiriman_client_diabaikan_total_tetap_dari_server(): void
     {
         $payload = $this->payload();
