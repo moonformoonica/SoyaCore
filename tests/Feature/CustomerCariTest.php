@@ -55,6 +55,76 @@ class CustomerCariTest extends TestCase
             ->assertJsonPath('data.0.poin', 0);
     }
 
+    /**
+     * Saran nomor terdaftar: kasir baru mengetik sebagian, nomor yang cocok
+     * sudah muncul — tidak perlu hafal nomor lengkapnya.
+     */
+    public function test_nomor_sebagian_memunculkan_nomor_terdaftar(): void
+    {
+        // awalan dalam ejaan lokal ("0812") maupun format simpan ("6281")
+        foreach (['0812', '6281', '812'] as $sebagian) {
+            $this->getJson('/api/customers/cari?no_wa='.urlencode($sebagian))
+                ->assertOk()
+                ->assertJsonCount(1, 'data')
+                ->assertJsonPath('data.0.nama', 'Budi Santoso')
+                ->assertJsonPath('data.0.no_wa', '6281234567890');
+        }
+
+        // potongan tengah/ekor nomor juga ketemu
+        $this->getJson('/api/customers/cari?no_wa=4567890')
+            ->assertOk()
+            ->assertJsonPath('data.0.nama', 'Budi Santoso');
+
+        // awalan yang dipakai bersama mengembalikan dua-duanya
+        $this->getJson('/api/customers/cari?no_wa=628')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function test_nomor_persis_muncul_paling_atas(): void
+    {
+        // nomor lain yang memuat nomor Budi sebagai awalan
+        Customer::create(['nama' => 'Ahmad', 'no_wa' => '62812345678901']);
+
+        $this->getJson('/api/customers/cari?no_wa=6281234567890')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            // meski "Ahmad" lebih dulu secara alfabet, yang persis cocok di atas
+            ->assertJsonPath('data.0.nama', 'Budi Santoso')
+            ->assertJsonPath('data.1.nama', 'Ahmad');
+    }
+
+    /**
+     * Tanpa batas minimal, "8" mencocokkan hampir semua nomor Indonesia
+     * (semuanya tersimpan sebagai 628xxx) dan endpoint ini jadi dump
+     * daftar pelanggan.
+     */
+    public function test_nomor_terlalu_pendek_tidak_mendump_daftar_pelanggan(): void
+    {
+        foreach (['8', '0', '62', '+'] as $terlaluPendek) {
+            $this->getJson('/api/customers/cari?no_wa='.urlencode($terlaluPendek))
+                ->assertOk()
+                ->assertJsonCount(0, 'data');
+        }
+    }
+
+    public function test_wildcard_like_tidak_bocor_dari_input_no_wa(): void
+    {
+        // wildcard murni tidak menyisakan digit apa pun -> bukan pencarian
+        foreach (['%', '%%', '_', '%8%'] as $input) {
+            $this->getJson('/api/customers/cari?no_wa='.urlencode($input))
+                ->assertOk()
+                ->assertJsonCount(0, 'data');
+        }
+
+        // dan wildcard yang menempel di angka tidak menambah kecocokan:
+        // "628%" harus berperilaku persis seperti "628", bukan seperti pola
+        $polos = $this->getJson('/api/customers/cari?no_wa=628')->assertOk()->json('data');
+        $berwildcard = $this->getJson('/api/customers/cari?no_wa='.urlencode('628%'))->assertOk()->json('data');
+
+        $this->assertSame($polos, $berwildcard);
+    }
+
     public function test_cari_nama_parsial_bisa_mengembalikan_banyak_hasil(): void
     {
         $this->getJson('/api/customers/cari?nama=budi')

@@ -18,7 +18,7 @@ class NomorWa
      */
     public static function normalisasi(string $nomor): string
     {
-        $digits = preg_replace('/\D+/', '', trim($nomor));
+        $digits = self::digit($nomor);
 
         if ($digits === '') {
             return '';
@@ -33,5 +33,17 @@ class NomorWa
         }
 
         return $digits; // sudah 62xxx (atau kode negara lain, disimpan apa adanya)
+    }
+
+    /**
+     * Digit mentah yang diketik user, tanpa penambahan prefix apa pun.
+     *
+     * Dipakai untuk mengukur "sudah berapa banyak yang diketik" — panjang
+     * hasil normalisasi() tidak bisa dipakai untuk itu karena menambahkan
+     * awalan "62", sehingga satu ketikan "8" terbaca jadi 3 karakter.
+     */
+    public static function digit(string $nomor): string
+    {
+        return preg_replace('/\D+/', '', trim($nomor));
     }
 }

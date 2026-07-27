@@ -81,7 +81,7 @@ Query param (minimal salah satu dari `no_wa` / `nama` wajib):
 
 | Param | Keterangan |
 |---|---|
-| `no_wa` | Dinormalisasi dulu (`0812…`, `+62 812…`, `812…` → `62812…`), lalu dicocokkan **persis** |
+| `no_wa` | Dinormalisasi dulu (`0812…`, `+62 812…`, `812…` → `62812…`), lalu dicocokkan **parsial** (contains), min 3 digit |
 | `nama` | Pencarian **parsial** (contains), min 2 karakter; wildcard `%` dan `_` di-escape jadi teks literal |
 | `limit` | 1–25, default 10 |
 
@@ -101,6 +101,26 @@ Response `200`:
 - Customer tanpa baris `loyalty` dilaporkan `poin: 0` (bukan error).
 - Query kosong (tanpa `no_wa` maupun `nama`) → `422 validasi_gagal` — endpoint ini
   bukan dump seluruh customer.
+
+**Saran nomor terdaftar** (kolom "Cek Poin Pelanggan"). Pencocokan `no_wa` parsial,
+jadi nomor yang sudah terdaftar muncul sejak kasir baru mengetik sebagian —
+tidak perlu hafal nomor lengkapnya:
+
+| Ketikan | Hasil |
+|---|---|
+| `0812` / `812` / `6281` | semua pelanggan berawalan `62812…` |
+| `4567890` | cocok juga di tengah/ekor nomor |
+| `6281234567890` | nomor lengkap; yang **cocok persis diurutkan paling atas**, sisanya menyusul alfabetis |
+| `8`, `62`, `+` | `200` dengan `data: []` — di bawah 3 digit |
+
+- Ukurannya **digit yang diketik**, bukan hasil normalisasi. Normalisasi menambahkan
+  awalan `62`, jadi satu ketikan `8` akan terbaca 3 karakter dan lolos batas kalau
+  yang diukur hasilnya.
+- Di bawah 3 digit sengaja `200 data: []`, **bukan `422`** — kolom ini bereaksi tiap
+  ketikan, jadi error di karakter pertama akan mengganggu. Batasnya ada supaya
+  mengetik `8` tidak mencocokkan hampir semua nomor Indonesia (semua tersimpan
+  sebagai `628…`) dan mengubah endpoint ini jadi dump daftar pelanggan.
+- Frontend tetap perlu debounce; tiap ketikan = satu query `LIKE`.
 
 Beda dengan `GET /api/loyalty/{nomorWa}` (publik, SoyaScan): endpoint tersebut
 tanpa auth, hanya exact-match `no_wa`, dan `404` kalau tidak ketemu. Untuk
