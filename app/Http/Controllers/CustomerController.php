@@ -56,7 +56,18 @@ class CustomerController extends Controller
             // Parsial supaya nomor terdaftar muncul sebagai saran sejak kasir
             // baru mengetik sebagian. Nomor lengkap tetap ketemu — LIKE
             // mencakup kecocokan persis.
-            $query->where('no_wa', 'like', '%'.$this->escapeLike($normal).'%')
+            //
+            // Dicocokkan ke SEMUA kandidat bentuk (lihat NomorWa::kandidatCari):
+            // memakai hasil normalisasi saja membuat pencarian cuma jalan dari
+            // depan, karena potongan yang diawali 0/8 keburu ditempeli "62" —
+            // mengetik 4 digit terakhir "8122" tidak akan pernah ketemu.
+            // Dibungkus closure supaya grup OR ini tidak bocor dan ber-OR
+            // dengan filter `nama` di bawah.
+            $query->where(function ($grup) use ($noWa) {
+                foreach (NomorWa::kandidatCari($noWa) as $kandidat) {
+                    $grup->orWhere('no_wa', 'like', '%'.$this->escapeLike($kandidat).'%');
+                }
+            })
                 // yang persis sama naik ke atas, sisanya menyusul
                 ->orderByRaw('CASE WHEN no_wa = ? THEN 0 ELSE 1 END', [$normal]);
         }

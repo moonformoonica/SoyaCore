@@ -46,4 +46,35 @@ class NomorWa
     {
         return preg_replace('/\D+/', '', trim($nomor));
     }
+
+    /**
+     * Bentuk-bentuk yang perlu dicoba saat mencocokkan potongan nomor
+     * (pencarian SEBAGIAN), bukan nomor lengkap.
+     *
+     * normalisasi() dirancang untuk nomor LENGKAP: input berawalan 0 atau 8
+     * SELALU ditempeli "62" karena diasumsikan itu awal nomor. Asumsi itu
+     * runtuh untuk pencarian sebagian — kasir yang mengetik 4 digit terakhir
+     * "8122" bukan sedang menulis awal nomor, tapi ekornya, dan "628122"
+     * tidak ada di dalam "6281245688122".
+     *
+     * Karena itu dikembalikan dua kemungkinan:
+     * - digit apa adanya  -> cocok untuk potongan tengah/ekor ("8122")
+     * - hasil normalisasi -> cocok untuk ejaan lokal dari awal ("0812")
+     *
+     * Keduanya dicoba karena dari potongan digit saja mustahil ditebak mana
+     * yang dimaksud; pemanggil mencocokkan dengan OR.
+     *
+     * @return list<string>
+     */
+    public static function kandidatCari(string $nomor): array
+    {
+        if (self::digit($nomor) === '') {
+            return [];
+        }
+
+        return array_values(array_unique([
+            self::digit($nomor),
+            self::normalisasi($nomor),
+        ]));
+    }
 }

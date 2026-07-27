@@ -102,20 +102,27 @@ Response `200`:
 - Query kosong (tanpa `no_wa` maupun `nama`) → `422 validasi_gagal` — endpoint ini
   bukan dump seluruh customer.
 
-**Saran nomor terdaftar** (kolom "Cek Poin Pelanggan"). Pencocokan `no_wa` parsial,
-jadi nomor yang sudah terdaftar muncul sejak kasir baru mengetik sebagian —
-tidak perlu hafal nomor lengkapnya:
+**Saran nomor terdaftar** (kolom "Cek Poin Pelanggan"). Pencocokan `no_wa` parsial
+dan **bisa dari posisi mana pun** — depan, tengah, atau belakang. Contoh untuk
+nomor tersimpan `6281245688122`:
 
 | Ketikan | Hasil |
 |---|---|
-| `0812` / `812` / `6281` | semua pelanggan berawalan `62812…` |
-| `4567890` | cocok juga di tengah/ekor nomor |
-| `6281234567890` | nomor lengkap; yang **cocok persis diurutkan paling atas**, sisanya menyusul alfabetis |
+| `0812` / `812` / `6281` | cocok dari **depan** (ejaan lokal maupun format simpan) |
+| `8122` (4 digit terakhir) | cocok dari **belakang** |
+| `4568`, `5688122` | cocok di **tengah/ekor** |
+| `6281245688122` | nomor lengkap; yang **cocok persis diurutkan paling atas**, sisanya menyusul alfabetis |
 | `8`, `62`, `+` | `200` dengan `data: []` — di bawah 3 digit |
 
-- Ukurannya **digit yang diketik**, bukan hasil normalisasi. Normalisasi menambahkan
-  awalan `62`, jadi satu ketikan `8` akan terbaca 3 karakter dan lolos batas kalau
-  yang diukur hasilnya.
+- Tiap ketikan dicocokkan ke **dua bentuk sekaligus** (OR): digit apa adanya, dan
+  hasil normalisasi. `NomorWa::normalisasi()` dirancang untuk nomor **lengkap** —
+  input berawalan `0`/`8` selalu ditempeli `62` karena diasumsikan itu awal nomor.
+  Untuk potongan, asumsi itu salah: `8122` jadi `628122`, yang tidak ada di dalam
+  `6281245688122`. Digit mentah menangkap potongan tengah/ekor, hasil normalisasi
+  menangkap ejaan lokal dari depan. Lihat `NomorWa::kandidatCari()`.
+- Batas minimalnya diukur dari **digit yang diketik**, bukan hasil normalisasi —
+  normalisasi menambahkan awalan `62`, jadi satu ketikan `8` terbaca 3 karakter
+  dan lolos batas kalau yang diukur hasilnya.
 - Di bawah 3 digit sengaja `200 data: []`, **bukan `422`** — kolom ini bereaksi tiap
   ketikan, jadi error di karakter pertama akan mengganggu. Batasnya ada supaya
   mengetik `8` tidak mencocokkan hampir semua nomor Indonesia (semua tersimpan

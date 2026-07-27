@@ -81,6 +81,43 @@ class CustomerCariTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
+    /**
+     * Kebiasaan nyata kasir: yang diingat pelanggan itu digit BELAKANG, bukan
+     * awalan. Ini dulu gagal — normalisasi() menempelkan "62" ke potongan yang
+     * diawali 0/8 (karena dirancang untuk nomor lengkap), sehingga "8122"
+     * dicari sebagai "628122" dan tidak pernah ketemu di "6281245688122".
+     */
+    public function test_digit_belakang_dan_tengah_menemukan_nomor(): void
+    {
+        Customer::create(['nama' => 'Kamila', 'no_wa' => '6281245688122']);
+
+        // 4 digit terakhir — diawali 8, kasus yang dilaporkan
+        $this->getJson('/api/customers/cari?no_wa=8122')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.nama', 'Kamila')
+            ->assertJsonPath('data.0.no_wa', '6281245688122');
+
+        // potongan ekor & tengah lain, termasuk yang diawali 0 dan 8
+        foreach (['88122', '5688122', '4568', '0812456'] as $potongan) {
+            $this->getJson('/api/customers/cari?no_wa='.urlencode($potongan))
+                ->assertOk()
+                ->assertJsonPath('data.0.nama', 'Kamila');
+        }
+    }
+
+    /**
+     * Potongan ekor yang diawali 0 juga tidak boleh ditempeli "62".
+     */
+    public function test_digit_belakang_diawali_nol_tetap_ketemu(): void
+    {
+        Customer::create(['nama' => 'Rani', 'no_wa' => '6281377700815']);
+
+        $this->getJson('/api/customers/cari?no_wa=0815')
+            ->assertOk()
+            ->assertJsonPath('data.0.nama', 'Rani');
+    }
+
     public function test_nomor_persis_muncul_paling_atas(): void
     {
         // nomor lain yang memuat nomor Budi sebagai awalan
