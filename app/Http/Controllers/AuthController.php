@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\UbahPasswordRequest;
+use App\Http\Requests\UpdateProfilRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -46,6 +49,55 @@ class AuthController extends Controller
     }
 
     /**
+     * PATCH /api/me — Pengaturan > Profil Saya > Edit Profil.
+     *
+     * Selalu mengedit akun PEMANGGIL, tidak pernah menerima id user dari
+     * body. `role` dan `is_active` tidak termasuk field yang bisa ditulis
+     * (lihat UpdateProfilRequest) — kalau bisa, kasir dapat mengangkat
+     * dirinya sendiri jadi manager dari halaman ini.
+     */
+    public function updateProfil(UpdateProfilRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $user->update($request->validated());
+
+        return response()->json(['user' => $this->profil($user)]);
+    }
+
+    /**
+     * POST /api/me/password — Pengaturan > Profil Saya > Ganti Password.
+     *
+     * Token lain dicabut setelah ganti password: kalau alasan menggantinya
+     * memang karena akun diduga bocor, sesi penyusup harus ikut mati. Token
+     * yang sedang dipakai dibiarkan hidup supaya manager tidak ter-logout
+     * dari halaman yang sedang dia buka.
+     */
+    public function ubahPassword(UbahPasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validated();
+
+        if (! Hash::check($data['password_lama'], $user->password)) {
+            throw new ApiException('password_lama_salah', 'Password lama tidak cocok.', 422);
+        }
+
+        $user->update(['password' => $data['password_baru']]); // di-hash oleh cast 'hashed'
+
+        $tokenSekarang = $request->user()->currentAccessToken();
+
+        $user->tokens()
+            ->when(
+                $tokenSekarang instanceof PersonalAccessToken,
+                fn ($q) => $q->whereKeyNot($tokenSekarang->getKey()),
+            )
+            ->delete();
+
+        return response()->json([
+            'message' => 'Password berhasil diubah. Perangkat lain yang masih login sudah dikeluarkan.',
+        ]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function profil(User $user): array
@@ -54,6 +106,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'nama' => $user->nama,
             'email' => $user->email,
+            'no_telepon' => $user->no_telepon,
             'role' => $user->role,
         ];
     }

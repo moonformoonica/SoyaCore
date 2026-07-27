@@ -9,6 +9,7 @@ use App\Http\Controllers\LoyaltyController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PengaturanLoyaltyController;
+use App\Http\Controllers\PengaturanTokoController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\TransaksiItemController;
 use Illuminate\Support\Facades\Route;
@@ -22,7 +23,13 @@ Route::get('/loyalty/{nomorWa}', [LoyaltyController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Pengaturan > Profil Saya. Selalu menyasar akun pemanggil sendiri —
+    // tidak ada id user di path maupun body, jadi tidak ada jalan mengedit
+    // akun orang lain lewat sini.
     Route::get('/me', [AuthController::class, 'me']);
+    Route::patch('/me', [AuthController::class, 'updateProfil']);
+    Route::post('/me/password', [AuthController::class, 'ubahPassword']);
 
     // Read: kasir & manager (dibutuhkan saat menyusun transaksi).
     // Catatan: list menu internal (flat + filter, termasuk nonaktif) pindah
@@ -59,6 +66,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pengaturan/loyalty', [PengaturanLoyaltyController::class, 'show']);
     Route::get('pengaturan/loyalty/katalog', [PengaturanLoyaltyController::class, 'katalog']);
 
+    // Info toko — kasir ikut baca karena dia yang mencetak nota berheader ini.
+    Route::get('pengaturan/toko', [PengaturanTokoController::class, 'show']);
+
     // Dashboard porsi kasir — cukup untuk memantau performa harian sendiri.
     // Sengaja dibatasi: tidak ada data per-pelanggan (RFM/loyalty/switch) dan
     // tidak ada export. `meta` ikut karena date-picker kedua halaman di bawah
@@ -82,6 +92,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Berdampak langsung ke uang, jadi sengaja manager-only.
         Route::patch('pengaturan/loyalty', [PengaturanLoyaltyController::class, 'update']);
         Route::patch('pengaturan/loyalty/katalog/{kode}', [PengaturanLoyaltyController::class, 'updateKatalog']);
+
+        // Info toko dipakai di header nota & laporan, jadi bukan preferensi
+        // pribadi kasir — manager yang pegang.
+        Route::patch('pengaturan/toko', [PengaturanTokoController::class, 'update']);
 
         // Reporting lanjutan + export (manager-only)
         Route::prefix('dashboard')->group(function () {
