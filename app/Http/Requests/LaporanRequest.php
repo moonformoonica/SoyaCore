@@ -4,15 +4,11 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Validasi params reporting. Superset dari semua param opsional endpoint
- * dashboard/export — tiap endpoint hanya membaca yang relevan.
- */
 class LaporanRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // role dicek middleware 'role:manager'
+        return true; 
     }
 
     /**

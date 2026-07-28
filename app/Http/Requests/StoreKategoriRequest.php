@@ -8,7 +8,7 @@ class StoreKategoriRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // role dicek oleh middleware 'role:manager'
+        return true; 
     }
 
     /**

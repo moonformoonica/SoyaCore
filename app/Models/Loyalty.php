@@ -11,7 +11,7 @@ class Loyalty extends Model
 
     protected $fillable = [
         'customer_id',
-        'poin', // saldo poin aktual (1 poin per Rp 1.000, model M3)
+        'poin', 
     ];
 
     protected $casts = [

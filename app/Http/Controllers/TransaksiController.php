@@ -76,9 +76,6 @@ class TransaksiController extends Controller
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
     }
 
-    /**
-     * Redeem Poin (M3) — hanya saat pending, satu redemption per transaksi.
-     */
     public function redeemPoin(RedeemPoinRequest $request, Transaksi $transaksi): TransaksiResource
     {
         $this->loyaltyService->redeemPoin($transaksi, $request->validated('kode_redeem'));
@@ -86,12 +83,6 @@ class TransaksiController extends Controller
         return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
     }
 
-    /**
-     * Tandai Lunas (alias: bayar). Status -> lunas, lalu earning poin
-     * LoyalSeed: intdiv(total, 1000), idempotent via loyalty_applied_at.
-     * user_id diisi kasir yang MEMPROSES pembayaran (penting untuk
-     * self-order yang dibuat tanpa kasir).
-     */
     public function bayar(BayarRequest $request, Transaksi $transaksi): TransaksiResource
     {
         $this->service->pastikanPending($transaksi);

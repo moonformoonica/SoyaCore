@@ -12,9 +12,6 @@ class TerapkanDiskonRequest extends FormRequest
     }
 
     /**
-     * Rentang nilai per tipe divalidasi lebih detail di DiskonEngine
-     * (supaya kode error spesifik: diskon_preset_invalid, dll).
-     *
      * @return array<string, list<string>>
      */
     public function rules(): array

@@ -12,17 +12,10 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    /**
-     * Label periode tetap untuk laporan snapshot (RFM & Switch).
-     */
     private const PERIODE_LABEL = '1 Jun 2026 – 30 Jul 2026';
 
     public function __construct(private readonly LaporanQuery $query) {}
 
-    /**
-     * Meta cakupan data — dihitung LIVE (tidak di-hardcode). Helper untuk
-     * date-range picker frontend.
-     */
     public function meta(): JsonResponse
     {
         [$min, $max] = $this->query->resolveWindow(null, null);
@@ -53,11 +46,6 @@ class DashboardController extends Controller
         return $this->envelope($request->grain(), $start, $end, $ada, $this->query->timeSeries($start, $end, $request->grain()));
     }
 
-    /**
-     * Khusus minuman — dessert & cookies (Cup/Pack) tidak dihitung, jadi
-     * totalnya memang lebih kecil dari /ringkasan. Dikirim lewat `catatan`
-     * supaya frontend bisa menampilkannya dan selisih itu tidak dikira bug.
-     */
     public function revenueUkuran(LaporanRequest $request): JsonResponse
     {
         [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
@@ -95,10 +83,6 @@ class DashboardController extends Controller
         return $this->envelope($request->grain(), $start, $end, $ada, $this->query->loyalty($start, $end, $request->limitOr(10)));
     }
 
-    /**
-     * Statis periode-penuh. Filter opsional ?segmen=. ringkasan_segmen
-     * dihitung dari seluruh snapshot (bukan hasil filter).
-     */
     public function rfm(Request $request): JsonResponse
     {
         $segmen = $request->query('segmen');
@@ -122,9 +106,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Statis periode-penuh. Filter opsional substring ?rekomendasi=.
-     */
     public function switch(Request $request): JsonResponse
     {
         $rekomendasi = $request->query('rekomendasi');

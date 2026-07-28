@@ -5,28 +5,9 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
-/**
- * Impor layer reporting dari CSV bersih di database/seeders/data/.
- *
- * Idempotent: setiap tabel di-truncate lalu diisi ulang, jadi aman
- * dijalankan berkali-kali. Dipakai bersama oleh LaporanSeeder dan
- * perintah `php artisan laporan:import`.
- *
- * PEMETAAN BERDASARKAN NAMA HEADER, bukan posisi kolom. Versi lama
- * memetakan secara posisional dan itu berbahaya: begitu CSV baru
- * menyisipkan kolom di tengah, data masuk ke kolom yang salah tanpa
- * error sama sekali. Sekarang kolom dicari lewat namanya, dan header
- * yang hilang langsung melempar exception dengan pesan jelas.
- *
- * Kolom CSV yang tidak terdaftar di sini diabaikan — menambah kolom
- * baru di CSV tidak akan merusak impor.
- */
 class LaporanImporter
 {
     /**
-     * Spesifikasi tiap tabel: kolom DB => [nama header CSV, tipe].
-     * Tipe: 'str' (wajib), 'opt' (boleh kosong => null), 'int', 'float'.
-     *
      * @var array<string, array{file: string, tabel: string, kolom: array<string, array{0: string, 1: string}>}>
      */
     private const SPEC = [
@@ -66,8 +47,6 @@ class LaporanImporter
             'kolom' => [
                 'nama_pelanggan' => ['Nama Pelanggan', 'str'],
                 'recency' => ['Recency', 'int'],
-                // Frekuensi_Kedatangan = jumlah kunjungan. Jangan tertukar
-                // dengan kolom "Frequency" yang berisi skor terbobot desimal.
                 'frequency' => ['Frekuensi_Kedatangan', 'int'],
                 'total_pcs_dibeli' => ['Total_Pcs_Dibeli', 'int'],
                 'monetary' => ['Monetary', 'int'],
@@ -104,8 +83,6 @@ class LaporanImporter
     }
 
     /**
-     * Impor seluruh CSV. Mengembalikan jumlah baris per tabel.
-     *
      * @return array<string, int>
      */
     public function import(): array
@@ -142,7 +119,6 @@ class LaporanImporter
             $jumlah = 0;
 
             while (($row = fgetcsv($handle)) !== false) {
-                // Baris kosong di akhir file: fgetcsv mengembalikan [null].
                 if ($row === [null] || $row === []) {
                     continue;
                 }
@@ -170,8 +146,6 @@ class LaporanImporter
     }
 
     /**
-     * Baca baris header dan tentukan indeks tiap kolom yang dibutuhkan.
-     *
      * @param  resource  $handle
      * @param  array<string, array{0: string, 1: string}>  $kolom
      * @return array<string, int>
@@ -242,9 +216,6 @@ class LaporanImporter
         return $hasil;
     }
 
-    /**
-     * Samakan header supaya beda BOM/spasi/kapital tidak bikin gagal.
-     */
     private function normalisasi(?string $nama): string
     {
         $nama = str_replace("\u{FEFF}", '', (string) $nama);

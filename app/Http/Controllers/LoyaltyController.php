@@ -7,13 +7,6 @@ use App\Models\Customer;
 use App\Support\NomorWa;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Cek poin loyalty publik (SoyaScan) — tanpa auth.
- *
- * BREAKING CHANGE dari kontrak v1 lama: response sekarang
- * {nomor_wa, nama, poin} — field stempel/gratis_tersedia/menuju_gratis
- * sudah tidak ada (model loyalty berubah dari stempel ke poin, M3).
- */
 class LoyaltyController extends Controller
 {
     public function show(string $nomorWa): JsonResponse

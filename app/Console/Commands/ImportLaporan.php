@@ -7,15 +7,6 @@ use Illuminate\Console\Command;
 use RuntimeException;
 use Throwable;
 
-/**
- * Refresh data reporting setelah CSV di database/seeders/data/ diganti.
- *
- * Alur update data rutin:
- *   1. Timpa CSV di database/seeders/data/ dengan hasil olahan terbaru.
- *   2. php artisan laporan:import
- *   3. Selesai — dashboard & export Excel ikut terbarui otomatis karena
- *      keduanya membaca dari tabel laporan_*, bukan dari file CSV.
- */
 class ImportLaporan extends Command
 {
     protected $signature = 'laporan:import
@@ -32,8 +23,7 @@ class ImportLaporan extends Command
         try {
             $hasil = (new LaporanImporter($dir))->import();
         } catch (RuntimeException $e) {
-            // Header tidak cocok / file hilang — pesannya sudah menjelaskan
-            // kolom mana yang bermasalah, jadi tampilkan apa adanya.
+            
             $this->newLine();
             $this->error($e->getMessage());
             $this->newLine();

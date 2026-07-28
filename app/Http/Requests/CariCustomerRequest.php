@@ -4,16 +4,11 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Validasi query param pencarian customer (halaman Pesanan).
- * Minimal salah satu dari no_wa / nama harus diisi — request kosong
- * ditolak supaya endpoint tidak dipakai sebagai dump seluruh customer.
- */
 class CariCustomerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // akses dibatasi middleware auth:sanctum (kasir & manager)
+        return true; 
     }
 
     /**

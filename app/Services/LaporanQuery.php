@@ -6,31 +6,12 @@ use App\Models\LaporanTransaksi;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
-/**
- * Query layer reporting — semua dihitung LIVE dari laporan_transaksi,
- * di-scope ke window [start, end] (inklusif). Uang selalu integer rupiah.
- *
- * Time-series di-bucket di PHP pakai Carbon supaya portable antara sqlite
- * (test) dan Postgres (production).
- */
 class LaporanQuery
 {
-    /**
-     * Ukuran milik dessert & cookies (Kembang Tahu Tahwa, Soy Milk Pudding,
-     * Vegan Cookies Peanut). Dipakai HANYA oleh revenueUkuran() yang memang
-     * dibatasi ke minuman — laporan lain (ringkasan, produk terlaris,
-     * platform) tetap menghitung semua item.
-     *
-     * Pemetaan ukuran <-> non-minuman bersifat satu-satu di data Gressoy:
-     * hanya tiga produk itu yang memakai Cup/Pack, dan ketiganya tidak
-     * pernah memakai ukuran lain.
-     */
+
     private const UKURAN_NON_MINUMAN = ['Cup', 'Pack'];
 
     /**
-     * Resolusi window: kalau start/end tidak diberikan, pakai rentang penuh
-     * yang tersedia di laporan_transaksi. Bila tabel kosong, fallback null.
-     *
      * @return array{0: ?string, 1: ?string}
      */
     public function resolveWindow(?string $start, ?string $end): array
@@ -38,7 +19,6 @@ class LaporanQuery
         $start ??= LaporanTransaksi::min('tanggal');
         $end ??= LaporanTransaksi::max('tanggal');
 
-        // Carbon-cast 'tanggal' bisa mengembalikan 'Y-m-d H:i:s'; normalkan.
         $start = $start ? Carbon::parse($start)->toDateString() : null;
         $end = $end ? Carbon::parse($end)->toDateString() : null;
 
@@ -74,8 +54,6 @@ class LaporanQuery
     }
 
     /**
-     * Time-series di-bucket per grain, urut ascending, bucket kosong di-skip.
-     *
      * @return list<array{periode: string, revenue: int, transaksi: int, qty: int}>
      */
     public function timeSeries(?string $start, ?string $end, string $grain): array
@@ -101,9 +79,6 @@ class LaporanQuery
     }
 
     /**
-     * Group by ukuran. rata_rata_transaksi = round(revenue / jumlah_transaksi)
-     * agar mereproduksi fixture laporan_revenue_ukuran persis.
-     *
      * @return list<array<string, mixed>>
      */
     public function revenueUkuran(?string $start, ?string $end): array

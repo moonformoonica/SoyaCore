@@ -4,14 +4,6 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Ganti Password (Pengaturan > Profil Saya).
- *
- * `password_lama` wajib walaupun pemanggil sudah login: token yang bocor
- * jangan sampai cukup untuk mengambil alih akun secara permanen.
- * Kecocokannya dicek di controller supaya bisa mengembalikan kode error
- * spesifik (password_lama_salah), bukan validasi_gagal generik.
- */
 class UbahPasswordRequest extends FormRequest
 {
     public function authorize(): bool

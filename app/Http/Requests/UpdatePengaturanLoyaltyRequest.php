@@ -9,7 +9,7 @@ class UpdatePengaturanLoyaltyRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // role dicek oleh middleware 'role:manager'
+        return true; 
     }
 
     /**
@@ -28,9 +28,6 @@ class UpdatePengaturanLoyaltyRequest extends FormRequest
     }
 
     /**
-     * Pesan ditulis eksplisit karena setting ini gampang disalahpahami
-     * terbalik (angka lebih besar = poin lebih sulit didapat).
-     *
      * @return array<string, string>
      */
     public function messages(): array

@@ -6,14 +6,7 @@ use App\Services\LaporanQuery;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-/**
- * Revenue per ukuran — CAKUPANNYA HANYA MINUMAN.
- *
- * Dessert & cookies (ukuran Cup/Pack) sengaja tidak masuk, jadi total
- * sheet ini memang lebih kecil dari total di sheet Ringkasan/Detail
- * Transaksi. Catatan di baris pertama ada supaya selisih itu tidak
- * dikira salah hitung.
- */
+
 class RevenueUkuranSheet implements FromArray, WithTitle
 {
     public function __construct(

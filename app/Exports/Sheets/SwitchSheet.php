@@ -6,10 +6,6 @@ use App\Models\LaporanSwitch;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-/**
- * Statis periode-penuh. Baris pertama adalah catatan periode tetap
- * (bukan hasil filter tanggal), lalu header, lalu data.
- */
 class SwitchSheet implements FromArray, WithTitle
 {
     private const PERIODE_LABEL = '1 Jun 2026 – 30 Jul 2026';

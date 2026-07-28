@@ -9,14 +9,10 @@ class UpdateKatalogRedeemRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // role dicek oleh middleware 'role:manager'
+        return true; 
     }
 
     /**
-     * Keduanya `sometimes`: manager boleh mengubah poin saja, status saja,
-     * atau dua-duanya. Body kosong ditolak lewat after() supaya tidak
-     * tercatat sebagai "perubahan" yang sebenarnya tidak mengubah apa pun.
-     *
      * @return array<string, list<string>>
      */
     public function rules(): array

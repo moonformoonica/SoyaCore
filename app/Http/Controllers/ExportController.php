@@ -12,10 +12,7 @@ class ExportController extends Controller
 {
     public function __construct(private readonly LaporanQuery $query) {}
 
-    /**
-     * Export laporan multi-sheet .xlsx, di-scope ke window (grain/start/end).
-     * Nama file: Laporan_SoyaCore_{grain}_{start}_{end}.xlsx
-     */
+
     public function export(LaporanRequest $request): BinaryFileResponse
     {
         [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());

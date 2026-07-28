@@ -30,8 +30,6 @@ class TransaksiItemController extends Controller
             );
         }
 
-        // Menu yang sama (non-reward) digabung: qty ditambah, snapshot
-        // harga_satuan yang lama dipertahankan selama transaksi pending.
         /** @var DetailTransaksi|null $item */
         $item = $transaksi->detailTransaksi()
             ->where('menu_id', $menu->id)
@@ -87,8 +85,6 @@ class TransaksiItemController extends Controller
     }
 
     /**
-     * Field opsional level item (per revisi ERD): hanya di-set bila dikirim.
-     *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */

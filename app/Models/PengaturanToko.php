@@ -5,10 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * Info toko — singleton (tabel hanya berisi 0 atau 1 baris), pola sama
- * dengan PengaturanLoyalty.
- */
 class PengaturanToko extends Model
 {
     protected $table = 'pengaturan_toko';
@@ -33,11 +29,6 @@ class PengaturanToko extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    /**
-     * Baris info toko aktif. Kalau belum ada, mengembalikan instance BELUM
-     * TERSIMPAN berisi nilai bawaan — pemanggil boleh membacanya seperti
-     * baris biasa tanpa perlu tahu tabelnya masih kosong.
-     */
     public static function current(): self
     {
         return static::query()->orderBy('id')->first() ?? new self([
@@ -47,12 +38,6 @@ class PengaturanToko extends Model
         ]);
     }
 
-    /**
-     * Kolom `time` dibaca berbeda tergantung driver: Postgres mengembalikan
-     * "08:00:00", SQLite mengembalikan apa yang ditulis ("08:00"). Dipangkas
-     * ke H:i di satu tempat supaya response API tidak ikut berbeda antara
-     * lingkungan test dan produksi.
-     */
     public static function jam(?string $nilai): ?string
     {
         return $nilai === null ? null : substr($nilai, 0, 5);

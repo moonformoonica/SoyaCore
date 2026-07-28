@@ -4,21 +4,11 @@ namespace App\Services;
 
 use App\Exceptions\ApiException;
 
-/**
- * Engine diskon M2 — semua penghitungan di server, client tidak pernah
- * mengirim total/diskon_nilai langsung (prinsip kontrak v1).
- */
 class DiskonEngine
 {
     public const PRESET_PERSEN = [10, 20, 50];
 
     /**
-     * Hitung pasangan diskon_persen/diskon_nilai dari subtotal saat ini.
-     *
-     * - preset        : nilai wajib 10 | 20 | 50 (persen)
-     * - custom_persen : nilai 0–100 (persen, integer)
-     * - custom_nilai  : nominal rupiah langsung, 0 ≤ nilai ≤ subtotal
-     *
      * @return array{diskon_persen: int, diskon_nilai: int}
      */
     public function hitung(int $subtotal, string $tipe, int $nilai): array
@@ -92,11 +82,6 @@ class DiskonEngine
     }
 
     /**
-     * Distribusi proporsional diskon nominal ke item-item (per revisi ERD,
-     * diskon disimpan per baris detail_transaksi). Semua item kecuali yang
-     * terakhir dapat bagian floor proporsional; sisanya diberikan ke item
-     * terakhir supaya jumlah distribusi tepat sama dengan nominal.
-     *
      * @param  array<int|string, int>  $itemSubtotals  [id item => subtotal]
      * @return array<int|string, int> [id item => bagian diskon]
      */

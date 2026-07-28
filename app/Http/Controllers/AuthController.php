@@ -48,14 +48,6 @@ class AuthController extends Controller
         return response()->json(['user' => $this->profil($request->user())]);
     }
 
-    /**
-     * PATCH /api/me — Pengaturan > Profil Saya > Edit Profil.
-     *
-     * Selalu mengedit akun PEMANGGIL, tidak pernah menerima id user dari
-     * body. `role` dan `is_active` tidak termasuk field yang bisa ditulis
-     * (lihat UpdateProfilRequest) — kalau bisa, kasir dapat mengangkat
-     * dirinya sendiri jadi manager dari halaman ini.
-     */
     public function updateProfil(UpdateProfilRequest $request): JsonResponse
     {
         $user = $request->user();
@@ -64,14 +56,6 @@ class AuthController extends Controller
         return response()->json(['user' => $this->profil($user)]);
     }
 
-    /**
-     * POST /api/me/password — Pengaturan > Profil Saya > Ganti Password.
-     *
-     * Token lain dicabut setelah ganti password: kalau alasan menggantinya
-     * memang karena akun diduga bocor, sesi penyusup harus ikut mati. Token
-     * yang sedang dipakai dibiarkan hidup supaya manager tidak ter-logout
-     * dari halaman yang sedang dia buka.
-     */
     public function ubahPassword(UbahPasswordRequest $request): JsonResponse
     {
         $user = $request->user();

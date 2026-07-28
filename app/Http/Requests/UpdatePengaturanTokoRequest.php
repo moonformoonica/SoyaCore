@@ -8,13 +8,10 @@ class UpdatePengaturanTokoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // role dicek oleh middleware 'role:manager'
+        return true; 
     }
 
     /**
-     * Urutan jam sengaja tidak divalidasi — toko yang tutup lewat tengah
-     * malam (buka 08:00, tutup 02:00) tetap sah.
-     *
      * @return array<string, list<string>>
      */
     public function rules(): array

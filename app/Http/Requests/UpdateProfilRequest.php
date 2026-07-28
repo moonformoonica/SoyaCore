@@ -5,19 +5,11 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-/**
- * Edit Profil (Pengaturan > Profil Saya).
- *
- * PENTING: `role` dan `is_active` sengaja TIDAK ada di sini dan tidak boleh
- * ditambahkan. Endpoint ini mengedit akun milik pemanggil sendiri — kalau
- * kedua field itu ikut bisa ditulis, kasir mana pun bisa mengangkat dirinya
- * jadi manager lewat halaman profilnya sendiri.
- */
 class UpdateProfilRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // hanya menyentuh akun milik pemanggil sendiri
+        return true; 
     }
 
     /**
@@ -32,7 +24,6 @@ class UpdateProfilRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                // email milik sendiri tidak dianggap bentrok
                 Rule::unique('users', 'email')->ignore($this->user()->id),
             ],
             'no_telepon' => ['sometimes', 'nullable', 'string', 'max:30'],

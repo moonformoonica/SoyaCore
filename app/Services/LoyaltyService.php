@@ -10,29 +10,10 @@ use App\Models\Transaksi;
 use App\Support\LoyaltyRedemptionCatalog;
 use Illuminate\Support\Facades\DB;
 
-/**
- * LoyalSeed (M3): earning poin + redeem katalog.
- *
- * Prinsip yang dikunci sejak M1:
- * - Poin HANYA bertambah saat status berubah jadi lunas (anti-fraud),
- *   tidak pernah saat order dibuat (pending).
- * - Rate: 1 poin per `rupiah_per_poin` dari total yang benar-benar dibayar
- *   (sudah dikurangi diskon/redeem), pembulatan ke bawah (intdiv). Rate-nya
- *   disetel manager lewat PengaturanLoyalty, default Rp 1.000.
- * - Redeem hanya saat pending, dan HANYA SATU redemption per transaksi.
- *
- * Perubahan rate TIDAK retroaktif: poin yang sudah masuk saldo tetap, dan
- * rate yang dipakai tiap transaksi ikut disnapshot di kolom transaksinya.
- */
 class LoyaltyService
 {
     public function __construct(private readonly TransaksiService $transaksiService) {}
 
-    /**
-     * Dipanggil HANYA dari Tandai Lunas, setelah status resmi lunas.
-     * Idempotent: loyalty_applied_at jadi guard supaya pemanggilan kedua
-     * tidak menambah poin lagi.
-     */
     public function earnPoinFor(Transaksi $transaksi): void
     {
         if ($transaksi->loyalty_applied_at !== null) {
@@ -40,13 +21,9 @@ class LoyaltyService
         }
 
         DB::transaction(function () use ($transaksi) {
-            // Dibaca sekali di sini, lalu disnapshot — kalau manager mengubah
-            // rate setelah ini, transaksi ini tetap bisa diaudit.
             $rupiahPerPoin = PengaturanLoyalty::rupiahPerPoin();
             $poinDidapat = intdiv((int) $transaksi->total, $rupiahPerPoin);
 
-            // Transaksi kasir walk-in boleh tanpa customer — poin tetap
-            // dicatat di transaksi (audit), tapi tidak ada saldo yang naik.
             if ($transaksi->customer_id !== null) {
                 $loyalty = $this->loyaltyTerkunci($transaksi->customer_id);
                 $loyalty->poin += $poinDidapat;
@@ -61,9 +38,6 @@ class LoyaltyService
         });
     }
 
-    /**
-     * Redeem katalog — dipanggil kasir SEBELUM Tandai Lunas.
-     */
     public function redeemPoin(Transaksi $transaksi, string $kodeRedeem): Transaksi
     {
         $this->transaksiService->pastikanPending($transaksi);
@@ -85,8 +59,6 @@ class LoyaltyService
             );
         }
 
-        // Dinonaktifkan manager lewat Settings — bedakan dari kode ngawur
-        // supaya kasir tahu ini reward yang memang sedang dimatikan.
         if ($item['is_active'] === false) {
             throw new ApiException(
                 'kode_redeem_nonaktif',
@@ -126,8 +98,6 @@ class LoyaltyService
                     );
                 }
 
-                // Pakai engine diskon M2 (persen ditulis per item sesuai
-                // skema ERD revisi; total dihitung ulang di dalamnya).
                 $this->transaksiService->terapkanDiskon($transaksi, 'custom_persen', $item['persen']);
             } else {
                 $menu = $this->cariMenuGratis($item);
@@ -143,8 +113,6 @@ class LoyaltyService
                 $transaksi->detailTransaksi()->create([
                     'menu_id' => $menu->id,
                     'qty' => 1,
-                    // snapshot harga asli untuk laporan nilai item gratis —
-                    // TIDAK ditambahkan ke tagihan (subtotal 0)
                     'harga_satuan' => $menu->harga,
                     'subtotal' => 0,
                     'is_reward' => true,
@@ -166,10 +134,6 @@ class LoyaltyService
         return $transaksi;
     }
 
-    /**
-     * Ambil baris loyalty milik customer dengan row lock (aman dari race
-     * dua request nyaris bersamaan). Dibuat dengan poin=0 kalau belum ada.
-     */
     private function loyaltyTerkunci(int $customerId): Loyalty
     {
         Loyalty::firstOrCreate(['customer_id' => $customerId], ['poin' => 0]);
@@ -178,10 +142,6 @@ class LoyaltyService
     }
 
     /**
-     * Cari menu reward: kategori + nama + ukuran sesuai katalog,
-     * case-insensitive, hanya menu aktif. Kalau lebih dari satu varian
-     * cocok, pilih sesuai urutan preferensi ukuran di katalog.
-     *
      * @param  array<string, mixed>  $item
      */
     private function cariMenuGratis(array $item): ?Menu

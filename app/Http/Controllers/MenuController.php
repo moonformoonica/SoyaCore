@@ -13,10 +13,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MenuController extends Controller
 {
-    /**
-     * GET /api/menu — PUBLIK (kontrak v1, konsumen: SoyaScan).
-     * Hanya menu aktif, dikelompokkan per kategori.
-     */
+   
     public function katalog(): JsonResponse
     {
         $kategori = Kategori::with([

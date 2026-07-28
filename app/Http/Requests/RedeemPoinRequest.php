@@ -8,12 +8,10 @@ class RedeemPoinRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // auth via Sanctum di route group
+        return true; 
     }
 
     /**
-     * Keanggotaan kode di katalog divalidasi LoyaltyService supaya bisa
-     * mengembalikan kode error spesifik (kode_redeem_invalid).
      *
      * @return array<string, list<string>>
      */

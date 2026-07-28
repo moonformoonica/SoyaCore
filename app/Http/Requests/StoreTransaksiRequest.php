@@ -12,9 +12,6 @@ class StoreTransaksiRequest extends FormRequest
     }
 
     /**
-     * Per revisi ERD 15 Juli 2026: nomor_meja/platform/catatan pindah ke
-     * level item (dikirim saat tambah item), bukan saat buat transaksi.
-     *
      * @return array<string, list<string>>
      */
     public function rules(): array

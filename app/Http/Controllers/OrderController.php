@@ -6,9 +6,6 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 
-/**
- * Endpoint publik self-order (SoyaScan) — tanpa auth, pelanggan belum login.
- */
 class OrderController extends Controller
 {
     public function __construct(private readonly OrderService $service) {}

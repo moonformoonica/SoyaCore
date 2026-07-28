@@ -8,29 +8,10 @@ use App\Models\Transaksi;
 use App\Support\NomorWa;
 use Illuminate\Support\Collection;
 
-/**
- * Per revisi ERD 15 Juli 2026: subtotal, diskon, nomor_meja, sumber,
- * platform, dan catatan disimpan per baris `detail_transaksi`; tabel
- * `transaksi` hanya menyimpan agregat `total`.
- *
- * Semantik diskon tetap level transaksi (sesuai spec M2 §5.4) tapi
- * PENYIMPANANNYA per item:
- * - diskon persen  -> direplikasi ke semua item, dihitung dari subtotal item
- * - diskon nominal -> didistribusi proporsional terhadap subtotal item
- */
 class TransaksiService
 {
     public function __construct(private readonly DiskonEngine $diskonEngine) {}
 
-    /**
-     * Satu-satunya tempat penghitungan total transaksi — dipanggil setiap
-     * kali item berubah. Diskon yang sedang aktif di item diterapkan ulang
-     * terhadap subtotal terbaru:
-     * - persen aktif  -> diskon_nilai tiap item dihitung ulang
-     * - nominal aktif -> sisa nominal (SUM diskon_nilai item yang masih ada,
-     *   di-clamp ke subtotal) didistribusi ulang — konsekuensinya, menghapus
-     *   item ikut menghapus porsi diskon nominal item tersebut
-     */
     public function recalculateTotals(Transaksi $transaksi): Transaksi
     {
         $items = $transaksi->detailTransaksi()->get();
@@ -47,9 +28,6 @@ class TransaksiService
         return $this->simpanTotal($transaksi, $items);
     }
 
-    /**
-     * Terapkan/ubah diskon (menggantikan diskon sebelumnya, tidak menumpuk).
-     */
     public function terapkanDiskon(Transaksi $transaksi, string $tipe, int $nilai): Transaksi
     {
         $items = $transaksi->detailTransaksi()->get();
@@ -66,9 +44,6 @@ class TransaksiService
         return $this->simpanTotal($transaksi, $items);
     }
 
-    /**
-     * Guard status: item/diskon/pembayaran hanya boleh saat 'pending'.
-     */
     public function pastikanPending(Transaksi $transaksi): void
     {
         if ($transaksi->status !== 'pending') {
@@ -80,10 +55,6 @@ class TransaksiService
         }
     }
 
-    /**
-     * Kode pesanan kasir: #K + urutan harian 3 digit (#K001, #K002, ...).
-     * Sengaja dibedakan dari format #A23 milik self-order (M3).
-     */
     public function generateKodePesanan(): string
     {
         $urutanHariIni = Transaksi::where('kode_pesanan', 'like', '#K%')
@@ -94,8 +65,6 @@ class TransaksiService
     }
 
     /**
-     * Find-or-create customer berdasarkan no_wa ternormalisasi.
-     *
      * @param  array{nama: string, no_wa: string}|null  $data
      */
     public function findOrCreateCustomer(?array $data): ?Customer
