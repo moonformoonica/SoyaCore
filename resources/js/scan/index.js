@@ -1,16 +1,48 @@
 /* ============================================================
    SoyaScan — self-order pelanggan (mobile).
    Alur: GET /api/menu (publik) -> browse -> pilih ukuran ->
-   keranjang -> POST /api/order (publik, tanpa auth).
+   keranjang -> POST /api/order (publik, tanpa auth) -> overlay
+   "Menunggu Pembayaran" -> polling status -> "Pesanan Berhasil".
    ============================================================ */
 (function () {
     'use strict';
 
     const API_BASE = '/api';
 
-    // ---- Peta nama menu (DB) -> file gambar di /images/menu.
-    // Dibuat eksplisit karena penamaan file tidak konsisten
-    // (Capucinno, Choco Coffiee, Royal belgian, dst).
+    // ---- KONFIGURASI STATUS PESANAN — WAJIB DICEK/DISESUAIKAN ----
+    function statusEndpoint(kode) {
+        return `${API_BASE}/order/${kode}`;
+    }
+    function isPaidStatus(json) {
+        const status = (json.data ? json.data.status : json.status) || '';
+        return ['lunas', 'selesai', 'paid', 'dibayar'].includes(String(status).toLowerCase());
+    }
+    const STATUS_POLL_INTERVAL_MS = 4000;
+    const STATUS_POLL_TIMEOUT_MS = 15 * 60 * 1000;
+    // ------------------------------------------------------------
+
+    // ---- PERSISTENSI PESANAN AKTIF (FIX reload) ----
+    // Tanpa ini, status "sudah di-ACC kasir" cuma hidup di memori JS —
+    // begitu halaman di-reload, semuanya reset ke layar menu awal,
+    // padahal transaksinya di backend sudah lunas. Simpan ke
+    // localStorage supaya reload tetap menampilkan overlay yang benar.
+    const STORAGE_KEY = 'soyascan_active_order';
+
+    function saveActiveOrder(data) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* storage penuh/diblokir, abaikan */ }
+    }
+    function loadActiveOrder() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+    function clearActiveOrder() {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* abaikan */ }
+    }
+    // ------------------------------------------------------------
+
+    // Peta nama menu (DB) -> file gambar di /images/menu.
     const IMG = {
         'Original':             { gelas: 'Soya Original.png',      botol: 'Original Botol.png' },
         'Taro Thanos':          { gelas: 'Taro Thanos.png',        botol: 'Taro Thanos Botol.png' },
@@ -33,13 +65,8 @@
         'Vegan Cookies Peanut': { gelas: 'Peanut.png' },
     };
 
-    // Nama tampil khusus (mockup menulis "Soya Original").
     const DISPLAY = { 'Original': 'Soya Original' };
-
-    // Urutan ukuran biar rapi di sheet varian.
     const UKURAN_RANK = { 'Hot': 1, 'Reguler': 2, 'Large': 3, '250ml': 4, '500ml': 5, '1000ml': 6 };
-
-    // Urutan kategori sesuai menu resmi (bukan alfabet).
     const KATEGORI_RANK = {
         'Soya Signature': 1,
         'Soya Chocolate': 2,
@@ -51,11 +78,13 @@
     const katRank = (nama) => KATEGORI_RANK[nama] || 99;
 
     // ---- State
-    let cards = [];            // hasil grouping (satu kartu = gelas/botol)
-    let kategoriList = [];     // { id, nama }
-    let activeKategori = '';   // '' = semua
-    let cart = [];             // { menuId, label, ukuran, harga, qty }
-    let metodeBayar = null;    // 'cash' | 'qris' — pilihan pelanggan di checkout
+    let cards = [];
+    let kategoriList = [];
+    let activeKategori = '';
+    let cart = [];
+    let metodeBayar = null;
+    let statusPollTimer = null;
+    let statusPollDeadline = 0;
 
     // ---- Util
     const $ = (id) => document.getElementById(id);
@@ -77,7 +106,6 @@
 
         cards = [];
         kategori.forEach((k) => {
-            // Kelompokkan menu per nama, lalu pisah varian gelas vs botol.
             const perNama = {};
             (k.menu || []).forEach((m) => {
                 (perNama[m.nama] = perNama[m.nama] || []).push(m);
@@ -114,7 +142,6 @@
     // RENDER: kategori chips
     // ==================================================================
     function shortLabel(nama) {
-        // Tetap pakai "Soya ..." (mis. Soya Signature); hanya "Dessert & Cookies" dipendekkan jadi "Dessert".
         return nama.replace(/\s*&\s*Cookies$/i, '');
     }
 
@@ -300,6 +327,82 @@
     }
 
     // ==================================================================
+    // OVERLAY: state "Menunggu Pembayaran" <-> "Pesanan Berhasil"
+    // ==================================================================
+    function setDoneWaiting() {
+        $('doneIconWaiting').hidden = false;
+        $('doneIconSuccess').hidden = true;
+        $('doneCheck').classList.remove('is-success');
+        $('doneTitle').textContent = 'Menunggu Pembayaran';
+        $('doneSub').textContent = 'Lakukan pembayaran di kasir dan pesananmu akan segera diproses';
+    }
+
+    function setDoneSuccess() {
+        $('doneIconWaiting').hidden = true;
+        $('doneIconSuccess').hidden = false;
+        $('doneCheck').classList.add('is-success');
+        $('doneTitle').textContent = 'Pesanan Berhasil! 🎉';
+        $('doneSub').textContent = 'Pesananmu sudah masuk ke kasir';
+    }
+
+    function stopStatusPolling() {
+        if (statusPollTimer) {
+            clearInterval(statusPollTimer);
+            statusPollTimer = null;
+        }
+    }
+
+    function startStatusPolling(kode) {
+        stopStatusPolling();
+        if (!kode || kode === '—') return;
+
+        statusPollDeadline = Date.now() + STATUS_POLL_TIMEOUT_MS;
+
+        const check = async () => {
+            if (Date.now() > statusPollDeadline) {
+                stopStatusPolling();
+                return;
+            }
+            try {
+                const res = await fetch(statusEndpoint(kode), { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return;
+                const json = await res.json();
+                if (isPaidStatus(json)) {
+                    setDoneSuccess();
+                    stopStatusPolling();
+                }
+            } catch (e) {
+                // koneksi bermasalah sesaat, coba lagi di interval berikutnya
+            }
+        };
+
+        check();
+        statusPollTimer = setInterval(check, STATUS_POLL_INTERVAL_MS);
+    }
+
+    // Tampilkan kembali overlay dari data yang disimpan di localStorage
+    // (dipanggil saat halaman baru dimuat/di-reload, sebelum daftar menu
+    // dirender, supaya pelanggan tidak "kelempar" balik ke layar menu).
+    function restoreActiveOrderOverlay() {
+        const order = loadActiveOrder();
+        if (!order || !order.kode) return false;
+
+        $('doneKode').textContent = order.kode;
+        $('doneNama').textContent = order.nama ?? '—';
+        $('doneMeja').textContent = order.meja ?? '—';
+        $('doneTotal').textContent = rupiah(order.total ?? 0);
+        $('donePoin').textContent = '+' + (order.poin ?? 0) + ' poin';
+
+        setDoneWaiting(); // default; check() di startStatusPolling akan
+                           // langsung update ke sukses kalau statusnya
+                           // ternyata sudah lunas
+        $('doneOverlay').hidden = false;
+        document.body.style.overflow = 'hidden';
+        startStatusPolling(order.kode);
+        return true;
+    }
+
+    // ==================================================================
     // CHECKOUT -> POST /api/order
     // ==================================================================
     function showCartError(msg) {
@@ -337,21 +440,29 @@
             const json = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(json.message || 'Pesanan gagal dikirim. Coba lagi.');
 
-            // Isi layar sukses SEBELUM form di-reset (nama & meja diambil dari form).
+            const kode = json.kode_pesanan || '—';
             const totalBayar = Number(json.total ?? cartTotal());
-            $('doneKode').textContent = json.kode_pesanan || '—';
+            const nomorMejaFinal = json.nomor_meja ?? nomorMeja;
+            const poin = Math.floor(totalBayar / 1000);
+
+            $('doneKode').textContent = kode;
             $('doneNama').textContent = nama;
-            $('doneMeja').textContent = json.nomor_meja ?? nomorMeja;
+            $('doneMeja').textContent = nomorMejaFinal;
             $('doneTotal').textContent = rupiah(totalBayar);
-            // LoyalSeed: 1 poin per Rp 1.000, dibulatkan ke bawah — poin baru
-            // benar-benar masuk saat kasir menandai lunas.
-            $('donePoin').textContent = '+' + Math.floor(totalBayar / 1000) + ' poin';
+            $('donePoin').textContent = '+' + poin + ' poin';
+
+            // Simpan ke localStorage supaya kalau halaman di-reload SEBELUM
+            // atau SESUDAH kasir meng-ACC pesanan, overlay ini tetap
+            // muncul lagi (bukan balik ke layar menu awal).
+            saveActiveOrder({ kode, nama, meja: nomorMejaFinal, total: totalBayar, poin });
+
+            setDoneWaiting();
+            startStatusPolling(kode);
 
             closeSheet('cartSheet');
             $('doneOverlay').hidden = false;
             document.body.style.overflow = 'hidden';
 
-            // reset
             cart = [];
             resetMetodeBayar();
             $('orderForm').reset();
@@ -366,6 +477,9 @@
     });
 
     $('doneClose').addEventListener('click', () => {
+        stopStatusPolling();
+        clearActiveOrder(); // pesanan ini sudah "selesai dilihat" pelanggan,
+                             // reload berikutnya balik ke layar menu normal
         $('doneOverlay').hidden = true;
         document.body.style.overflow = '';
     });
@@ -379,16 +493,19 @@
         searchTimer = setTimeout(renderList, 200);
     });
 
-    // Prefill nomor meja dari QR (?meja=5).
     const meja = new URLSearchParams(location.search).get('meja');
     if (meja) $('fMeja').value = meja;
 
-    // No. WhatsApp: hanya angka, maksimal 12 digit.
     $('fWa').addEventListener('input', function () {
         this.value = this.value.replace(/\D/g, '').slice(0, 12);
     });
 
     (async function init() {
+        // Tampilkan overlay pesanan aktif (kalau ada) SEGERA, tidak perlu
+        // menunggu katalog menu selesai dimuat — biar tidak "kelip" ke
+        // layar menu dulu sebelum overlay muncul.
+        restoreActiveOrderOverlay();
+
         try {
             await loadKatalog();
             renderChips();

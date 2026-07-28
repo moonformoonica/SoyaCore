@@ -222,7 +222,7 @@ loginForm.addEventListener('submit', async function (e) {
         if (result.user.role === 'manager') {
             window.location.href = '/dashboard';
         } else {
-            window.location.href = '/transaksi';
+            window.location.href = '/pesanan';
         }
 
     } catch (err) {

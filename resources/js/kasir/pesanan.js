@@ -161,7 +161,19 @@
             // ver2: pelanggan baru — daftar pakai nama + no WA yang diisi manual.
             const nama = document.getElementById('custNama').value.trim();
             const noWa = document.getElementById('custNoWa').value.trim();
-            if (nama && noWa) payload.customer = { nama, no_wa: noWa };
+
+            // WAJIB ada pelanggan — transaksi tanpa nama tidak diizinkan.
+            if (!nama || !noWa) {
+                // Pastikan form isian pelanggan tampil, lalu arahkan kasir.
+                document.getElementById('custFoundCard').style.display = 'none';
+                document.getElementById('custNewForm').style.display = 'block';
+                document.getElementById(nama ? 'custNoWa' : 'custNama').focus();
+                throw new Error(!nama
+                    ? 'Isi nama pelanggan dulu sebelum menambah item.'
+                    : 'Lengkapi No. WhatsApp pelanggan dulu.');
+            }
+
+            payload.customer = { nama, no_wa: noWa };
         }
 
         const res = await fetch(`${API_BASE}/transaksi`, fetchOptions({ method: 'POST', body: JSON.stringify(payload) }));
