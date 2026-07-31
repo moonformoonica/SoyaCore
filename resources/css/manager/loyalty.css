@@ -65,7 +65,7 @@
 /* ---------- REWARD CATALOG ---------- */
 .loyalty-manager .rewards{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:24px;}
 .loyalty-manager .reward-card{
-  background:rgba(247, 200, 92, 0.2); border:1px solid #F0BC3F; border-radius:var(--lm-radius);
+  background:#fff; border:1px solid var(--lm-line); border-radius:var(--lm-radius);
   padding:20px; position:relative;
 }
 .loyalty-manager .reward-card h4{margin:0 0 4px; font-size:15px; font-weight:700; color:#212B36;}
@@ -74,7 +74,7 @@
 .loyalty-manager .reward-tags{display:flex; flex-wrap:wrap; gap:6px;}
 .loyalty-manager .reward-tag{
   font-size:10.5px; font-weight:600; padding:4px 9px; border-radius:999px;
-  background:#fff; color:#B26A00; border:1px solid #F7C85C;
+  background:var(--lm-bg); color:var(--lm-ink-soft); border:1px solid var(--lm-line);
 }
 .loyalty-manager .reward-actions{position:absolute; top:16px; right:16px; display:flex; gap:6px;}
 .loyalty-manager .reward-actions button{

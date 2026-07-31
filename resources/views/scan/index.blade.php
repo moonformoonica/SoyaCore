@@ -10,6 +10,45 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     @vite('resources/css/scan/index.css')
+
+    <style>
+    /* FIX: paksa atribut hidden SELALU menang atas aturan display apapun
+       di scan/index.css. Ini penyebab icon jam pasir & centang numpuk
+       bareng — kemungkinan besar ada selector di scan/index.css (misal
+       untuk .done-check svg) yang men-set display:block/flex, dan itu
+       mengalahkan display:none bawaan dari atribut [hidden] karena
+       urutan/spesifisitas CSS. Aturan !important di bawah ini menjamin
+       [hidden] selalu benar-benar menyembunyikan elemennya. */
+    [hidden] { display: none !important; }
+
+    .hourglass-icon{ animation: hourglassFlip 3s ease-in-out infinite; }
+    @keyframes hourglassFlip{
+        0%, 40%   { transform: rotate(0deg); }
+        55%, 95%  { transform: rotate(180deg); }
+        100%      { transform: rotate(360deg); }
+    }
+
+    /* pasir atas mengecil & pasir bawah membesar, reset pas kebalik */
+    .sand-top{ transform-origin: 12px 4px; animation: sandTopShrink 3s ease-in-out infinite; }
+    @keyframes sandTopShrink{
+        0%        { transform: scaleY(1); }
+        35%       { transform: scaleY(.15); }
+        40%, 100% { transform: scaleY(1); }
+    }
+    .sand-bottom{ transform-origin: 12px 20px; animation: sandBottomGrow 3s ease-in-out infinite; }
+    @keyframes sandBottomGrow{
+        0%        { transform: scaleY(.15); }
+        35%       { transform: scaleY(1); }
+        40%, 100% { transform: scaleY(.15); }
+    }
+
+    /* garis butiran yang jatuh, muncul-hilang biar kesan netes */
+    .sand-drip{ opacity:0; animation: sandDrip .5s linear infinite; }
+    @keyframes sandDrip{
+        0%, 100% { opacity:0; }
+        50%      { opacity:1; }
+    }
+    </style>
 </head>
 <body>
 
@@ -133,14 +172,28 @@
 <div class="scan-done" id="doneOverlay" hidden>
     <div class="done-box">
 
-        <div class="done-check">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <div class="done-check" id="doneCheck">
+            <svg viewBox="0 0 24 24" class="hourglass-icon" id="doneIconWaiting">
+                <path d="M6 2h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                <path d="M6 22h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                <path d="M6 2c0 5 4 6 4 10s-4 5-4 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                <path d="M18 2c0 5-4 6-4 10s4 5 4 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+
+                {{-- pasir di ruang atas --}}
+                 <path d="M8.3 4c.3 3 2 4.3 3.7 6 1.7-1.7 3.4-3 3.7-6z" fill="currentColor" opacity=".85" class="sand-top"></path>
+                {{-- pasir di ruang bawah --}}
+                <path d="M8.3 20c.3 -3 2 -4.3 3.7 -6 1.7 1.7 3.4 3 3.7 6z" fill="currentColor" opacity=".85" class="sand-bottom"></path>
+                {{-- butiran yang jatuh di tengah --}}
+                <line x1="12" y1="10.5" x2="12" y2="13.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" class="sand-drip"></line>
+            </svg>
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" id="doneIconSuccess" hidden>
                 <path d="M20 6 9 17l-5-5"></path>
             </svg>
         </div>
 
-        <h2 class="done-title">Pesanan Berhasil! 🎉</h2>
-        <p class="done-sub">Pesananmu sudah masuk ke kasir</p>
+        <h2 class="done-title" id="doneTitle">Menunggu Pembayaran</h2>
+        <p class="done-sub" id="doneSub">Lakukan pembayaran di kasir dan pesananmu akan segera diproses</p>
 
         <div class="done-kode" id="doneKode">#A01</div>
 

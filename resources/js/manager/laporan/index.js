@@ -38,9 +38,20 @@
     let rfmChart = null;
     let revenueUkuranChart = null;
 
-    // ---- Revenue per Ukuran (sumber sama dengan dashboard) ----
+    // Query string rentang tanggal (start/end) dari input di header.
+    function rentangQS() {
+        const s = document.getElementById('exportStart').value;
+        const e = document.getElementById('exportEnd').value;
+        const p = new URLSearchParams();
+        if (s) p.set('start', s);
+        if (e) p.set('end', e);
+        const qs = p.toString();
+        return qs ? '?' + qs : '';
+    }
+
+    // ---- Revenue per Ukuran (ikut rentang tanggal) ----
     async function loadRevenueUkuran() {
-        const res = await fetch(`${API_BASE}/dashboard/revenue-ukuran`, fetchOptions());
+        const res = await fetch(`${API_BASE}/dashboard/revenue-ukuran${rentangQS()}`, fetchOptions());
         if (!res.ok) throw new Error('Gagal memuat data revenue ukuran.');
         return res.json();
     }
@@ -192,6 +203,11 @@
     document.getElementById('rfmSearch').addEventListener('input', debounce(renderRfmTable, 250));
     document.getElementById('switchSearch').addEventListener('input', debounce(initSwitch, 400));
 
+    // Ganti tanggal -> grafik revenue ukuran ikut menyesuaikan rentang.
+    // (RFM & Switch sengaja tetap snapshot penuh — lihat keterangan di panel.)
+    document.getElementById('exportStart').addEventListener('change', initRevenueUkuran);
+    document.getElementById('exportEnd').addEventListener('change', initRevenueUkuran);
+
     function debounce(fn, delay) {
         let timer;
         return function (...args) {
@@ -204,11 +220,31 @@
     // bukan link <a href> biasa yang tidak bawa token) ----
     document.getElementById('unduhBtn').addEventListener('click', async function () {
         const btn = this;
+        errorEl.style.display = 'none';
+
+        const s = document.getElementById('exportStart').value;
+        const e = document.getElementById('exportEnd').value;
+
+        // Validasi rentang di klien (backend juga menolak end < start).
+        if (s && e && s > e) {
+            showError('Tanggal akhir tidak boleh lebih awal dari tanggal mulai.');
+            return;
+        }
+
         btn.disabled = true;
         btn.textContent = 'Menyiapkan...';
 
         try {
-            const res = await fetch(`${API_BASE}/laporan/export`, fetchOptions());
+            // Cek dulu: ada data nggak di rentang ini? Kalau kosong, jangan unduh.
+            const cek = await fetch(`${API_BASE}/dashboard/ringkasan${rentangQS()}`, fetchOptions());
+            if (cek.ok) {
+                const cekJson = await cek.json();
+                if (cekJson.data_tersedia === false) {
+                    throw new Error('Tidak ada data di rentang tanggal itu — tidak bisa diunduh. (Data tersedia Juni–Juli.)');
+                }
+            }
+
+            const res = await fetch(`${API_BASE}/laporan/export${rentangQS()}`, fetchOptions());
             if (!res.ok) throw new Error('Gagal mengunduh laporan.');
 
             const blob = await res.blob();
