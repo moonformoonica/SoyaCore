@@ -52,13 +52,14 @@ class TransaksiDiskonTest extends TestCase
         ]);
 
         // Tambah 2 item berbeda: 2x10000 + 1x15000 = 35000
-        // (nomor_meja/platform/catatan kini atribut level item — revisi ERD)
+        // (platform/catatan/level_sugar/level_ice kini atribut level item;
+        // `nomor_meja` sudah dihapus dari kontrak)
         $respon = $this->postJson("/api/transaksi/{$id}/items", [
             'menu_id' => $this->susu->id,
             'qty' => 2,
-            'nomor_meja' => '5',
+            'catatan' => 'tanpa sedotan',
         ])->assertOk();
-        $this->assertSame('5', $respon->json('data.items.0.nomor_meja'));
+        $this->assertSame('tanpa sedotan', $respon->json('data.items.0.catatan'));
         $this->assertSame('kasir', $respon->json('data.items.0.sumber'));
 
         $respon = $this->postJson("/api/transaksi/{$id}/items", ['menu_id' => $this->tahu->id, 'qty' => 1])

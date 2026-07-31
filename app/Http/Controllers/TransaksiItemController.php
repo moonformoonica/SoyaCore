@@ -10,6 +10,7 @@ use App\Models\DetailTransaksi;
 use App\Models\Menu;
 use App\Models\Transaksi;
 use App\Services\TransaksiService;
+use App\Support\OpsiMinuman;
 
 class TransaksiItemController extends Controller
 {
@@ -30,10 +31,23 @@ class TransaksiItemController extends Controller
             );
         }
 
+        OpsiMinuman::pastikanBoleh(
+            $menu->ukuran,
+            $data['level_sugar'] ?? null,
+            $data['level_ice'] ?? null,
+            $menu->nama.' ('.($menu->ukuran ?: 'tanpa ukuran').')',
+        );
+
+        // Item digabung hanya kalau opsi peracikannya juga sama. Dua gelas
+        // Original dengan level sugar berbeda adalah dua instruksi berbeda buat
+        // barista, jadi menggabungkannya jadi satu baris qty 2 akan menghapus
+        // salah satu permintaan pelanggan.
         /** @var DetailTransaksi|null $item */
         $item = $transaksi->detailTransaksi()
             ->where('menu_id', $menu->id)
             ->where('is_reward', false)
+            ->where('level_sugar', $data['level_sugar'] ?? null)
+            ->where('level_ice', $data['level_ice'] ?? null)
             ->first();
 
         if ($item !== null) {
@@ -53,7 +67,7 @@ class TransaksiItemController extends Controller
 
         $this->service->recalculateTotals($transaksi);
 
-        return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
+        return new TransaksiResource($transaksi->load(['customer', 'user', 'dibayarOleh', 'detailTransaksi.menu']));
     }
 
     public function update(UpdateItemRequest $request, Transaksi $transaksi, int $item): TransaksiResource
@@ -63,6 +77,15 @@ class TransaksiItemController extends Controller
         $detail = $transaksi->detailTransaksi()->findOrFail($item);
 
         $data = $request->validated();
+
+        $detail->loadMissing('menu');
+        OpsiMinuman::pastikanBoleh(
+            $detail->menu?->ukuran,
+            $data['level_sugar'] ?? null,
+            $data['level_ice'] ?? null,
+            ($detail->menu?->nama ?? 'Item ini').' ('.($detail->menu?->ukuran ?: 'tanpa ukuran').')',
+        );
+
         $detail->update(array_merge([
             'qty' => $data['qty'],
             'subtotal' => $data['qty'] * $detail->harga_satuan,
@@ -70,7 +93,7 @@ class TransaksiItemController extends Controller
 
         $this->service->recalculateTotals($transaksi);
 
-        return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
+        return new TransaksiResource($transaksi->load(['customer', 'user', 'dibayarOleh', 'detailTransaksi.menu']));
     }
 
     public function destroy(Transaksi $transaksi, int $item): TransaksiResource
@@ -81,7 +104,7 @@ class TransaksiItemController extends Controller
 
         $this->service->recalculateTotals($transaksi);
 
-        return new TransaksiResource($transaksi->load(['customer', 'user', 'detailTransaksi.menu']));
+        return new TransaksiResource($transaksi->load(['customer', 'user', 'dibayarOleh', 'detailTransaksi.menu']));
     }
 
     /**
@@ -90,6 +113,6 @@ class TransaksiItemController extends Controller
      */
     private function fieldTambahan(array $data): array
     {
-        return array_intersect_key($data, array_flip(['nomor_meja', 'platform', 'catatan']));
+        return array_intersect_key($data, array_flip(['platform', 'catatan', 'level_sugar', 'level_ice']));
     }
 }

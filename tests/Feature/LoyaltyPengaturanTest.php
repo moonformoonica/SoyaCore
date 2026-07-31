@@ -231,19 +231,23 @@ class LoyaltyPengaturanTest extends TestCase
 
         $respon = $this->getJson('/api/pengaturan/loyalty/katalog')->assertOk();
 
-        $this->assertCount(7, $respon->json('data'));
+        $this->assertCount(8, $respon->json('data'));
         $this->assertSame(1000, $respon->json('meta.rupiah_per_poin'));
 
         $gratisOriginal = collect($respon->json('data'))->firstWhere('kode', 'gratis_original');
 
         $this->assertSame('Gratis Original', $gratisOriginal['label']);
         $this->assertSame('gratis_menu', $gratisOriginal['tipe']);
-        $this->assertSame(150, $gratisOriginal['poin']);
-        $this->assertSame(150, $gratisOriginal['poin_default']);
+        $this->assertSame(350, $gratisOriginal['poin']);
+        $this->assertSame(350, $gratisOriginal['poin_default']);
         $this->assertTrue($gratisOriginal['is_active']);
         $this->assertSame('Original', $gratisOriginal['menu_gratis']);
-        $this->assertSame(150 * 1000, $gratisOriginal['setara_belanja']);
+        $this->assertSame(350 * 1000, $gratisOriginal['setara_belanja']);
         $this->assertNull($gratisOriginal['diubah_pada']);
+        // reward gratis tidak mengenal plafon potongan
+        $this->assertNull($gratisOriginal['maks_potongan']);
+        // Rp 17.000 / 350 poin = 48,6 — di bawah acuan Rp 50/poin
+        $this->assertSame(48.6, $gratisOriginal['rupiah_per_poin_efektif']);
 
         // belum ada yang diedit -> tabel override masih kosong
         $this->assertDatabaseCount('katalog_redeem', 0);
@@ -257,8 +261,11 @@ class LoyaltyPengaturanTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.kode', 'gratis_original')
             ->assertJsonPath('data.poin', 200)
-            ->assertJsonPath('data.poin_default', 150) // bawaan tetap terlihat sebagai pembanding
-            ->assertJsonPath('data.setara_belanja', 200000);
+            ->assertJsonPath('data.poin_default', 350) // bawaan tetap terlihat sebagai pembanding
+            ->assertJsonPath('data.setara_belanja', 200000)
+            // Rp 17.000 / 200 poin = 85 — jauh di atas Rp 50, tanda reward
+            // kemurahan yang memang harus terlihat manager
+            ->assertJsonPath('data.rupiah_per_poin_efektif', 85);
 
         $this->assertDatabaseHas('katalog_redeem', [
             'kode' => 'gratis_original',
@@ -266,7 +273,7 @@ class LoyaltyPengaturanTest extends TestCase
             'updated_by' => $manager->id,
         ]);
 
-        // 175 poin: cukup untuk harga lama (150), kurang untuk harga baru (200)
+        // 175 poin: kurang untuk harga baru (200)
         $this->loyalty->update(['poin' => 175]);
 
         $this->actingAsKasir();
@@ -290,7 +297,7 @@ class LoyaltyPengaturanTest extends TestCase
         $this->patchJson('/api/pengaturan/loyalty/katalog/diskon_10', ['is_active' => false])
             ->assertOk()
             ->assertJsonPath('data.is_active', false)
-            ->assertJsonPath('data.poin', 150); // poin tidak ikut berubah
+            ->assertJsonPath('data.poin', 100); // poin tidak ikut berubah
 
         $this->loyalty->update(['poin' => 400]);
 
@@ -318,12 +325,14 @@ class LoyaltyPengaturanTest extends TestCase
         $this->actingAsKasir();
         $id = $this->transaksiPending(2); // subtotal 50.000
 
+        // 10% dari 50.000 = 5.000, tepat di plafon (belum mengikat)
         $this->postJson("/api/transaksi/{$id}/redeem-poin", ['kode_redeem' => 'diskon_10'])
             ->assertOk()
+            ->assertJsonPath('data.diskon_persen', 10)
             ->assertJsonPath('data.diskon_nilai', 5000)
             ->assertJsonPath('data.total', 45000);
 
-        $this->assertSame(250, $this->loyalty->fresh()->poin);
+        $this->assertSame(300, $this->loyalty->fresh()->poin);
     }
 
     public function test_patch_sebagian_tidak_menghapus_field_lain(): void
@@ -356,10 +365,10 @@ class LoyaltyPengaturanTest extends TestCase
 
         $this->assertSame(10000, $respon->json('meta.rupiah_per_poin'));
 
-        // 150 poin di rate 10.000 = belanja Rp 1,5 juta — angka inilah yang
+        // 350 poin di rate 10.000 = belanja Rp 3,5 juta — angka inilah yang
         // memberi tahu manager bahwa poin katalog perlu ikut diturunkan
         $gratisOriginal = collect($respon->json('data'))->firstWhere('kode', 'gratis_original');
-        $this->assertSame(1_500_000, $gratisOriginal['setara_belanja']);
+        $this->assertSame(3_500_000, $gratisOriginal['setara_belanja']);
     }
 
     public function test_kode_katalog_tidak_dikenal_404(): void
@@ -390,6 +399,6 @@ class LoyaltyPengaturanTest extends TestCase
 
         // tidak ada override yang tersimpan -> katalog masih di nilai bawaan
         $this->assertDatabaseCount('katalog_redeem', 0);
-        $this->assertSame(150, LoyaltyRedemptionCatalog::find('diskon_10')['poin']);
+        $this->assertSame(100, LoyaltyRedemptionCatalog::find('diskon_10')['poin']);
     }
 }

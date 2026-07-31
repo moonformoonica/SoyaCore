@@ -5,9 +5,11 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\LaporanKasirController;
 use App\Http\Controllers\LoyaltyController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PembatalanController;
 use App\Http\Controllers\PengaturanLoyaltyController;
 use App\Http\Controllers\PengaturanTokoController;
 use App\Http\Controllers\TransaksiController;
@@ -58,7 +60,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('transaksi/{transaksi}/bayar', [TransaksiController::class, 'bayar']);
     // alias sesuai penamaan M3 — action yang sama dengan /bayar
     Route::post('transaksi/{transaksi}/tandai-lunas', [TransaksiController::class, 'bayar']);
+    // Alias lama pembatalan penuh — sekarang ikut melewati alur pembatalan
+    // baru (poin redeem dikembalikan, dokumen pembatalan dicatat, proyeksi
+    // laporan disinkronkan).
     Route::post('transaksi/{transaksi}/batal', [TransaksiController::class, 'batal']);
+
+    // Pembatalan / koreksi pesanan yang salah — BUKAN pengembalian uang.
+    // Kasir ikut boleh karena dialah yang berhadapan dengan pelanggan saat
+    // kesalahan pesanan ketahuan; jejaknya dijaga oleh alasan yang wajib diisi
+    // dan pencatatan akun pemroses.
+    Route::post('transaksi/{transaksi}/pembatalan', [PembatalanController::class, 'store']);
+    Route::get('transaksi/{transaksi}/pembatalan', [PembatalanController::class, 'index']);
 
     // Pengaturan loyalty — BACA saja di sini. Kasir ikut butuh: rate dipakai
     // menampilkan estimasi poin di struk, katalog dipakai merender tombol
@@ -107,6 +119,17 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('switch', [DashboardController::class, 'switch']);
         });
 
+        // Perbandingan antar akun kasir + rekap pembatalan seluruh toko.
+        // Manager-only: keduanya menyandingkan performa akun orang lain.
+        Route::get('laporan/kasir', [LaporanKasirController::class, 'index']);
+        Route::get('pembatalan', [PembatalanController::class, 'semua']);
+
         Route::get('laporan/export', [ExportController::class, 'export']);
+
+        // QRIS statis merchant & QR menu meja — keduanya menyentuh identitas
+        // toko, jadi bukan wewenang kasir.
+        Route::post('pengaturan/toko/qris', [PengaturanTokoController::class, 'uploadQris']);
+        Route::delete('pengaturan/toko/qris', [PengaturanTokoController::class, 'hapusQris']);
+        Route::get('pengaturan/toko/qr-menu', [PengaturanTokoController::class, 'qrMenu']);
     });
 });

@@ -53,7 +53,7 @@ class DashboardController extends Controller
 
         return $this->envelope(
             $request->grain(), $start, $end, $ada,
-            $this->query->revenueUkuran($start, $end),
+            $this->query->revenueUkuran($start, $end, $request->sembunyikanTidakDiketahui()),
             'Khusus minuman — dessert & cookies (Cup/Pack) tidak termasuk.',
         );
     }
@@ -72,7 +72,10 @@ class DashboardController extends Controller
         [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
         $ada = $this->query->adaData($start, $end);
 
-        return $this->envelope($request->grain(), $start, $end, $ada, $this->query->platform($start, $end));
+        return $this->envelope(
+            $request->grain(), $start, $end, $ada,
+            $this->query->platform($start, $end, $request->sembunyikanTidakDiketahui()),
+        );
     }
 
     public function loyalty(LaporanRequest $request): JsonResponse

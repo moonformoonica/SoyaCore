@@ -7,17 +7,22 @@ use App\Http\Requests\UpdateMenuRequest;
 use App\Http\Resources\MenuResource;
 use App\Models\Kategori;
 use App\Models\Menu;
+use App\Support\GolonganUkuran;
+use App\Support\OpsiMinuman;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MenuController extends Controller
 {
-   
+    /**
+     * Katalog publik SoyaScan.
+     */
     public function katalog(): JsonResponse
     {
         $kategori = Kategori::with([
-            'menu' => fn ($q) => $q->where('is_active', true)->orderBy('nama')->orderBy('ukuran'),
+            'menu' => fn ($q) => $q->where('is_active', true)->orderBy('nama'),
         ])->orderBy('nama')->get();
 
         return response()->json([
@@ -27,14 +32,28 @@ class MenuController extends Controller
                 ->map(fn ($k) => [
                     'id' => $k->id,
                     'nama' => $k->nama,
-                    'menu' => $k->menu->map(fn ($m) => [
+                    'menu' => $this->urutkanUkuran($k->menu)->map(fn ($m) => [
                         'id' => $m->id,
                         'nama' => $m->nama,
                         'rasa' => $m->rasa,
                         'ukuran' => $m->ukuran,
                         'harga' => $m->harga,
+                        // Frontend cukup membaca golongan + flag; ia tidak perlu
+                        // tahu ukuran mana termasuk apa, dan tidak boleh
+                        // menebaknya dari string.
+                        'golongan_ukuran' => GolonganUkuran::dari($m->ukuran),
+                        'bisa_pilih_sugar' => OpsiMinuman::bisaPilihSugar($m->ukuran),
+                        'bisa_pilih_ice' => OpsiMinuman::bisaPilihIce($m->ukuran),
                     ])->values(),
                 ]),
+            'meta' => [
+                // Daftar opsi dikirim dari sini supaya frontend merender
+                // tombol/dropdown-nya dari satu sumber, tidak menyalin label
+                // yang lalu lepas sinkron dengan validasi backend.
+                'opsi_sugar' => OpsiMinuman::daftarSugar(),
+                'opsi_ice' => OpsiMinuman::daftarIce(),
+                'golongan_ukuran' => GolonganUkuran::semua(),
+            ],
         ]);
     }
 
@@ -50,7 +69,18 @@ class MenuController extends Controller
             $query->where('is_active', filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN));
         }
 
-        return MenuResource::collection($query->orderBy('nama')->orderBy('rasa')->get());
+        $menu = $this->urutkanUkuran($query->orderBy('nama')->orderBy('rasa')->get());
+
+        // Dipakai halaman Edit Menu untuk memisahkan kolom cup dan botol.
+        // Difilter di PHP karena golongan diturunkan dari GolonganUkuran, bukan
+        // dari kolom database — kalau ditulis sebagai WHERE, aturannya jadi ada
+        // di dua tempat.
+        if ($request->filled('golongan')) {
+            $golongan = (string) $request->query('golongan');
+            $menu = $menu->filter(fn (Menu $m) => GolonganUkuran::dari($m->ukuran) === $golongan)->values();
+        }
+
+        return MenuResource::collection($menu);
     }
 
     public function store(StoreMenuRequest $request): MenuResource
@@ -87,5 +117,27 @@ class MenuController extends Controller
         $menu->delete();
 
         return response()->json(['message' => 'Menu berhasil dihapus.']);
+    }
+
+    /**
+     * Mengurutkan ukuran menurut besar gelas/kemasan (Hot → Reguler → Large →
+     * 250ml → 500ml → 1000ml), bukan alfabetis.
+     *
+     * `orderBy('ukuran')` di SQL menghasilkan `1000ml, 250ml, 500ml, Hot,
+     * Large, Reguler` — urutan yang tidak berarti apa pun buat manager yang
+     * sedang membandingkan harga antar ukuran. Diurutkan di PHP karena
+     * urutannya didefinisikan di {@see GolonganUkuran}, dan menyalinnya ke
+     * ekspresi CASE per query berarti menjaga urutan yang sama di beberapa
+     * tempat sekaligus.
+     *
+     * `sortBy` stabil, jadi urutan `nama`/`rasa` dari SQL tetap terjaga sebagai
+     * pengurutan sekunder.
+     *
+     * @param  Collection<int, Menu>  $menu
+     * @return Collection<int, Menu>
+     */
+    private function urutkanUkuran(Collection $menu): Collection
+    {
+        return $menu->sortBy(fn (Menu $m) => GolonganUkuran::urutan($m->ukuran))->values();
     }
 }

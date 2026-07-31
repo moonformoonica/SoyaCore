@@ -3,13 +3,49 @@
 namespace App\Services;
 
 use App\Models\LaporanTransaksi;
+use App\Support\KalenderIndonesia;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class LaporanQuery
 {
-
     private const UKURAN_NON_MINUMAN = ['Cup', 'Pack'];
+
+    /**
+     * Label untuk baris yang nilai pengelompokannya kosong (`NULL` atau string
+     * kosong). Tanpa label, frontend menerima key kosong dan chart-nya
+     * merendernya sebagai batang tak bernama — inilah bucket "other" yang
+     * diminta hilang.
+     *
+     * Datanya TIDAK dihapus dari database: menyembunyikannya adalah keputusan
+     * tampilan, dan angka ringkasan harus tetap bisa direkonsiliasi dengan
+     * total keseluruhan.
+     */
+    public const LABEL_TIDAK_DIKETAHUI = 'Tidak diketahui';
+
+    /**
+     * Filter kasir opsional. Diterapkan di {@see self::base()} supaya SATU
+     * sekali pasang otomatis berlaku ke seluruh agregasi — ringkasan, time
+     * series, revenue per ukuran, produk terlaris — tanpa tiap method perlu
+     * tahu ada filter ini.
+     */
+    private ?int $kasirUserId = null;
+
+    /**
+     * Salinan yang tersaring ke satu akun kasir. Mengembalikan instance baru,
+     * bukan mengubah yang ini: LaporanQuery diinject ke controller dari
+     * container, dan menyimpan state filter di sana akan bocor ke request lain
+     * pada worker yang sama.
+     */
+    public function untukKasir(?int $kasirUserId): self
+    {
+        $klon = clone $this;
+        $klon->kasirUserId = $kasirUserId;
+
+        return $klon;
+    }
 
     /**
      * @return array{0: ?string, 1: ?string}
@@ -54,7 +90,7 @@ class LaporanQuery
     }
 
     /**
-     * @return list<array{periode: string, revenue: int, transaksi: int, qty: int}>
+     * @return list<array{periode: string, periode_label: string, hari: ?string, revenue: int, transaksi: int, qty: int}>
      */
     public function timeSeries(?string $start, ?string $end, string $grain): array
     {
@@ -65,13 +101,13 @@ class LaporanQuery
         $buckets = [];
         foreach ($rows as $row) {
             $key = $this->bucketKey($row->tanggal, $grain);
-            if (! isset($buckets[$key])) {
-                $buckets[$key] = ['periode' => $key, 'revenue' => 0, 'transaksi' => 0, 'qty' => 0];
-            }
+            $buckets[$key] ??= $this->bucketKosong($key, $grain);
             $buckets[$key]['revenue'] += (int) $row->total;
             $buckets[$key]['transaksi'] += 1;
             $buckets[$key]['qty'] += (int) $row->qty;
         }
+
+        $buckets = $this->isiPeriodeKosong($buckets, $start, $end, $grain);
 
         ksort($buckets);
 
@@ -81,27 +117,48 @@ class LaporanQuery
     /**
      * @return list<array<string, mixed>>
      */
-    public function revenueUkuran(?string $start, ?string $end): array
+    public function revenueUkuran(?string $start, ?string $end, bool $sembunyikanTidakDiketahui = false): array
     {
         $rows = $this->base($start, $end)
-            ->whereNotIn('ukuran', self::UKURAN_NON_MINUMAN)
+            // Dessert & cookies (`Cup`/`Pack`) sengaja di luar cakupan endpoint
+            // ini. Baris ber-`ukuran` NULL adalah hal ketiga — ukurannya
+            // memang tidak terekam — dan harus tetap ikut supaya totalnya bisa
+            // direkonsiliasi. `NOT IN` sendirian membuangnya diam-diam, karena
+            // `NULL NOT IN (...)` bernilai NULL, bukan true.
+            ->where(fn (Builder $q) => $q
+                ->whereNull('ukuran')
+                ->orWhereNotIn('ukuran', self::UKURAN_NON_MINUMAN))
             ->selectRaw('ukuran, sum(qty) as jumlah_terjual, sum(total) as total_revenue, count(*) as jumlah_transaksi')
             ->groupBy('ukuran')
-            ->orderByRaw('sum(total) desc')
             ->get();
 
-        return $rows->map(function ($r) {
-            $jumlahTransaksi = (int) $r->jumlah_transaksi;
-            $totalRevenue = (int) $r->total_revenue;
-
-            return [
-                'ukuran' => $r->ukuran,
+        $buckets = $this->gabungBucketTidakDiketahui(
+            $rows,
+            'ukuran',
+            fn ($r) => [
                 'jumlah_terjual' => (int) $r->jumlah_terjual,
-                'total_revenue' => $totalRevenue,
-                'jumlah_transaksi' => $jumlahTransaksi,
-                'rata_rata_transaksi' => $jumlahTransaksi > 0 ? (int) round($totalRevenue / $jumlahTransaksi) : 0,
+                'total_revenue' => (int) $r->total_revenue,
+                'jumlah_transaksi' => (int) $r->jumlah_transaksi,
+            ],
+            $sembunyikanTidakDiketahui,
+        );
+
+        $hasil = [];
+        foreach ($buckets as $label => $angka) {
+            $hasil[] = [
+                'ukuran' => $label,
+                'jumlah_terjual' => $angka['jumlah_terjual'],
+                'total_revenue' => $angka['total_revenue'],
+                'jumlah_transaksi' => $angka['jumlah_transaksi'],
+                'rata_rata_transaksi' => $angka['jumlah_transaksi'] > 0
+                    ? (int) round($angka['total_revenue'] / $angka['jumlah_transaksi'])
+                    : 0,
             ];
-        })->all();
+        }
+
+        usort($hasil, fn ($a, $b) => $b['total_revenue'] <=> $a['total_revenue']);
+
+        return $hasil;
     }
 
     /**
@@ -130,20 +187,32 @@ class LaporanQuery
     /**
      * @return list<array<string, mixed>>
      */
-    public function platform(?string $start, ?string $end): array
+    public function platform(?string $start, ?string $end, bool $sembunyikanTidakDiketahui = false): array
     {
         $rows = $this->base($start, $end)
             ->selectRaw('platform, count(*) as transaksi, sum(total) as revenue, sum(qty) as qty')
             ->groupBy('platform')
-            ->orderByRaw('sum(total) desc')
             ->get();
 
-        return $rows->map(fn ($r) => [
-            'platform' => $r->platform,
-            'transaksi' => (int) $r->transaksi,
-            'revenue' => (int) $r->revenue,
-            'qty' => (int) $r->qty,
-        ])->all();
+        $buckets = $this->gabungBucketTidakDiketahui(
+            $rows,
+            'platform',
+            fn ($r) => [
+                'transaksi' => (int) $r->transaksi,
+                'revenue' => (int) $r->revenue,
+                'qty' => (int) $r->qty,
+            ],
+            $sembunyikanTidakDiketahui,
+        );
+
+        $hasil = [];
+        foreach ($buckets as $label => $angka) {
+            $hasil[] = ['platform' => $label] + $angka;
+        }
+
+        usort($hasil, fn ($a, $b) => $b['revenue'] <=> $a['revenue']);
+
+        return $hasil;
     }
 
     /**
@@ -182,6 +251,10 @@ class LaporanQuery
             $query->whereDate('tanggal', '<=', $end);
         }
 
+        if ($this->kasirUserId !== null) {
+            $query->where('kasir_user_id', $this->kasirUserId);
+        }
+
         return $query;
     }
 
@@ -193,5 +266,126 @@ class LaporanQuery
             'tahunan' => $tanggal->format('Y'),
             default => $tanggal->format('Y-m-d'), // harian
         };
+    }
+
+    /**
+     * `periode` (key mentah) TIDAK dihapus — ia yang dipakai sorting dan
+     * sebagai key stabil di frontend. `periode_label` dan `hari` ditambahkan di
+     * sebelahnya sebagai teks siap tampil.
+     *
+     * @return array{periode: string, periode_label: string, hari: ?string, revenue: int, transaksi: int, qty: int}
+     */
+    private function bucketKosong(string $key, string $grain): array
+    {
+        $awal = $this->awalBucket($key, $grain);
+
+        return [
+            'periode' => $key,
+            'periode_label' => match ($grain) {
+                'mingguan' => KalenderIndonesia::labelMingguan($awal),
+                'bulanan' => KalenderIndonesia::labelBulanan($awal),
+                'tahunan' => $key,
+                default => KalenderIndonesia::labelHarian($awal),
+            },
+            // Nama hari hanya bermakna pada grain harian. Bucket mingguan
+            // mencakup tujuh hari sekaligus, jadi mengisinya akan menyesatkan.
+            'hari' => $grain === 'harian' ? KalenderIndonesia::namaHari($awal) : null,
+            'revenue' => 0,
+            'transaksi' => 0,
+            'qty' => 0,
+        ];
+    }
+
+    private function awalBucket(string $key, string $grain): Carbon
+    {
+        return match ($grain) {
+            'bulanan' => Carbon::createFromFormat('Y-m-d', $key.'-01')->startOfDay(),
+            'tahunan' => Carbon::createFromFormat('Y-m-d', $key.'-01-01')->startOfDay(),
+            default => Carbon::createFromFormat('Y-m-d', $key)->startOfDay(),
+        };
+    }
+
+    /**
+     * Hari (atau minggu/bulan/tahun) tanpa transaksi tetap dikeluarkan sebagai
+     * bucket bernilai 0, bukan dilewati. Grafik tren yang melompati hari kosong
+     * menyambung dua titik yang berjauhan dan membaca naik-turun yang tidak
+     * pernah terjadi.
+     *
+     * @param  array<string, array<string, mixed>>  $buckets
+     * @return array<string, array<string, mixed>>
+     */
+    private function isiPeriodeKosong(array $buckets, ?string $start, ?string $end, string $grain): array
+    {
+        // Rentang yang sama sekali tidak punya transaksi tetap mengembalikan
+        // array kosong, bukan deretan bucket bernilai 0. Yang dibutuhkan grafik
+        // adalah hari kosong DI ANTARA hari yang ada isinya; membangun grafik
+        // rata nol untuk rentang tanpa data sama sekali cuma menyembunyikan
+        // fakta itu — dan `data_tersedia: false` sudah menyampaikannya.
+        if ($buckets === []) {
+            return [];
+        }
+
+        // Batas dari filter kalau ada; kalau tidak, dari data yang benar-benar
+        // ada.
+        $start ??= min(array_keys($buckets));
+        $end ??= max(array_keys($buckets));
+
+        $kursor = $this->awalBucket($this->bucketKey(Carbon::parse($start), $grain), $grain);
+        $batas = Carbon::parse($end);
+
+        $langkah = match ($grain) {
+            'mingguan' => fn (Carbon $c) => $c->addWeek(),
+            'bulanan' => fn (Carbon $c) => $c->addMonth(),
+            'tahunan' => fn (Carbon $c) => $c->addYear(),
+            default => fn (Carbon $c) => $c->addDay(),
+        };
+
+        while ($kursor->lessThanOrEqualTo($batas)) {
+            $key = $this->bucketKey($kursor, $grain);
+            $buckets[$key] ??= $this->bucketKosong($key, $grain);
+            $langkah($kursor);
+        }
+
+        return $buckets;
+    }
+
+    /**
+     * Menggabungkan baris ber-nilai kosong (`NULL` maupun string kosong)
+     * menjadi satu bucket berlabel {@see self::LABEL_TIDAK_DIKETAHUI}.
+     *
+     * Digabung di PHP, bukan dengan `COALESCE` di SQL, karena NULL dan '' bisa
+     * sama-sama ada dan `GROUP BY` menghasilkan dua baris terpisah untuk hal
+     * yang sama.
+     *
+     * @param  Collection<int, Model>  $rows
+     * @param  callable(mixed): array<string, int>  $angka
+     * @return array<string, array<string, int>>
+     */
+    private function gabungBucketTidakDiketahui(
+        $rows,
+        string $kolom,
+        callable $angka,
+        bool $sembunyikan,
+    ): array {
+        $buckets = [];
+
+        foreach ($rows as $row) {
+            $nilai = $row->{$kolom};
+            $kosong = $nilai === null || trim((string) $nilai) === '';
+
+            // Dibuang SEBELUM diakumulasi, supaya ia juga tidak ikut
+            // menghitung persentase di sisi frontend maupun total di sini.
+            if ($kosong && $sembunyikan) {
+                continue;
+            }
+
+            $label = $kosong ? self::LABEL_TIDAK_DIKETAHUI : (string) $nilai;
+
+            foreach ($angka($row) as $kunci => $jumlah) {
+                $buckets[$label][$kunci] = ($buckets[$label][$kunci] ?? 0) + $jumlah;
+            }
+        }
+
+        return $buckets;
     }
 }

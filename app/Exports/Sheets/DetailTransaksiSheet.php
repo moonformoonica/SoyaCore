@@ -11,9 +11,13 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 
 class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, WithTitle
 {
+    /** Baris impor CSV historis memang tidak merekam kasir. */
+    private const KASIR_TIDAK_ADA = '—';
+
     public function __construct(
         private readonly ?string $start,
         private readonly ?string $end,
+        private readonly ?int $kasirUserId = null,
     ) {}
 
     public function title(): string
@@ -31,6 +35,9 @@ class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, With
         if ($this->end !== null) {
             $query->whereDate('tanggal', '<=', $this->end);
         }
+        if ($this->kasirUserId !== null) {
+            $query->where('kasir_user_id', $this->kasirUserId);
+        }
 
         return $query;
     }
@@ -41,7 +48,7 @@ class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, With
     public function headings(): array
     {
         return [
-            'ID Transaksi', 'Tanggal', 'Platform', 'Nama Pelanggan', 'No WhatsApp',
+            'ID Transaksi', 'Tanggal', 'Platform', 'Kasir', 'Nama Pelanggan', 'No WhatsApp',
             'Nama Produk', 'Rasa', 'Ukuran', 'Jumlah (pcs)', 'Harga Satuan (Rp)',
             'Total (Rp)', 'Poin Loyalty', 'Catatan',
         ];
@@ -55,8 +62,13 @@ class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, With
     {
         return [
             $row->kode,
+            // Sudah tanggal WIB sejak diproyeksikan/diimpor, jadi tidak perlu
+            // dikonversi lagi di sini.
             $row->tanggal->format('Y-m-d'),
             $row->platform,
+            // Sel kosong terbaca sebagai data hilang, sedangkan ini memang
+            // transaksi dari sebelum SoyaCore dipakai — jadi diberi tanda.
+            $row->kasir_nama ?? self::KASIR_TIDAK_ADA,
             $row->nama_pelanggan,
             $row->no_wa,
             $row->nama_produk,

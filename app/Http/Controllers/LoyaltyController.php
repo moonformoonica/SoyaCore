@@ -23,10 +23,20 @@ class LoyaltyController extends Controller
             );
         }
 
+        $loyalty = $customer->loyalty;
+
+        // Saldo yang sudah lewat masa berlakunya dinolkan di sini juga, bukan
+        // cuma disembunyikan — pelanggan dan pembukuan harus melihat angka yang
+        // sama dengan yang berlaku saat redeem.
+        $loyalty?->hanguskanBilaKedaluwarsa();
+
         return response()->json([
             'nomor_wa' => $customer->no_wa,
             'nama' => $customer->nama,
-            'poin' => (int) ($customer->loyalty?->poin ?? 0),
+            'poin' => (int) ($loyalty?->poin ?? 0),
+            // Dikirim supaya UI kasir bisa mengingatkan pelanggan sebelum
+            // poinnya hangus. Null = belum berlaku kedaluwarsa.
+            'poin_kedaluwarsa_pada' => $loyalty?->poin_kedaluwarsa_pada?->toIso8601String(),
         ]);
     }
 }

@@ -198,11 +198,22 @@
                         data-min="{{ $item['min_subtotal'] ?? 0 }}">
                     <span class="ri-info">
                         <span class="ri-label">{{ $item['label'] }}</span>
-                        @if (($item['min_subtotal'] ?? 0) > 0)
-                            <span class="ri-syarat">min. belanja Rp {{ number_format($item['min_subtotal'], 0, ',', '.') }}</span>
-                        @else
-                            <span class="ri-syarat">{{ $item['tipe'] === 'diskon' ? 'Potongan harga' : 'Menu gratis' }}</span>
-                        @endif
+                        @php
+                            // Plafon ikut ditampilkan karena inilah yang paling
+                            // sering ditanya pelanggan di pesanan besar:
+                            // "kenapa diskon 50% cuma potong Rp 25.000?"
+                            $syarat = [];
+                            if (($item['min_subtotal'] ?? 0) > 0) {
+                                $syarat[] = 'min. belanja Rp '.number_format($item['min_subtotal'], 0, ',', '.');
+                            }
+                            if (($item['maks_potongan'] ?? null) !== null) {
+                                $syarat[] = 'maks. potong Rp '.number_format($item['maks_potongan'], 0, ',', '.');
+                            }
+                            if ($syarat === []) {
+                                $syarat[] = $item['tipe'] === 'diskon' ? 'Potongan harga' : 'Menu gratis';
+                            }
+                        @endphp
+                        <span class="ri-syarat">{{ implode(' · ', $syarat) }}</span>
                     </span>
                     <span class="ri-poin">{{ $item['poin'] }} poin</span>
                 </button>

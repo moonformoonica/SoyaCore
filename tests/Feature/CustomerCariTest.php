@@ -162,6 +162,49 @@ class CustomerCariTest extends TestCase
         $this->assertSame($polos, $berwildcard);
     }
 
+    /**
+     * Kontrak yang dipegang UI: satu kotak nomor harus menemukan pelanggan
+     * terdaftar baik dari nomor LENGKAP (ejaan apa pun) maupun dari 4 DIGIT
+     * TERAKHIR — itu yang biasanya disebut pelanggan di konter.
+     */
+    public function test_nomor_penuh_dan_4_digit_terakhir_menemukan_pelanggan_yang_sama(): void
+    {
+        // 1) Nomor lengkap, empat ejaan berbeda.
+        foreach (['081234567890', '0812-3456-7890', '+62 812 3456 7890', '6281234567890'] as $ketikan) {
+            $this->getJson('/api/customers/cari?no_wa='.urlencode($ketikan))
+                ->assertOk()
+                ->assertJsonPath('data.0.nama', 'Budi Santoso')
+                ->assertJsonPath('data.0.no_wa', '6281234567890')
+                ->assertJsonPath('data.0.poin', 400);
+        }
+
+        // 2) Empat digit terakhir.
+        $this->getJson('/api/customers/cari?no_wa=7890')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.nama', 'Budi Santoso');
+
+        // Nomor lain dengan ekor berbeda tidak ikut terbawa.
+        $this->getJson('/api/customers/cari?no_wa=9999')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.nama', 'Budiman');
+    }
+
+    /**
+     * `LIKE` case-sensitive di PostgreSQL. Tanpa `LOWER()` di kedua sisi, test
+     * ini lulus di SQLite lokal tapi kasir di produksi tidak akan menemukan
+     * "Budi Santoso" saat mengetik "budi".
+     */
+    public function test_cari_nama_tidak_bergantung_huruf_besar_kecil(): void
+    {
+        foreach (['budi', 'BUDI', 'Budi', 'sAnToSo'] as $ketikan) {
+            $this->getJson('/api/customers/cari?nama='.$ketikan)
+                ->assertOk()
+                ->assertJsonPath('data.0.nama', 'Budi Santoso');
+        }
+    }
+
     public function test_cari_nama_parsial_bisa_mengembalikan_banyak_hasil(): void
     {
         $this->getJson('/api/customers/cari?nama=budi')

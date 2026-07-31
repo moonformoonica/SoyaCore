@@ -6,11 +6,11 @@
 
    Perubahan dari versi sebelumnya:
    - Pengelolaan "Tingkatan Membership" dihapus dari halaman ini.
-   - Katalog reward sekarang FIXED (7 jenis), detail (nama, ikon,
+   - Katalog reward sekarang FIXED (8 jenis), detail (nama, ikon,
      ukuran minuman yang tersedia, apakah butuh minimal pembelian)
      dikunci di REWARD_CATALOG. Manager hanya bisa:
        a) mengaktifkan/menambah salah satu jenis dari katalog
-       b) mengatur poin & minimal pembelian per jenis
+       b) mengatur poin, minimal pembelian & maksimal potongan per jenis
        c) menghapus jenis yang sedang aktif
    ===================================================================== */
 (function () {
@@ -20,16 +20,23 @@
   const REWARD_CATALOG = {
     diskon_10: {
       name: 'Voucher Diskon 10%', icon: '🏷️',
-      desc: 'Berlaku untuk semua menu, tanpa minimum pembelian.',
+      desc: 'Berlaku untuk semua menu, dengan minimum pembelian.',
+      needsMinPurchase: true, hasMaxDiscount: true,
     },
     diskon_20: {
       name: 'Voucher Diskon 20%', icon: '🏷️',
-      desc: 'Berlaku untuk semua menu, tanpa minimum pembelian.',
+      desc: 'Berlaku untuk semua menu, dengan minimum pembelian.',
+      needsMinPurchase: true, hasMaxDiscount: true,
+    },
+    diskon_30: {
+      name: 'Voucher Diskon 30%', icon: '🏷️',
+      desc: 'Berlaku untuk semua menu, dengan minimum pembelian.',
+      needsMinPurchase: true, hasMaxDiscount: true,
     },
     diskon_50: {
       name: 'Voucher Diskon 50%', icon: '🏷️',
       desc: 'Diskon besar, berlaku dengan minimum pembelian.',
-      needsMinPurchase: true,
+      needsMinPurchase: true, hasMaxDiscount: true,
     },
     gratis_original: {
       name: 'Gratis Soy Milk Original', icon: '🥛',
@@ -52,19 +59,22 @@
       sizes: ['Regular'],
     },
   };
-  const MIN_REDEEM_POINTS = 150;
+  // Sama dengan batas bawah backend (KatalogRedeem::POIN_MIN). Pagar salah
+  // ketik saja — berapa poin yang wajar adalah keputusan manager.
+  const MIN_REDEEM_POINTS = 1;
 
   /* ================= STATE ================= */
   // rewards = jenis dari katalog yang sedang aktif ditawarkan ke member.
   // "points" & "minPurchase" boleh diatur manager, sisanya ikut REWARD_CATALOG[key].
   let rewards = [
-    { key: 'diskon_10', points: 150 },
-    { key: 'diskon_20', points: 250 },
-    { key: 'diskon_50', points: 350, minPurchase: 50000 },
-    { key: 'gratis_original', points: 150 },
-    { key: 'gratis_coffee_kopi', points: 250 },
-    { key: 'gratis_honey_lemon', points: 250 },
-    { key: 'gratis_mango_monggo', points: 250 },
+    { key: 'diskon_10', points: 100, minPurchase: 25000, maxDiscount: 5000 },
+    { key: 'diskon_20', points: 200, minPurchase: 25000, maxDiscount: 10000 },
+    { key: 'diskon_30', points: 300, minPurchase: 25000, maxDiscount: 15000 },
+    { key: 'diskon_50', points: 500, minPurchase: 25000, maxDiscount: 25000 },
+    { key: 'gratis_original', points: 350 },
+    { key: 'gratis_coffee_kopi', points: 450 },
+    { key: 'gratis_honey_lemon', points: 400 },
+    { key: 'gratis_mango_monggo', points: 400 },
   ];
 
   // Diisi dari data transaksi asli (GET /api/transaksi) di loadHistory().
@@ -177,13 +187,16 @@
   }
 
   /* ================= RENDER: REWARDS ================= */
-  function rewardTags(catalogItem, minPurchase) {
+  function rewardTags(catalogItem, minPurchase, maxDiscount) {
     const tags = [];
     if (catalogItem.sizes) {
       tags.push(`<span class="reward-tag">Ukuran: ${catalogItem.sizes.join(' / ')}</span>`);
     }
     if (catalogItem.needsMinPurchase && minPurchase) {
       tags.push(`<span class="reward-tag">Min. belanja ${fmtRp(minPurchase)}</span>`);
+    }
+    if (catalogItem.hasMaxDiscount && maxDiscount) {
+      tags.push(`<span class="reward-tag">Maks. potongan ${fmtRp(maxDiscount)}</span>`);
     }
     return tags.join('');
   }
@@ -204,7 +217,7 @@
           <h4>${escapeHtml(c.name)}</h4>
           <p>${escapeHtml(c.desc)}</p>
           <span class="reward-points">${r.points} poin</span>
-          <div class="reward-tags">${rewardTags(c, r.minPurchase)}</div>
+          <div class="reward-tags">${rewardTags(c, r.minPurchase, r.maxDiscount)}</div>
         </div>`;
       }
 
@@ -218,6 +231,11 @@
             ${c.needsMinPurchase ? `
               <label>Minimal pembelian (Rp)</label>
               <input type="number" id="edit-min-${r.key}" value="${r.minPurchase || 0}">
+            ` : ''}
+            ${c.hasMaxDiscount ? `
+              <label>Maksimal potongan (Rp)</label>
+              <input type="number" id="edit-maks-${r.key}" value="${r.maxDiscount || 0}">
+              <p class="hint">Persennya berlaku penuh sampai potongan menyentuh angka ini.</p>
             ` : ''}
             <div class="actions">
               <button class="cancel-btn" data-cancel-reward="${r.key}">Batal</button>
@@ -236,7 +254,7 @@
         <h4>${escapeHtml(c.name)}</h4>
         <p>${escapeHtml(c.desc)}</p>
         <span class="reward-points">${r.points} poin</span>
-        <div class="reward-tags">${rewardTags(c, r.minPurchase)}</div>
+        <div class="reward-tags">${rewardTags(c, r.minPurchase, r.maxDiscount)}</div>
       </div>`;
     }).join('');
 
@@ -291,8 +309,9 @@
     el.querySelectorAll('[data-cancel-reward]').forEach(b => b.addEventListener('click', () => {
       editingRewardKey = null; renderRewards();
     }));
-    // Simpan edit poin -> PATCH { poin }. (min_subtotal fixed di backend,
-    // tidak dikirim.)
+    // Simpan edit -> PATCH { poin, min_subtotal, maks_potongan }. Ketiganya
+    // sudah dibuka backend; field yang tidak relevan per tipe reward tidak
+    // dirender, jadi tidak ikut terkirim.
     el.querySelectorAll('[data-save-reward]').forEach(b => b.addEventListener('click', async () => {
       const key = b.dataset.saveReward;
       const r = rewards.find(x => x.key === key);
@@ -301,10 +320,19 @@
       if (!points || points < MIN_REDEEM_POINTS) {
         toast(`Poin minimal ${MIN_REDEEM_POINTS}.`); return;
       }
+
+      const body = { poin: points };
+      const minInput = document.getElementById(`edit-min-${key}`);
+      const maksInput = document.getElementById(`edit-maks-${key}`);
+      if (minInput) body.min_subtotal = Number(minInput.value) || 0;
+      if (maksInput) body.maks_potongan = Number(maksInput.value) || 0;
+
       b.disabled = true;
       try {
-        const item = await patchKatalog(key, { poin: points });
+        const item = await patchKatalog(key, body);
         r.points = item.poin ?? points;
+        r.minPurchase = item.min_subtotal ?? r.minPurchase;
+        r.maxDiscount = item.maks_potongan ?? r.maxDiscount;
         editingRewardKey = null;
         toast(`Reward "${c.name}" diperbarui.`);
         renderRewards();
@@ -323,11 +351,22 @@
       if (!points || points < MIN_REDEEM_POINTS) {
         toast(`Poin minimal ${MIN_REDEEM_POINTS}.`); return;
       }
+      const body = { is_active: true, poin: points };
+      const newMin = document.getElementById('new-reward-min');
+      if (c.needsMinPurchase && newMin && newMin.value !== '') {
+        body.min_subtotal = Number(newMin.value) || 0;
+      }
+
       saveNew.disabled = true;
       try {
-        const item = await patchKatalog(key, { is_active: true, poin: points });
+        const item = await patchKatalog(key, body);
         if (!rewards.find(r => r.key === key)) {
-          rewards.push({ key, points: item.poin ?? points, minPurchase: item.min_subtotal || 0 });
+          rewards.push({
+            key,
+            points: item.poin ?? points,
+            minPurchase: item.min_subtotal || 0,
+            maxDiscount: item.maks_potongan || 0,
+          });
         }
         addingReward = false;
         toast(`Reward "${c.name}" diaktifkan.`);
@@ -357,7 +396,10 @@
           // rewards = yang aktif (ditawarkan ke pelanggan); nonaktif tetap ada
           // di REWARD_CATALOG untuk bisa diaktifkan lagi.
           rewards = items.filter(i => i.is_active).map(i => ({
-            key: i.kode, points: i.poin, minPurchase: i.min_subtotal || 0,
+            key: i.kode,
+            points: i.poin,
+            minPurchase: i.min_subtotal || 0,
+            maxDiscount: i.maks_potongan || 0,
           }));
         }
       } catch (e) { /* pakai data default kalau gagal */ }

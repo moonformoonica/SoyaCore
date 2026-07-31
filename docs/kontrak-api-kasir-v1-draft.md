@@ -81,9 +81,34 @@ Query param (minimal salah satu dari `no_wa` / `nama` wajib):
 
 | Param | Keterangan |
 |---|---|
-| `no_wa` | Dinormalisasi dulu (`0812…`, `+62 812…`, `812…` → `62812…`), lalu dicocokkan **parsial** (contains), min 3 digit |
-| `nama` | Pencarian **parsial** (contains), min 2 karakter; wildcard `%` dan `_` di-escape jadi teks literal |
+| `no_wa` | Dicocokkan **parsial**, min 3 digit. Lihat kontrak pencocokan nomor di bawah |
+| `nama` | Pencarian **parsial** (contains), min 2 karakter, **case-insensitive**; wildcard `%` dan `_` di-escape jadi teks literal |
 | `limit` | 1–25, default 10 |
+
+#### Kontrak pencocokan nomor WA (berlaku di semua pencarian nomor)
+
+Nomor tersimpan **selalu** dalam bentuk ternormalisasi `62…`. Pencarian mencoba
+**dua bentuk sekaligus** (di-OR), sehingga keduanya bekerja:
+
+| Yang diketik | Contoh | Cocok karena |
+|---|---|---|
+| **Nomor lengkap**, ejaan apa pun | `081234567890`, `0812-3456-7890`, `+62 812 3456 7890`, `6281234567890` | dinormalisasi dulu ke `6281234567890` |
+| **Potongan nomor**, termasuk **4 digit terakhir** | `7890`, `3456` | digitnya dicocokkan apa adanya sebagai substring |
+
+Kenapa dua bentuk, bukan satu: normalisasi dirancang untuk nomor **lengkap** —
+input berawalan `0`/`8` selalu ditempeli `62`. Asumsi itu runtuh untuk potongan
+nomor, karena `8122` (4 digit terakhir) bukan awal nomor tapi ekornya, dan
+`628122` tidak ada di dalam `6281245688122`. Karena itu keduanya dicoba.
+
+Berlaku sama di:
+
+- `GET /api/customers/cari?no_wa=` — auto-detect pelanggan di halaman Pesanan
+- `GET /api/transaksi?cari=` — riwayat transaksi (§ daftar transaksi)
+
+> `GET /api/loyalty/{nomorWa}` **sengaja TIDAK** ikut aturan ini — endpoint itu
+> publik tanpa auth, jadi pencocokan parsial akan membuat siapa pun bisa
+> menebak 4 digit lalu memanen nama + saldo poin pelanggan. Di sana nomornya
+> harus **lengkap dan persis**.
 
 Response `200`:
 
@@ -157,16 +182,73 @@ Body (semua opsional):
 - `kode_pesanan` digenerate server: `#K` + urutan harian 3 digit (`#K001`, `#K002`, …) —
   dibedakan dari format `#A23` self-order (M3).
 - `user_id` = user yang login, status awal `pending`.
-- **Per revisi ERD 15 Juli 2026**: `nomor_meja`, `platform`, `catatan`, dan
-  `sumber` adalah atribut level **item** (tabel `detail_transaksi`) — dikirim
-  saat tambah item, bukan saat membuat transaksi.
+- **Per revisi ERD 15 Juli 2026**: `platform`, `catatan`, dan `sumber` adalah
+  atribut level **item** (tabel `detail_transaksi`) — dikirim saat tambah item,
+  bukan saat membuat transaksi. (`nomor_meja` **dihapus** pada revisi
+  1 Agustus 2026, termasuk kolomnya.)
+- **Revisi 1 Agustus 2026**: `transaksi.sumber` (`kasir` | `self_order`) kini ada
+  di level transaksi juga — satu transaksi berasal dari satu channel, dan
+  menurunkannya dari item memaksa query anak di setiap baris daftar.
 
 Response `201`: objek transaksi lengkap (lihat bentuk di bawah).
 
 ### GET /api/transaksi — list
 
-Filter: `?status=pending|lunas|batal`, `?tanggal=YYYY-MM-DD` (by `created_at`).
-Pagination standar Laravel (15/halaman): `data`, `links`, `meta`.
+Pagination standar Laravel (15/halaman, maks `per_page=200`): `data`, `links`,
+`meta`.
+
+#### Filter tanggal & urutan (revisi 1 Agustus 2026)
+
+| Query param | Isi | Keterangan |
+|---|---|---|
+| `tanggal` | `YYYY-MM-DD` | Parameter lama, **tetap didukung**: tanggal persis |
+| `tanggal_mulai` | `YYYY-MM-DD` | Batas bawah, inklusif |
+| `tanggal_selesai` | `YYYY-MM-DD` | Batas atas, inklusif |
+| `preset` | `hari_ini` \| `kemarin` \| `7_hari` \| `30_hari` \| `bulan_ini` | Jalan pintas. Kalah dari batas eksplisit bila salah satunya dikirim. `7_hari`/`30_hari` menghitung hari ini sebagai salah satu harinya. |
+| `urut` | `terbaru` \| `terlama` | Default `terbaru` (perilaku sebelumnya) |
+
+`tanggal_selesai < tanggal_mulai` ditolak `422`. Batas hari dihitung menurut
+**WIB**, bukan zona server — lihat [`laporan-kasir.md`](laporan-kasir.md) §7.
+
+#### Filter data (revisi 1 Agustus 2026)
+
+Semua opsional dan bisa digabung (AND).
+
+| Query param | Isi |
+|---|---|
+| `status` | `pending` \| `lunas` \| `batal` \| `batal_sebagian` |
+| `sumber` | `kasir` \| `self_order` |
+| `metode_bayar` | `cash` \| `qris` |
+| `ada_redeem` | `true` \| `false` — transaksi yang memakai poin |
+| `cari` | Cocokkan ke `kode_pesanan`, nama customer, atau no WA customer (case-insensitive; nomor WA dicoba dalam ejaan lokal `0812…` maupun tersimpan `62812…`) |
+| `total_min` / `total_max` | Rentang nilai transaksi |
+| `dibuat_oleh` | Transaksi yang **disusun** akun ini |
+| `dibayar_oleh` | Transaksi yang **diselesaikan** akun ini |
+| `user_id` | Alias lama — diperlakukan sebagai `dibayar_oleh`, jatuh ke `user_id` untuk transaksi `pending`. Dipertahankan supaya kartu statistik kasir yang sudah ada tidak rusak. |
+
+Nilai di luar daftar ditolak `422`, bukan diabaikan — daftar kosong yang muncul
+gara-gara salah tulis param terlihat seperti "tidak ada transaksi hari ini".
+
+#### Blok `meta` ringkasan (revisi 1 Agustus 2026)
+
+`meta` pagination bawaan Laravel tetap ada, ditambah ringkasan **hasil
+terfilter** — bukan seluruh tabel:
+
+```json
+"meta": {
+  "current_page": 1, "per_page": 15, "total": 42,
+  "jumlah_transaksi": 42,
+  "total_omzet": 1250000,
+  "total_qty": 87
+}
+```
+
+Inilah yang membuat filter berguna buat manager: angkanya ikut berubah, bukan
+cuma daftarnya.
+
+> ⚠️ **Antrean pesanan `pending` tidak boleh difilter ke akun sendiri.** Saat
+> pergantian akun, pesanan yang belum dibayar harus tetap terlihat oleh kasir
+> yang baru login. Lihat [`laporan-kasir.md`](laporan-kasir.md) §3.
 
 ### GET /api/transaksi/{id} — detail
 
@@ -178,14 +260,20 @@ Response `200`:
     "id": 1,
     "kode_pesanan": "#K001",
     "status": "pending",
+    "sumber": "kasir",
+    "sumber_label": "Kasir",
     "customer": { "id": 1, "nama": "Budi", "no_wa": "081234567890" },
-    "kasir": { "id": 2, "nama": "Kasir Gressoy" },
+    "kasir_pembuat": { "id": 2, "nama": "Kasir Satu" },
+    "kasir_penyelesai": null,
+    "kasir": { "id": 2, "nama": "Kasir Satu" },
     "items": [
       {
         "id": 1, "menu_id": 1, "nama": "Original",
         "rasa": "Soya Original Premium + Brown Sugar", "ukuran": "Reguler",
         "qty": 2, "harga_satuan": 17000, "subtotal": 34000, "is_reward": false,
-        "nomor_meja": "5", "sumber": "kasir", "platform": null,
+        "level_sugar": "less", "level_sugar_label": "Less Sugar",
+        "level_ice": "no", "level_ice_label": "No Ice",
+        "sumber": "kasir", "platform": null,
         "diskon_persen": 0, "diskon_nilai": 0, "catatan": null
       }
     ],
@@ -205,6 +293,18 @@ Response `200`:
 > **agregat dari item** (per revisi ERD kolom-kolom ini tersimpan di
 > `detail_transaksi`); hanya `total` yang tersimpan di tabel `transaksi`.
 
+**Revisi 1 Agustus 2026 — dua peran kasir:**
+
+| Field              | Arti                                                                      |
+| ------------------ | ------------------------------------------------------------------------- |
+| `kasir_pembuat`    | Akun yang **menyusun** pesanan. `null` untuk pesanan SoyaScan.             |
+| `kasir_penyelesai` | Akun yang **menyelesaikan pembayaran**. `null` selama masih `pending`.     |
+| `kasir`            | Key lama, **tetap ada**: penyelesai bila ada, jatuh ke pembuat bila belum. |
+
+Sebelum revisi ini, `bayar()` menimpa `user_id` dengan akun yang menandai lunas,
+sehingga jejak kasir pembuat hilang saat pesanan menyeberangi pergantian akun.
+Penjelasan lengkap: [`laporan-kasir.md`](laporan-kasir.md).
+
 ### POST /api/transaksi/{id}/items — tambah item
 
 Body:
@@ -213,22 +313,31 @@ Body:
 {
   "menu_id": 1,
   "qty": 2,
-  "nomor_meja": "5",
   "platform": null,
-  "catatan": "less sugar"
+  "catatan": "gelas terpisah",
+  "level_sugar": "less",
+  "level_ice": "no"
 }
 ```
 
-- `nomor_meja` / `platform` / `catatan` opsional (atribut level item, per
-  revisi ERD). `sumber` di-set server = `kasir`.
+- `platform` / `catatan` / `level_sugar` / `level_ice` opsional (atribut level
+  item). `sumber` di-set server = `kasir`.
 - **Tanpa harga** — server snapshot `menu.harga` ke `harga_satuan`.
-- Menu yang sama (non-reward) digabung: qty ditambahkan ke baris yang sudah ada.
+- Menu yang sama (non-reward) digabung **hanya kalau opsi peracikannya juga
+  sama**. Dua gelas Original dengan level sugar berbeda adalah dua instruksi
+  berbeda buat barista, jadi tetap dua baris.
+- `level_sugar` / `level_ice` mengikuti aturan ketersediaan per ukuran yang sama
+  dengan SoyaScan (lihat `kontrak-api-v1.md` §2) — kasir harus bisa mencatat hal
+  yang sama seperti pelanggan. Opsi yang tidak relevan ditolak `422`
+  `opsi_tidak_tersedia`.
 - Error: `menu_tidak_tersedia` (422) untuk menu tak ada / nonaktif.
+- ⚠️ `nomor_meja` **sudah tidak diterima lagi** (dihapus 1 Agustus 2026).
 
 ### PATCH /api/transaksi/{id}/items/{item} — ubah qty
 
-Body: `{ "qty": 3 }` (≥ 1), boleh sekalian `nomor_meja`/`platform`/`catatan`.
-Subtotal item & total transaksi dihitung ulang.
+Body: `{ "qty": 3 }` (≥ 1), boleh sekalian
+`platform`/`catatan`/`level_sugar`/`level_ice`. Subtotal item & total transaksi
+dihitung ulang.
 
 ### DELETE /api/transaksi/{id}/items/{item} — hapus item
 
@@ -268,9 +377,84 @@ Error: `items_kosong` (422) bila belum ada item; `409` bila bukan `pending`.
 > Catatan: `point_earned` dicatat di transaksi saja — increment stempel di tabel
 > `loyalty` adalah scope LoyalSeed (M3).
 
-### POST /api/transaksi/{id}/batal
+**Revisi 1 Agustus 2026**, dua hal berubah di sini:
 
-Tanpa body. Set `status = batal`. `409` bila bukan `pending`.
+1. `dibayar_oleh` diisi akun pemanggil, dan **`user_id` TIDAK lagi ditimpa** —
+   jejak kasir pembuat pesanan tetap utuh.
+2. Transaksinya langsung **diproyeksikan ke `laporan_transaksi`** di dalam
+   transaksi database yang sama, jadi dashboard dan export Excel ikut hidup di
+   detik itu juga. Sengaja sinkron, bukan queued job: laporan harus bisa
+   di-export real-time.
+
+### POST /api/transaksi/{id}/batal — alias pembatalan penuh
+
+Tanpa body. Set `status = batal`. `409` bila sudah `batal`.
+
+**Revisi 1 Agustus 2026:** endpoint ini **tetap dipertahankan** supaya frontend
+yang sudah jalan tidak rusak, tapi sekarang ikut melewati alur pembatalan baru —
+mengembalikan poin redeem, mencatat dokumen pembatalan, dan menyinkronkan
+proyeksi laporan. Ia juga menerima transaksi `lunas`, bukan hanya `pending`.
+
+---
+
+## Pembatalan / Koreksi Pesanan (revisi 1 Agustus 2026)
+
+> **Ini pembatalan pesanan yang salah, BUKAN pengembalian uang.** Dokumentasi
+> lengkap beserta rumus dan aturan poin: [`pembatalan-pesanan.md`](pembatalan-pesanan.md).
+
+| Method & path                       | Role           | Keterangan                                    |
+| ----------------------------------- | -------------- | --------------------------------------------- |
+| `POST /api/transaksi/{id}/pembatalan` | kasir, manager | Penuh atau sebagian                           |
+| `GET /api/transaksi/{id}/pembatalan`  | kasir, manager | Riwayat pembatalan transaksi itu              |
+| `GET /api/pembatalan`                 | manager        | Semua pembatalan; filter tanggal & akun kasir |
+
+Body `POST` — `items` kosong/tidak dikirim = pembatalan **penuh**:
+
+```json
+{
+  "alasan": "Pelanggan salah pesan ukuran",
+  "items": [{ "detail_transaksi_id": 12, "qty": 1 }]
+}
+```
+
+Response `201` memuat rincian per item, `nilai_dibatalkan`, `poin_ditarik`,
+`poin_dikembalikan`, `status_transaksi` setelahnya, dan `saldo_poin_pelanggan`
+terkini — kasir perlu menyebutkannya ke pelanggan saat itu juga.
+
+`GET /api/pembatalan` menerima `tanggal_mulai`/`tanggal_selesai`/`preset` (aturan
+sama dengan daftar transaksi) plus `user_id` (akun yang **memproses**
+pembatalan), dan mengembalikan `meta` berisi `jumlah_pembatalan`,
+`nilai_dibatalkan`, `poin_ditarik`, `poin_dikembalikan`.
+
+---
+
+## Laporan Kasir & Pengaturan (revisi 1 Agustus 2026)
+
+| Method & path                            | Role    | Keterangan                                          |
+| ---------------------------------------- | ------- | --------------------------------------------------- |
+| `GET /api/laporan/kasir`                 | manager | Perbandingan antar akun kasir                       |
+| `GET /api/laporan/export?kasir_user_id=` | manager | Export Excel, opsional disaring ke satu kasir       |
+| `POST /api/pengaturan/toko/qris`         | manager | Unggah/ganti gambar QRIS (`image`, jpg/png, maks 2 MB) |
+| `DELETE /api/pengaturan/toko/qris`       | manager | Hapus gambar QRIS                                   |
+| `GET /api/pengaturan/toko/qr-menu`       | manager | QR untuk ditempel di meja (`format=svg\|png`, `ukuran`) |
+
+- `GET /api/pengaturan/toko` kini menyertakan `qris_url` (URL penuh, `null` kalau
+  belum diunggah).
+- `qr-menu` mengembalikan **berkas gambar** dengan `Content-Type` yang sesuai,
+  bukan JSON base64 — supaya manager bisa langsung menyimpan/mencetak dari
+  browser. Default `svg` karena akan dicetak dan harus tetap tajam; `ukuran`
+  dibatasi 64–2048 px.
+- Isi QR diambil dari `config('soyascan.url')` (env `SOYASCAN_URL`, fallback
+  `APP_URL`) — **tidak** di-hardcode, karena QR yang sudah dicetak dan ditempel
+  di meja tidak bisa ditarik lagi.
+
+Isi respons laporan kasir dan sheet `Rekap Kasir`:
+[`laporan-kasir.md`](laporan-kasir.md).
+
+Dashboard juga menambah `?sembunyikan_tidak_diketahui=true` pada
+`GET /api/dashboard/platform` dan `GET /api/dashboard/revenue-ukuran`, serta
+`periode_label` + `hari` (berbahasa Indonesia) pada
+`GET /api/dashboard/time-series`.
 
 ---
 
@@ -293,3 +477,13 @@ Tanpa body. Set `status = batal`. `409` bila bukan `pending`.
 | `diskon_melebihi_subtotal` | 422 | Nominal > subtotal |
 | `kategori_masih_dipakai` | 409 | Hapus kategori yang masih punya menu |
 | `transaksi_sudah_lunas` / `transaksi_sudah_batal` | 409 | Ubah transaksi non-pending |
+
+### Tambahan revisi 1 Agustus 2026
+
+| Kode | HTTP | Sumber |
+|---|---|---|
+| `opsi_tidak_tersedia` | 422 | `level_sugar`/`level_ice` dikirim untuk ukuran yang tidak boleh memilihnya |
+| `qty_pembatalan_melebihi` | 422 | Qty pembatalan melebihi sisa yang belum dibatalkan (dihitung lintas semua pembatalan) |
+| `item_bukan_milik_transaksi` | 422 | `detail_transaksi_id` bukan bagian dari transaksi itu |
+| `pembatalan_sebagian_butuh_lunas` | 422 | Pembatalan sebagian pada transaksi `pending` — pakai ubah/hapus item |
+| `format_png_tidak_didukung` | 503 | QR PNG diminta tapi server tidak punya ekstensi GD |

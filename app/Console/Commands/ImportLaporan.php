@@ -23,7 +23,7 @@ class ImportLaporan extends Command
         try {
             $hasil = (new LaporanImporter($dir))->import();
         } catch (RuntimeException $e) {
-            
+
             $this->newLine();
             $this->error($e->getMessage());
             $this->newLine();

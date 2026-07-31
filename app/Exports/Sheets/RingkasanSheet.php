@@ -14,6 +14,7 @@ class RingkasanSheet implements FromArray, WithHeadings, WithTitle
         private readonly ?string $start,
         private readonly ?string $end,
         private readonly LaporanQuery $query,
+        private readonly ?string $kasirNama = null,
     ) {}
 
     public function title(): string
@@ -39,6 +40,10 @@ class RingkasanSheet implements FromArray, WithHeadings, WithTitle
         return [
             ['Grain', $this->grain],
             ['Rentang', ($this->start ?? '-').' s/d '.($this->end ?? '-')],
+            // Disebut eksplisit supaya file yang sudah di-download tetap bisa
+            // dikenali: tanpa baris ini, laporan satu kasir dan laporan seluruh
+            // toko terlihat sama persis dan gampang tertukar.
+            ['Kasir', $this->kasirNama ?? 'Semua kasir'],
             ['Total Revenue (Rp)', $k['total_revenue']],
             ['Total Transaksi', $k['total_transaksi']],
             ['Total Qty (pcs)', $k['total_qty']],

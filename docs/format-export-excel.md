@@ -4,6 +4,13 @@
 > Format ini sudah disepakati dengan Kamila dan menjadi acuan pembuatan
 > export class (Laravel Excel) di milestone berikutnya.
 
+> ⚠️ **Dokumen ini adalah rancangan awal 2 sheet dan sudah tertinggal dari
+> implementasinya.** File export yang benar-benar dihasilkan sekarang berisi
+> 7 sheet (`Ringkasan`, `Rekap Kasir`, `Detail Transaksi`, `Revenue per Ukuran`,
+> `Time Series`, `RFM Pelanggan`, `Rekomendasi Switch`), dan turun jadi 5 sheet
+> saat difilter satu kasir. Acuan yang berlaku untuk sheet per-kasir ada di
+> [`laporan-kasir.md`](laporan-kasir.md) §6.
+
 Export terdiri dari **2 sheet** dalam satu file Excel, sesuai Diagram Laporan Excel.
 
 Aturan umum:

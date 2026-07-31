@@ -6,6 +6,7 @@ use App\Exports\LaporanExport;
 use App\Models\LaporanRevenueUkuran;
 use App\Models\User;
 use App\Services\LaporanQuery;
+use App\Services\RekapKasirHarian;
 use Database\Seeders\LaporanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -29,6 +30,15 @@ class DashboardLaporanTest extends TestCase
     private const NON_MINUMAN_REVENUE = 5065000;
 
     private const FULL_ROWS = 882;
+
+    /**
+     * `Rekap Kasir` diletakkan setelah `Ringkasan` supaya terlihat lebih dulu
+     * daripada sheet detail — itu yang dibaca manager.
+     */
+    private const SHEET_LENGKAP = [
+        'Ringkasan', 'Rekap Kasir', 'Detail Transaksi', 'Revenue per Ukuran',
+        'Time Series', 'RFM Pelanggan', 'Rekomendasi Switch',
+    ];
 
     protected function setUp(): void
     {
@@ -271,41 +281,45 @@ class DashboardLaporanTest extends TestCase
         Excel::assertDownloaded('Laporan_SoyaCore_harian_2026-06-01_2026-07-30.xlsx', function ($export) {
             $titles = array_map(fn ($s) => $s->title(), $export->sheets());
 
-            return $titles === [
-                'Ringkasan', 'Detail Transaksi', 'Revenue per Ukuran',
-                'Time Series', 'RFM Pelanggan', 'Rekomendasi Switch',
-            ];
+            return $titles === self::SHEET_LENGKAP;
         });
     }
 
     public function test_export_menghasilkan_xlsx_valid_yang_bisa_dibuka(): void
     {
-        $export = new LaporanExport('harian', '2026-06-01', '2026-07-30', app(LaporanQuery::class));
-        $binary = Excel::raw($export, ExcelWriter::XLSX);
+        $binary = Excel::raw($this->export('2026-06-01', '2026-07-30'), ExcelWriter::XLSX);
 
         $tmp = tempnam(sys_get_temp_dir(), 'soyacore_').'.xlsx';
         file_put_contents($tmp, $binary);
 
         $spreadsheet = IOFactory::load($tmp);
-        $this->assertSame([
-            'Ringkasan', 'Detail Transaksi', 'Revenue per Ukuran',
-            'Time Series', 'RFM Pelanggan', 'Rekomendasi Switch',
-        ], $spreadsheet->getSheetNames());
+        $this->assertSame(self::SHEET_LENGKAP, $spreadsheet->getSheetNames());
 
         @unlink($tmp);
     }
 
     public function test_export_window_kosong_tetap_xlsx_valid(): void
     {
-        $export = new LaporanExport('harian', '2026-08-01', '2026-08-31', app(LaporanQuery::class));
-        $binary = Excel::raw($export, ExcelWriter::XLSX);
+        $binary = Excel::raw($this->export('2026-08-01', '2026-08-31'), ExcelWriter::XLSX);
 
         $tmp = tempnam(sys_get_temp_dir(), 'soyacore_').'.xlsx';
         file_put_contents($tmp, $binary);
 
         $spreadsheet = IOFactory::load($tmp);
-        $this->assertCount(6, $spreadsheet->getSheetNames());
+        $this->assertCount(count(self::SHEET_LENGKAP), $spreadsheet->getSheetNames());
 
         @unlink($tmp);
+    }
+
+    private function export(?string $start, ?string $end, ?int $kasirUserId = null): LaporanExport
+    {
+        return new LaporanExport(
+            'harian',
+            $start,
+            $end,
+            app(LaporanQuery::class),
+            app(RekapKasirHarian::class),
+            $kasirUserId,
+        );
     }
 }

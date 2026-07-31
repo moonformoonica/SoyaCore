@@ -9,11 +9,15 @@ class DiskonEngine
     public const PRESET_PERSEN = [10, 20, 50];
 
     /**
+     * `$maksPotongan` null (bawaan) = tanpa plafon, jadi diskon manual kasir
+     * berperilaku persis seperti sebelum plafon ada. Plafon hanya dipakai
+     * diskon yang berasal dari redeem poin.
+     *
      * @return array{diskon_persen: int, diskon_nilai: int}
      */
-    public function hitung(int $subtotal, string $tipe, int $nilai): array
+    public function hitung(int $subtotal, string $tipe, int $nilai, ?int $maksPotongan = null): array
     {
-        return match ($tipe) {
+        $hasil = match ($tipe) {
             'preset' => $this->preset($subtotal, $nilai),
             'custom_persen' => $this->customPersen($subtotal, $nilai),
             'custom_nilai' => $this->customNilai($subtotal, $nilai),
@@ -23,6 +27,26 @@ class DiskonEngine
                 422,
             ),
         };
+
+        return $this->batasi($hasil, $maksPotongan);
+    }
+
+    /**
+     * Begitu plafon mengikat, diskonnya bukan persen murni lagi — ia jadi
+     * potongan nominal. Bentuk hasilnya ikut berubah supaya pemanggil menulis
+     * potongan yang sudah dipotong plafon ke tiap item, bukan menghitung ulang
+     * persen di subtotal yang sudah membesar.
+     *
+     * @param  array{diskon_persen: int, diskon_nilai: int}  $hasil
+     * @return array{diskon_persen: int, diskon_nilai: int}
+     */
+    private function batasi(array $hasil, ?int $maksPotongan): array
+    {
+        if ($maksPotongan === null || $hasil['diskon_nilai'] <= $maksPotongan) {
+            return $hasil;
+        }
+
+        return ['diskon_persen' => 0, 'diskon_nilai' => $maksPotongan];
     }
 
     /**

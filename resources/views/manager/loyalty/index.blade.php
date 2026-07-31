@@ -12,10 +12,11 @@
       ditukar bulan ini, Member baru bulan ini) — datanya masih dummy,
       nanti tinggal disambungkan ke controller.
     - Katalog reward sekarang mengikuti daftar tetap (fixed) yang sudah
-      ditentukan: diskon_10, diskon_20, diskon_50, gratis_original,
-      gratis_coffee_kopi, gratis_honey_lemon, gratis_mango_monggo.
-      Detail (nama, ikon, ukuran minuman) sudah dikunci di JS, manager
-      hanya bisa mengatur poin & minimal pembelian per item.
+      ditentukan: diskon_10, diskon_20, diskon_30, diskon_50,
+      gratis_original, gratis_coffee_kopi, gratis_honey_lemon,
+      gratis_mango_monggo. Detail (nama, ikon, ukuran minuman) sudah
+      dikunci di JS, manager hanya bisa mengatur poin, minimal pembelian,
+      & maksimal potongan per item.
 
     1. Taruh loyalty.css di resources/css/manager/loyalty.css
     2. Taruh manager.loyalty.js di resources/js/manager.loyalty.js

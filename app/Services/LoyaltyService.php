@@ -26,7 +26,16 @@ class LoyaltyService
 
             if ($transaksi->customer_id !== null) {
                 $loyalty = $this->loyaltyTerkunci($transaksi->customer_id);
+
+                // Dinolkan dulu kalau sudah lewat masa berlaku, supaya poin
+                // yang seharusnya hangus tidak ikut hidup lagi karena ada
+                // transaksi baru.
+                $loyalty->hanguskanBilaKedaluwarsa();
+
                 $loyalty->poin += $poinDidapat;
+                // Jam kedaluwarsa di-reset tiap transaksi: yang masih belanja
+                // tidak pernah kehilangan poin.
+                $loyalty->poin_kedaluwarsa_pada = now()->addMonths(Loyalty::BULAN_KEDALUWARSA);
                 $loyalty->save();
             }
 
@@ -77,6 +86,7 @@ class LoyaltyService
 
         DB::transaction(function () use ($transaksi, $kodeRedeem, $item) {
             $loyalty = $this->loyaltyTerkunci($transaksi->customer_id);
+            $loyalty->hanguskanBilaKedaluwarsa();
 
             if ($loyalty->poin < $item['poin']) {
                 $kurang = $item['poin'] - $loyalty->poin;
@@ -98,7 +108,12 @@ class LoyaltyService
                     );
                 }
 
-                $this->transaksiService->terapkanDiskon($transaksi, 'custom_persen', $item['persen']);
+                $this->transaksiService->terapkanDiskon(
+                    $transaksi,
+                    'custom_persen',
+                    $item['persen'],
+                    $item['maks_potongan'],
+                );
             } else {
                 $menu = $this->cariMenuGratis($item);
 
@@ -128,6 +143,9 @@ class LoyaltyService
             $transaksi->forceFill([
                 'kode_redeem' => $kodeRedeem,
                 'poin_ditukar' => $item['poin'],
+                // Disimpan supaya recalculateTotals() tetap tahu plafonnya saat
+                // kasir menambah/mengubah item setelah redeem.
+                'maks_potongan' => $item['maks_potongan'],
             ])->save();
         });
 
@@ -139,6 +157,22 @@ class LoyaltyService
         Loyalty::firstOrCreate(['customer_id' => $customerId], ['poin' => 0]);
 
         return Loyalty::where('customer_id', $customerId)->lockForUpdate()->first();
+    }
+
+    /**
+     * Harga reguler menu reward menurut database — dipakai halaman pengaturan
+     * untuk menghitung Rp/poin efektif item gratis_menu. Diambil live dengan
+     * pencarian yang sama seperti saat redeem, jadi angka yang dilihat manager
+     * tidak pernah beda dengan yang benar-benar diberikan ke pelanggan.
+     * Null = menunya tidak ada/nonaktif di database.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    public function hargaMenuGratis(array $item): ?int
+    {
+        $menu = $this->cariMenuGratis($item);
+
+        return $menu === null ? null : (int) $menu->harga;
     }
 
     /**

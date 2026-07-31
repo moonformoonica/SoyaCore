@@ -6,7 +6,6 @@ use App\Services\LaporanQuery;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-
 class RevenueUkuranSheet implements FromArray, WithTitle
 {
     public function __construct(

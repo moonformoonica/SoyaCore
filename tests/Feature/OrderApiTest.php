@@ -45,7 +45,7 @@ class OrderApiTest extends TestCase
         return array_merge([
             'nama' => 'Budi',
             'nomor_wa' => '0812-3456-7890',
-            'nomor_meja' => '12',
+            // PERUBAHAN KONTRAK: `nomor_meja` sudah tidak dikirim lagi.
             'items' => [
                 ['menu_id' => $this->susu->id, 'qty' => 2],
                 ['menu_id' => $this->tahu->id, 'qty' => 1],
@@ -59,7 +59,6 @@ class OrderApiTest extends TestCase
 
         // 2x17000 + 1x21000 = 55000 — dihitung server
         $respon->assertJsonPath('status', 'pending')
-            ->assertJsonPath('nomor_meja', '12')
             ->assertJsonPath('total', 55000)
             ->assertJsonPath('kode_pesanan', '#A01')
             ->assertJsonCount(2, 'items')
@@ -68,12 +67,14 @@ class OrderApiTest extends TestCase
         $this->assertStringContainsString('#A01', $respon->json('pesan'));
 
         $transaksi = Transaksi::first();
-        $this->assertNull($transaksi->user_id); // belum ada kasir
+        $this->assertNull($transaksi->user_id); // belum ada kasir pembuat
+        $this->assertNull($transaksi->dibayar_oleh); // belum dibayar siapa pun
+        $this->assertSame('self_order', $transaksi->sumber);
         $this->assertSame('self_order', $transaksi->detailTransaksi()->first()->sumber);
-        $this->assertSame('12', $transaksi->detailTransaksi()->first()->nomor_meja);
 
-        // loyalty dibuat dengan poin 0 — poin TIDAK bertambah saat pending
-        $this->assertSame(0, Loyalty::first()->poin);
+        // pelanggan baru dapat bonus pendaftaran, dan cuma itu — poin dari
+        // belanjanya sendiri TIDAK bertambah selama transaksi masih pending
+        $this->assertSame(Loyalty::POIN_BONUS_DAFTAR, Loyalty::first()->poin);
     }
 
     public function test_metode_bayar_pilihan_pelanggan_tersimpan(): void

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\OpsiMinuman;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,7 +23,13 @@ class DetailTransaksiResource extends JsonResource
             'harga_satuan' => $this->harga_satuan,
             'subtotal' => $this->subtotal,
             'is_reward' => $this->is_reward,
-            'nomor_meja' => $this->nomor_meja,
+            // Kasir dan barista harus melihatnya saat menyiapkan pesanan, dan
+            // keduanya ikut tercetak di nota. Label dikirim sekalian supaya
+            // 'less' tidak dirender apa adanya ke barista.
+            'level_sugar' => $this->level_sugar,
+            'level_sugar_label' => OpsiMinuman::labelSugar($this->level_sugar),
+            'level_ice' => $this->level_ice,
+            'level_ice_label' => OpsiMinuman::labelIce($this->level_ice),
             'sumber' => $this->sumber,
             'platform' => $this->platform,
             'diskon_persen' => $this->diskon_persen,

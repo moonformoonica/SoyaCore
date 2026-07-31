@@ -16,12 +16,16 @@ class KatalogRedeem extends Model
     protected $fillable = [
         'kode',
         'poin',
+        'maks_potongan',
+        'min_subtotal',
         'is_active',
         'updated_by',
     ];
 
     protected $casts = [
         'poin' => 'integer',
+        'maks_potongan' => 'integer',
+        'min_subtotal' => 'integer',
         'is_active' => 'boolean',
     ];
 

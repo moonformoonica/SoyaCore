@@ -57,6 +57,12 @@ Detail endpoint + contoh request/response: lihat `docs/kontrak-api-kasir-v1-draf
 
 ## Revisi Skema Transaksi (15 Juli 2026 — keputusan Monica)
 
+> ⚠️ **Catatan historis, sebagian sudah tidak berlaku.** Sejak revisi
+> 1 Agustus 2026: kolom `nomor_meja` **dihapus sepenuhnya** dari
+> `detail_transaksi`, dan `sumber` kini ada di level transaksi juga (bukan hanya
+> item). Bagian di bawah dibiarkan apa adanya sebagai catatan keputusan M2 —
+> acuan yang berlaku ada di `kontrak-api-kasir-v1-draft.md`.
+
 Mengikuti **ERD revisi**, kolom `nomor_meja`, `sumber`, `platform`,
 `subtotal`, `diskon_persen`, `diskon_nilai`, `catatan` berada di
 `detail_transaksi` (level item), sedangkan tabel `transaksi` hanya menyimpan

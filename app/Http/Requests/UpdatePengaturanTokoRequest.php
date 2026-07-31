@@ -8,7 +8,7 @@ class UpdatePengaturanTokoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; 
+        return true;
     }
 
     /**
