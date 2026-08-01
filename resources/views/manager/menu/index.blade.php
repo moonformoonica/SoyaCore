@@ -116,21 +116,6 @@
 
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    try {
-        const rawUser = localStorage.getItem('auth_user');
-        const role = rawUser ? JSON.parse(rawUser).role : null;
-
-        if (role === 'kasir') {
-            document.querySelectorAll('.transaction-page [data-role="manager"]').forEach(function (el) {
-                el.style.display = 'none';
-            });
-        }
-    } catch (e) {
-        // localStorage tidak terbaca / rusak — biarkan tampilan default (manager)
-    }
-});
-</script>
+{{-- Penyembunyian elemen manager sudah pindah ke resources/js/manager/menu/index.js --}}
 
 @endsection

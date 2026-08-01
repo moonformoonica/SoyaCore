@@ -5,8 +5,9 @@
 @import './manager/transaksi.css';
 @import './profil.css';
 @import './login.css';
-@import './sidebar.css';
-@import './menu/index.css';
+/* Jalurnya HARUS lewat manager/ — './menu/index.css' tidak ada dan membuat
+   `npm run build` gagal total. Impor './sidebar.css' yang dobel sudah dibuang. */
+@import './manager/menu/index.css';
 
 
 
@@ -20,70 +21,8 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-/* ===========================
-        SEARCH BOX
-=========================== */
-
-.search-box{
-
-    width:340px;
-
-    height:46px;
-
-    border:1px solid #E5E7EB;
-
-    border-radius:10px;
-
-    display:flex;
-
-    align-items:center;
-
-    padding:0 16px;
-
-    background:white;
-
-}
-
-.search-box i{
-
-    color:#9CA3AF;
-
-    margin-right:12px;
-
-}
-
-.search-box svg{
-
-    width:18px;
-
-    height:18px;
-
-    color:#9CA3AF;
-
-    margin-right:12px;
-
-    flex-shrink:0;
-
-}
-
-.search-box input{
-
-    flex:1;
-
-    border:none;
-
-    outline:none;
-
-    font-size:14px;
-
-    font-family:'Inter',sans-serif;
-
-    background:transparent;
-
-}
-
-.search-box input::placeholder{
-
-    color:#9CA3AF;
-
-}
+/* Definisi `.search-box` yang dulu ada di sini SENGAJA DIHAPUS.
+   Kotak cari punya dua pemilik yang sah — header (header.css, 180px) dan baris
+   filter halaman Transaksi (.filter-bar .search-box) — dan salinan ketiga di
+   berkas global ini cuma jadi penimpa tak terduga begitu app.css ikut dimuat di
+   layout utama. */

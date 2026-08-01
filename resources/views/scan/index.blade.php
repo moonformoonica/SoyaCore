@@ -11,44 +11,6 @@
 
     @vite('resources/css/scan/index.css')
 
-    <style>
-    /* FIX: paksa atribut hidden SELALU menang atas aturan display apapun
-       di scan/index.css. Ini penyebab icon jam pasir & centang numpuk
-       bareng — kemungkinan besar ada selector di scan/index.css (misal
-       untuk .done-check svg) yang men-set display:block/flex, dan itu
-       mengalahkan display:none bawaan dari atribut [hidden] karena
-       urutan/spesifisitas CSS. Aturan !important di bawah ini menjamin
-       [hidden] selalu benar-benar menyembunyikan elemennya. */
-    [hidden] { display: none !important; }
-
-    .hourglass-icon{ animation: hourglassFlip 3s ease-in-out infinite; }
-    @keyframes hourglassFlip{
-        0%, 40%   { transform: rotate(0deg); }
-        55%, 95%  { transform: rotate(180deg); }
-        100%      { transform: rotate(360deg); }
-    }
-
-    /* pasir atas mengecil & pasir bawah membesar, reset pas kebalik */
-    .sand-top{ transform-origin: 12px 4px; animation: sandTopShrink 3s ease-in-out infinite; }
-    @keyframes sandTopShrink{
-        0%        { transform: scaleY(1); }
-        35%       { transform: scaleY(.15); }
-        40%, 100% { transform: scaleY(1); }
-    }
-    .sand-bottom{ transform-origin: 12px 20px; animation: sandBottomGrow 3s ease-in-out infinite; }
-    @keyframes sandBottomGrow{
-        0%        { transform: scaleY(.15); }
-        35%       { transform: scaleY(1); }
-        40%, 100% { transform: scaleY(.15); }
-    }
-
-    /* garis butiran yang jatuh, muncul-hilang biar kesan netes */
-    .sand-drip{ opacity:0; animation: sandDrip .5s linear infinite; }
-    @keyframes sandDrip{
-        0%, 100% { opacity:0; }
-        50%      { opacity:1; }
-    }
-    </style>
 </head>
 <body>
 
@@ -57,12 +19,16 @@
     {{-- ============================ HEADER ============================ --}}
     <header class="scan-header">
         <div class="scan-brand">
-            <img src="{{ asset('images/Logo.png') }}" alt="GresSOY">
+            <img src="{{ asset('images/LogoGresSoy.png') }}" alt="GresSOY">
         </div>
 
         <div class="scan-welcome">
-            <h1>Selamat datang di GresSOY</h1>
-            <p>Pilih menu, pesanan langsung masuk ke kasir</p>
+            <div class="scan-welcome-text">
+                <h1>Selamat datang di GresSOY</h1>
+                <p>Pilih menu, pesanan langsung masuk ke kasir</p>
+            </div>
+
+            <img class="scan-maskot" src="{{ asset('images/maskot.png') }}" alt="" aria-hidden="true">
         </div>
 
         <div class="scan-search">
@@ -109,6 +75,29 @@
     </div>
 </div>
 
+{{-- ============ BOTTOM SHEET: PILIH SUGAR & ICE ==================== --}}
+<div class="scan-sheet" id="opsiSheet" hidden>
+    <div class="backdrop" data-close="opsi"></div>
+    <div class="panel">
+        <div class="grip"></div>
+        <p class="sheet-title" id="opsiTitle">Pilih Takaran</p>
+        <p class="sheet-sub" id="opsiSub"></p>
+
+        <div class="scan-opsi-grup" id="opsiSugarWrap" hidden>
+            <span class="scan-opsi-label" id="opsiSugarLabel">Gula</span>
+            <p class="scan-opsi-ket" id="opsiSugarKet" hidden></p>
+            <div class="scan-opsi-row" id="opsiSugarRow"></div>
+        </div>
+
+        <div class="scan-opsi-grup" id="opsiIceWrap" hidden>
+            <span class="scan-opsi-label">Ice</span>
+            <div class="scan-opsi-row" id="opsiIceRow"></div>
+        </div>
+
+        <button type="button" class="scan-primary" id="opsiConfirm">Tambah ke Keranjang</button>
+    </div>
+</div>
+
 {{-- ================== BOTTOM SHEET: KERANJANG ====================== --}}
 <div class="scan-sheet" id="cartSheet" hidden>
     <div class="backdrop" data-close="cart"></div>
@@ -130,11 +119,6 @@
                 <label for="fWa">Nomor WhatsApp<span class="req">*</span></label>
                 <input type="tel" id="fWa" placeholder="08xxxxxxxxxx" inputmode="numeric" maxlength="12" required>
             </div>
-            <div class="scan-field">
-                <label for="fMeja">Nomor Meja<span class="req">*</span></label>
-                <input type="text" id="fMeja" placeholder="Contoh: 5" required>
-            </div>
-
             <div class="scan-field">
                 <label>Metode Pembayaran<span class="req">*</span></label>
                 <div class="scan-pay-row">
@@ -193,18 +177,31 @@
         </div>
 
         <h2 class="done-title" id="doneTitle">Menunggu Pembayaran</h2>
-        <p class="done-sub" id="doneSub">Lakukan pembayaran di kasir dan pesananmu akan segera diproses</p>
+        <p class="done-sub" id="doneSub">Lakukan pembayaran dan pesananmu akan segera diproses</p>
 
         <div class="done-kode" id="doneKode">#A01</div>
+        <div class="done-qris" id="doneQris" hidden>
+            <p class="qris-judul">Scan untuk Membayar</p>
+            <img id="doneQrisImg" alt="Kode QRIS pembayaran" hidden>
+            <a id="doneQrisUnduh" class="qris-unduh" download hidden>
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v12"></path>
+                    <path d="m7 11 5 5 5-5"></path>
+                    <path d="M4 20h16"></path>
+                </svg>
+                Unduh QRIS
+            </a>
+            <p class="qris-hint" id="doneQrisHint" hidden>
+                Simpan gambarnya, lalu buka aplikasi bank atau e-wallet kamu dan pilih bayar dengan QRIS dari galeri.
+            </p>
+
+            <p class="qris-note" id="doneQrisNote" hidden></p>
+        </div>
 
         <div class="done-detail">
             <div class="done-row">
                 <span>Nama</span>
                 <strong id="doneNama">—</strong>
-            </div>
-            <div class="done-row">
-                <span>No Meja</span>
-                <strong id="doneMeja">—</strong>
             </div>
             <div class="done-row">
                 <span>Total Bayar</span>
@@ -215,6 +212,7 @@
                 <strong>10–15 menit</strong>
             </div>
         </div>
+        <div class="done-items" id="doneItems" hidden></div>
 
         <div class="done-poin">
             <div class="ico">🎁</div>

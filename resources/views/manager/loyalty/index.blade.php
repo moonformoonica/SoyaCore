@@ -1,28 +1,3 @@
-{{--
-    resources/views/manager/loyalty-manager.blade.php
-
-    Sidebar & header sudah ada di layouts/app.blade.php, jadi file ini
-    tinggal @extends layout itu — sidebar & header otomatis ikut tampil.
-
-    Perubahan dari versi sebelumnya:
-    - Section "Tingkatan Membership" (bronze/silver/gold) DIHAPUS,
-      termasuk kolom "Tingkatan" di tabel riwayat karena datanya
-      sudah tidak dikelola dari halaman ini.
-    - Stat cards tetap 4 (Total member, Total poin aktif, Reward
-      ditukar bulan ini, Member baru bulan ini) — datanya masih dummy,
-      nanti tinggal disambungkan ke controller.
-    - Katalog reward sekarang mengikuti daftar tetap (fixed) yang sudah
-      ditentukan: diskon_10, diskon_20, diskon_30, diskon_50,
-      gratis_original, gratis_coffee_kopi, gratis_honey_lemon,
-      gratis_mango_monggo. Detail (nama, ikon, ukuran minuman) sudah
-      dikunci di JS, manager hanya bisa mengatur poin, minimal pembelian,
-      & maksimal potongan per item.
-
-    1. Taruh loyalty.css di resources/css/manager/loyalty.css
-    2. Taruh manager.loyalty.js di resources/js/manager.loyalty.js
-    3. Route tinggal return view('manager.loyalty-manager')
-    4. Jalankan "npm run dev" / "npm run build"
---}}
 
 @extends('layouts.app')
 
@@ -43,7 +18,6 @@
     </div>
 
     <div class="stats" id="lm-stats" data-role="manager">
-        {{-- diisi otomatis oleh manager.loyalty.js --}}
     </div>
 
     <div class="settings-card" data-role="manager">
@@ -54,7 +28,6 @@
         <button class="btn btn-add" id="btnSaveRule" style="align-self:flex-end">Simpan aturan</button>
     </div>
 
-    {{-- kasir: cek poin pelanggan tanpa perlu mulai transaksi dulu --}}
     <div class="lm-cek-poin" id="lmCekPoin" data-role="kasir" style="display:none;">
         <h2 class="lm-cek-poin-title">Cek Poin Pelanggan</h2>
         <p class="lm-cek-poin-sub">Cari berdasarkan No. WhatsApp.</p>
@@ -73,7 +46,22 @@
     </div>
     <div class="rewards" id="lm-rewards"></div>
 
-    <div class="section-head" data-role="manager"><h2>Riwayat poin terbaru</h2></div>
+    <div class="section-head" data-role="manager">
+        <h2>Riwayat poin terbaru</h2>
+        <div class="custom-select" id="lm-history-sort">
+            <button type="button" class="custom-select-trigger">
+                <span class="selected-label">Terbaru</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+            <ul class="custom-options">
+                <li data-value="terbaru" class="selected">Terbaru</li>
+                <li data-value="poin_desc">Poin tertinggi</li>
+                <li data-value="poin_asc">Poin terendah</li>
+            </ul>
+        </div>
+    </div>
     <div class="table-card" data-role="manager">
         <table>
             <thead>

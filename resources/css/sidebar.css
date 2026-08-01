@@ -11,70 +11,46 @@
     width:270px;
     background:#f0f7ee; 
     padding:30px 24px;
-
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-
     border-right:1px solid #DCEAD5; 
-
     flex-shrink:0;
 }
 
 .logo{
-
     text-align:center;
-
     margin-bottom:45px;
-
 }
 
 .logo img{
-
-    width:200px;
+    width:150px;
     max-width:100%;
-
 }
 
 .menu{
-
     display:flex;
     flex-direction:column;
     gap:8px;
-
 }
 
 .menu a{
-
     height:52px;
-
     border-radius:12px;
-
     text-decoration:none;
-
     color:#3F3F46;
-
     display:flex;
     align-items:center;
-
     gap:14px;
-
     padding:0 18px;
-
     font-size:15px;
-
     transition:.25s;
-
 }
 
 .menu a i{
-
     width:18px;
-
     text-align:center;
-
     color:#7A7A7A;
-
 }
 
 .menu a:hover{
@@ -82,19 +58,13 @@
 }
 
 .menu a.active{
-
     background:#7FB77E;
-
     color:#2F6B3F;
-
     font-weight:600;
-
 }
 
 .menu a.active i{
-
     color:#2F6B3F;
-
 }
 
 

@@ -12,10 +12,9 @@
                 'Accept': 'application/json',
                 ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
             },
-            // credentials: 'include', // aktifkan ini kalau pakai cookie Sanctum SPA
+           
         };
     }
-    // ==================================================================
 
     const els = {
         error: document.getElementById('dashError'),
@@ -109,14 +108,14 @@
                     await Promise.all([
                         apiGet('/ringkasan', params),
                         apiGet('/time-series', params),
-                        apiGet('/revenue-ukuran', params),
+                        apiGet('/revenue-ukuran', { ...params, sembunyikan_tidak_diketahui: true }),
                         apiGet('/produk-terlaris', { ...params, by: 'qty', limit: 100 }),
-                        apiGet('/platform', params),
+                        apiGet('/platform', { ...params, sembunyikan_tidak_diketahui: true }),
                         apiGet('/rfm', {}),
                     ]);
 
                 renderRingkasan(ringkasan.data);
-                renderTrend(timeSeries.data);
+                renderTrend(timeSeries.data, timeSeries.data_tersedia);
                 renderProdukTerlaris(produkSemua.data);
                 renderWorstSeller(produkSemua.data);
                 renderUkuran(revenueUkuran.data);
@@ -135,18 +134,34 @@
     }
 
     function renderRingkasan(d) {
-        document.getElementById('cardRevenue').textContent = rupiah(d.total_revenue);
-        document.getElementById('cardTransaksi').textContent = Number(d.total_transaksi).toLocaleString('id-ID');
-        document.getElementById('cardRata').textContent = rupiah(d.rata_rata_transaksi);
+        const revenue = Number(d.total_revenue || 0);
+        const jumlah = Number(d.total_transaksi || 0);
+        const rata = jumlah > 0 ? Math.round(revenue / jumlah) : 0;
+
+        document.getElementById('cardRevenue').textContent = rupiah(revenue);
+        document.getElementById('cardTransaksi').textContent = jumlah.toLocaleString('id-ID');
+        document.getElementById('cardRata').textContent = rupiah(rata);
     }
 
-    function renderTrend(rows) {
+    function renderTrend(rows, dataTersedia) {
         destroyChart('trend');
+
         const ctx = document.getElementById('trendChart');
+        const kosong = document.getElementById('trendKosong');
+
+        // Rentang tanpa data sama sekali: tampilkan keterangan, bukan chart kosong.
+        if (dataTersedia === false || !rows.length) {
+            ctx.hidden = true;
+            if (kosong) kosong.hidden = false;
+            return;
+        }
+        ctx.hidden = false;
+        if (kosong) kosong.hidden = true;
+
         charts.trend = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: rows.map(r => r.periode),
+                labels: rows.map(r => r.hari ?? r.periode_label ?? r.periode),
                 datasets: [{
                     label: 'Revenue',
                     data: rows.map(r => r.revenue),
@@ -156,48 +171,80 @@
                     tension: 0.3,
                 }],
             },
-            options: { plugins: { legend: { display: false } } },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => {
+                                const r = rows[items[0].dataIndex];
+                                const label = r.periode_label ?? r.periode;
+                                return r.hari ? `${r.hari}, ${label}` : label;
+                            },
+                            label: (item) => {
+                                const r = rows[item.dataIndex];
+                                return [
+                                    `Revenue: ${rupiah(r.revenue)}`,
+                                    `Transaksi: ${Number(r.transaksi).toLocaleString('id-ID')}`,
+                                    `Qty: ${Number(r.qty).toLocaleString('id-ID')}`,
+                                ];
+                            },
+                        },
+                    },
+                },
+            },
         });
     }
 
     function labelProduk(r) {
-        return r.rasa ? `${r.nama_produk} (${r.rasa})` : r.nama_produk;
+        const nama = r.nama_produk || '';
+        const rasa = r.rasa || '';
+        return rasa && !nama.toLowerCase().includes(rasa.toLowerCase())
+            ? `${nama} (${rasa})`
+            : nama;
     }
 
-    function renderProdukChart(chartKey, canvasId, labels, data, color, othersColor) {
+    function potongLabel(teks, maks = 16) {
+        return teks.length > maks ? teks.slice(0, maks - 1) + '…' : teks;
+    }
+
+    function renderProdukChart(chartKey, canvasId, labelsPenuh, data, color) {
         destroyChart(chartKey);
         const ctx = document.getElementById(canvasId);
-        const colors = labels.map(l => (l === 'Others' ? othersColor : color));
         charts[chartKey] = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels,
-                datasets: [{ label: 'Qty Terjual', data, backgroundColor: colors }],
+                labels: labelsPenuh.map(l => potongLabel(l)),
+                datasets: [{ label: 'Qty Terjual', data, backgroundColor: color }],
             },
-            options: { plugins: { legend: { display: false } } },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: { title: (items) => labelsPenuh[items[0].dataIndex] },
+                    },
+                },
+                scales: {
+                    x: { ticks: { maxRotation: 45, minRotation: 45, autoSkip: false, font: { size: 10 } } },
+                },
+            },
         });
     }
 
-    // rows = SEMUA produk (urut qty desc dari backend). Tampilkan 10 teratas
-    // + bucket "Others" (akumulasi sisanya), meniru dashboard sumber.
     function renderProdukTerlaris(rows) {
         const top = rows.slice(0, 10);
-        const othersQty = rows.slice(10).reduce((s, r) => s + Number(r.qty || 0), 0);
-        const labels = top.map(labelProduk);
-        const data = top.map(r => Number(r.qty || 0));
-        if (othersQty > 0) { labels.push('Others'); data.push(othersQty); }
-        renderProdukChart('bestSeller', 'bestSellerChart', labels, data, '#2f9e5f', '#8fd6ac');
+        renderProdukChart(
+            'bestSeller', 'bestSellerChart',
+            top.map(labelProduk), top.map(r => Number(r.qty || 0)), '#2f9e5f',
+        );
     }
 
     function renderWorstSeller(rows) {
-        const worst = rows.slice(-10); // 10 qty terkecil, urut desc
-        const othersQty = rows.slice(0, Math.max(0, rows.length - 10))
-            .reduce((s, r) => s + Number(r.qty || 0), 0);
-        const labels = [];
-        const data = [];
-        if (othersQty > 0) { labels.push('Others'); data.push(othersQty); }
-        worst.forEach(r => { labels.push(labelProduk(r)); data.push(Number(r.qty || 0)); });
-        renderProdukChart('worstSeller', 'worstSellerChart', labels, data, '#3fb98f', '#8fd6ac');
+        const worst = rows.slice(-10); // 10 qty terkecil, urut desc dari backend
+        renderProdukChart(
+            'worstSeller', 'worstSellerChart',
+            worst.map(labelProduk), worst.map(r => Number(r.qty || 0)), '#3fb98f',
+        );
     }
 
     function renderUkuran(rows) {
@@ -344,9 +391,6 @@
         loadDashboard();
     });
 
-    // ====== Auto-resize chart tiap kali lebar container berubah ======
-    // Menutupi kasus sidebar collapse/expand, resize window, dsb — tidak
-    // bergantung pada JS sidebar itu sendiri (yang mungkin ada di file lain).
     const resizeObserver = new ResizeObserver(function () {
         Object.values(charts).forEach(chart => chart.resize());
     });

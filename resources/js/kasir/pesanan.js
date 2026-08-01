@@ -22,20 +22,18 @@
     function showSuccess(msg) { successEl.textContent = msg; successEl.style.display = 'block'; setTimeout(() => successEl.style.display = 'none', 4000); }
 
     // ---- State ----
-    let allMenu = [];        // flat rows dari GET /api/menu
-    let kategoriList = [];   // dari GET /api/kategori
-    let activeKategori = ''; // '' = semua
-    let currentTransaksi = null; // objek TransaksiResource, null = belum ada transaksi berjalan
-    let tipePesanan = 'dine_in'; // 'dine_in' | 'takeaway' — dipakai isi nomor_meja per item
-    let metodeBayar = null; // 'cash' | 'qris'
-    let selectedCustomer = null; // ver1: { nama, no_wa, poin } hasil GET /api/loyalty/{no_wa}, null = belum/ver2
-    let selectedDiskonPersen = null; // preset diskon yang lagi dipilih, diterapkan lewat tombol "Terapkan Diskon"
+    let allMenu = [];        
+    let kategoriList = [];  
+    let activeKategori = ''; 
+    let currentTransaksi = null; 
+    let tipePesanan = 'dine_in'; 
+    let metodeBayar = null; 
+    let selectedCustomer = null; 
+    let selectedDiskonPersen = null; 
 
     // ==================================================================
     // LOAD DATA AWAL
     // ==================================================================
-    // Urutan kategori sesuai menu resmi (bukan alfabet) — disamakan dengan
-    // halaman SoyaScan supaya kasir dan pelanggan lihat susunan yang sama.
     const KATEGORI_RANK = {
         'Soya Signature': 1,
         'Soya Chocolate': 2,
@@ -53,11 +51,82 @@
         renderKategoriTabs();
     }
 
+    // ==================================================================
+    // OPSI SUGAR & ICE (aturan sama dengan SoyaScan)
+    // ==================================================================
+    let opsiSugar = [];
+    let opsiIce = [];
+    let opsiPending = null; 
+
+    async function loadOpsiMinuman() {
+        try {
+            const res = await fetch(`${API_BASE}/menu`, { headers: { Accept: 'application/json' } });
+            if (!res.ok) return;
+            const meta = (await res.json()).meta || {};
+            opsiSugar = meta.opsi_sugar || [];
+            opsiIce = meta.opsi_ice || [];
+        } catch (e) {
+        }
+    }
+
+    function renderOpsiRow(rowId, daftar, terpilih) {
+        const row = document.getElementById(rowId);
+        row.innerHTML = daftar.map((o) =>
+            `<button type="button" class="pes-opsi-btn ${o.kode === terpilih ? 'active' : ''}" data-kode="${o.kode}">${o.label}</button>`
+        ).join('');
+        row.querySelectorAll('.pes-opsi-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                row.querySelectorAll('.pes-opsi-btn').forEach((b) => b.classList.toggle('active', b === btn));
+                if (rowId === 'opsiSugarRow') opsiPending.sugar = btn.dataset.kode;
+                else opsiPending.ice = btn.dataset.kode;
+            });
+        });
+    }
+
+    function bukaOpsi(menu) {
+        opsiPending = {
+            menu,
+            sugar: menu.bisa_pilih_sugar && opsiSugar.length ? opsiSugar[0].kode : null,
+            ice: menu.bisa_pilih_ice && opsiIce.length ? opsiIce[0].kode : null,
+        };
+
+        document.getElementById('opsiJudul').textContent =
+            menu.ukuran ? `${menu.nama} (${menu.ukuran})` : menu.nama;
+
+        const pemanis = menu.pemanis || {};
+        document.getElementById('opsiSugarLabel').textContent =
+            pemanis.khusus ? pemanis.jenis : 'Gula';
+
+        document.getElementById('opsiSugarWrap').style.display = menu.bisa_pilih_sugar ? 'block' : 'none';
+        document.getElementById('opsiIceWrap').style.display = menu.bisa_pilih_ice ? 'block' : 'none';
+
+        if (menu.bisa_pilih_sugar) renderOpsiRow('opsiSugarRow', opsiSugar, opsiPending.sugar);
+        if (menu.bisa_pilih_ice) renderOpsiRow('opsiIceRow', opsiIce, opsiPending.ice);
+
+        document.getElementById('opsiBackdrop').classList.add('open');
+    }
+
+    function tutupOpsi() {
+        document.getElementById('opsiBackdrop').classList.remove('open');
+        opsiPending = null;
+    }
+
+    document.getElementById('opsiClose').addEventListener('click', tutupOpsi);
+    document.getElementById('opsiBackdrop').addEventListener('click', function (e) {
+        if (e.target === this) tutupOpsi();
+    });
+    document.getElementById('opsiTambahBtn').addEventListener('click', function () {
+        if (!opsiPending) return;
+        const { menu, sugar, ice } = opsiPending;
+        tutupOpsi();
+        tambahItem(menu.id, sugar, ice);
+    });
+
     async function loadMenu() {
         const res = await fetch(`${API_BASE}/menu-internal?is_active=1`, fetchOptions());
         const json = await res.json();
         allMenu = json.data || [];
-        renderKategoriTabs(); // refresh jumlah per kategori
+        renderKategoriTabs();
         renderMenuGrid();
     }
 
@@ -135,7 +204,18 @@
         }).join('');
 
         grid.querySelectorAll('.pes-add-btn, .qty-plus').forEach(function (btn) {
-            btn.addEventListener('click', () => tambahItem(parseInt(btn.dataset.menuId, 10)));
+            btn.addEventListener('click', function () {
+                const menuId = parseInt(btn.dataset.menuId, 10);
+                const menu = allMenu.find(m => m.id === menuId);
+
+                // Ukuran yang boleh diracik ditanyakan takarannya dulu, sama
+                // seperti alur di SoyaScan.
+                if (menu && (menu.bisa_pilih_sugar || menu.bisa_pilih_ice)) {
+                    bukaOpsi(menu);
+                    return;
+                }
+                tambahItem(menuId);
+            });
         });
         grid.querySelectorAll('.qty-minus').forEach(function (btn) {
             btn.addEventListener('click', () => kurangiItem(parseInt(btn.dataset.menuId, 10)));
@@ -145,26 +225,17 @@
     // ==================================================================
     // TRANSAKSI: buat / tambah item / kurangi item / hapus
     // ==================================================================
-
-    // Transaksi baru dibuat SEKALI, saat item pertama ditambahkan — memakai
-    // data pelanggan yang sudah diisi saat itu (kalau ada). Karena backend
-    // tidak punya endpoint untuk mengubah customer pada transaksi yang
-    // sudah dibuat, field pelanggan dikunci setelah ini.
     async function pastikanTransaksi() {
         if (currentTransaksi) return currentTransaksi;
 
         const payload = {};
         if (selectedCustomer) {
-            // ver1: pelanggan ketemu dari pencarian — pakai data yang sudah ada.
             payload.customer = { nama: selectedCustomer.nama, no_wa: selectedCustomer.no_wa };
         } else {
-            // ver2: pelanggan baru — daftar pakai nama + no WA yang diisi manual.
             const nama = document.getElementById('custNama').value.trim();
             const noWa = document.getElementById('custNoWa').value.trim();
 
-            // WAJIB ada pelanggan — transaksi tanpa nama tidak diizinkan.
             if (!nama || !noWa) {
-                // Pastikan form isian pelanggan tampil, lalu arahkan kasir.
                 document.getElementById('custFoundCard').style.display = 'none';
                 document.getElementById('custNewForm').style.display = 'block';
                 document.getElementById(nama ? 'custNoWa' : 'custNama').focus();
@@ -261,11 +332,6 @@
         });
     }
 
-    /**
-     * Cari lewat GET /api/customers/cari — mendukung nama maupun no WA.
-     * Kata kunci yang didominasi angka diperlakukan sebagai nomor WA,
-     * selain itu dicari sebagai nama.
-     */
     async function cariPelanggan() {
         const kata = document.getElementById('custSearch').value.trim();
 
@@ -275,13 +341,13 @@
             tampilkanFormKosong();
             return;
         }
+        const sebagaiNomor = !/[a-z]/i.test(kata);
+        const jumlahDigit = kata.replace(/\D/g, '').length;
 
-        const angka = kata.replace(/\D/g, '');
-        const sebagaiNomor = angka.length >= 3 && angka.length >= kata.length - 3;
-
-        // Pencarian nama butuh minimal 2 huruf (aturan CariCustomerRequest).
-        if (!sebagaiNomor && kata.length < 2) {
+        if ((sebagaiNomor && jumlahDigit < 3) || (!sebagaiNomor && kata.length < 2)) {
+            selectedCustomer = null;
             bersihkanHasil();
+            tampilkanFormKosong();
             return;
         }
 
@@ -294,7 +360,6 @@
             const daftar = (await res.json()).data || [];
 
             if (daftar.length === 0) {
-                // Belum terdaftar — tawarkan form pendaftaran pelanggan baru.
                 bersihkanHasil();
                 tampilkanFormBaru(sebagaiNomor ? kata : '');
                 return;
@@ -307,7 +372,6 @@
                 return;
             }
 
-            // Lebih dari satu kandidat — biar kasir yang memilih.
             selectedCustomer = null;
             tampilkanFormKosong();
             tampilkanHasil(daftar);
@@ -320,7 +384,7 @@
     document.getElementById('custAddBtn').addEventListener('click', function () {
         tampilkanFormBaru(document.getElementById('custSearch').value.trim());
     });
-    // No. WhatsApp pelanggan baru: hanya angka, maksimal 12 digit.
+
     document.getElementById('custNoWa').addEventListener('input', function () {
         this.value = this.value.replace(/\D/g, '').slice(0, 12);
     });
@@ -332,22 +396,17 @@
         document.getElementById('custSearch').focus();
     });
 
-    function itemPayloadTambahan() {
-        const payload = {};
-        if (tipePesanan === 'dine_in') {
-            const nomorMeja = document.getElementById('nomorMeja').value.trim();
-            if (nomorMeja) payload.nomor_meja = nomorMeja;
-        }
-        return payload;
-    }
-
-    async function tambahItem(menuId) {
+    async function tambahItem(menuId, sugar = null, ice = null) {
         try {
             const transaksi = await pastikanTransaksi();
 
+            const payload = { menu_id: menuId, qty: 1 };
+            if (sugar) payload.level_sugar = sugar;
+            if (ice) payload.level_ice = ice;
+
             const res = await fetch(`${API_BASE}/transaksi/${transaksi.id}/items`, fetchOptions({
                 method: 'POST',
-                body: JSON.stringify({ menu_id: menuId, qty: 1, ...itemPayloadTambahan() }),
+                body: JSON.stringify(payload),
             }));
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
@@ -365,7 +424,8 @@
 
     async function kurangiItem(menuId) {
         if (!currentTransaksi) return;
-        const item = currentTransaksi.items.find(i => i.menu_id === menuId && !i.is_reward);
+        const cocok = currentTransaksi.items.filter(i => i.menu_id === menuId && !i.is_reward);
+        const item = cocok[cocok.length - 1];
         if (!item) return;
 
         try {
@@ -375,7 +435,7 @@
             } else {
                 res = await fetch(`${API_BASE}/transaksi/${currentTransaksi.id}/items/${item.id}`, fetchOptions({
                     method: 'PATCH',
-                    body: JSON.stringify({ qty: item.qty - 1, ...itemPayloadTambahan() }),
+                    body: JSON.stringify({ qty: item.qty - 1 }),
                 }));
             }
             if (!res.ok) {
@@ -418,9 +478,13 @@
         } else {
             list.innerHTML = items.map(function (i) {
                 const label = i.ukuran ? `${i.nama} (${i.ukuran})` : i.nama;
+                // Label takaran datang siap pakai dari backend ("Less Sugar"),
+                // jangan memetakan kode 'less' sendiri.
+                const takaran = [i.level_sugar_label, i.level_ice_label].filter(Boolean).join(' · ');
                 return `<div class="pes-cart-item">
                     <div class="ci-info">
                         <div class="ci-nama">${label} ${i.is_reward ? '🎁' : ''}</div>
+                        ${takaran ? `<div class="ci-takaran">${takaran}</div>` : ''}
                         <div class="ci-harga">${i.qty} x ${rupiah(i.harga_satuan)} = ${rupiah(i.subtotal)}</div>
                     </div>
                     <div class="ci-actions">
@@ -462,7 +526,6 @@
             tipePesanan = btn.dataset.tipe;
             document.querySelectorAll('.pes-tipe-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById('nomorMejaWrap').style.display = tipePesanan === 'dine_in' ? 'block' : 'none';
         });
     });
 
@@ -490,8 +553,6 @@
         }
     }
 
-    // Pilih preset dulu (cuma menandai aktif) — baru benar-benar diterapkan
-    // saat tombol "Terapkan Diskon" ditekan.
     document.querySelectorAll('.pes-diskon-preset').forEach(function (btn) {
         btn.addEventListener('click', function () {
             document.querySelectorAll('.pes-diskon-preset').forEach(b => b.classList.remove('active'));
@@ -502,9 +563,6 @@
 
     document.getElementById('diskonTerapkanBtn').addEventListener('click', function () {
         if (selectedDiskonPersen === null) return showError('Pilih diskon dulu sebelum menerapkan.');
-        // custom_persen dipakai (bukan preset) karena backend cuma terima
-        // preset 10/20/50 — 30% (dan preset lain di masa depan) tetap valid
-        // lewat jalur custom_persen (terima 0-100), hasilnya identik.
         terapkanDiskon('custom_persen', selectedDiskonPersen);
     });
 
@@ -607,10 +665,6 @@
         redeemBackdrop.classList.remove('open');
     }
 
-    /**
-     * Nonaktifkan opsi yang jelas-jelas tidak memenuhi syarat, supaya kasir
-     * tidak menabrak error dari server: poin kurang atau minimal belanja.
-     */
     function segarkanOpsiRedeem() {
         const poin = selectedCustomer?.poin ?? 0;
         const subtotal = currentTransaksi ? currentTransaksi.subtotal : 0;
@@ -679,10 +733,8 @@
     // ==================================================================
     // PESANAN MASUK dari SoyaScan (self-order, status pending)
     // ==================================================================
-    let pesananMasuk = []; // cache TransaksiResource yang sedang ditampilkan
+    let pesananMasuk = [];
 
-    // Self-order ditandai di level item (detail_transaksi.sumber). Kode
-    // pesanan '#A...' dipakai sebagai cadangan kalau item belum termuat.
     function isSelfOrder(trx) {
         if (Array.isArray(trx.items) && trx.items.length) {
             return trx.items.some(i => i.sumber === 'self_order');
@@ -725,7 +777,6 @@
 
         row.innerHTML = pesananMasuk.map(function (trx) {
             const aktif = currentTransaksi && currentTransaksi.id === trx.id;
-            const meja = (trx.items || []).map(i => i.nomor_meja).find(Boolean);
             const ringkas = (trx.items || [])
                 .map(i => `${i.qty}× ${i.nama}${i.ukuran ? ' (' + i.ukuran + ')' : ''}`)
                 .join(', ');
@@ -736,7 +787,6 @@
             return `<div class="pm-card ${aktif ? 'active' : ''}">
                 <div class="pm-top">
                     <span class="pm-kode">${trx.kode_pesanan || '—'}</span>
-                    ${meja ? `<span class="pm-meja">Meja ${meja}</span>` : ''}
                 </div>
                 <div class="pm-nama">${trx.customer ? trx.customer.nama : 'Tanpa nama'}</div>
                 <div class="pm-items">${ringkas || '-'}</div>
@@ -757,10 +807,6 @@
         });
     }
 
-    /**
-     * Muat pesanan self-order ke panel kanan supaya kasir bisa lanjut pakai
-     * alur yang sudah ada (diskon, redeem poin, Tandai Lunas).
-     */
     async function prosesPesananMasuk(id) {
         const trx = pesananMasuk.find(t => t.id === id);
         if (!trx) return;
@@ -776,10 +822,6 @@
             b.classList.toggle('active', metodeBayar !== null && b.dataset.metode === metodeBayar);
         });
 
-        // Nomor meja diwarisi supaya item tambahan dari kasir ikut nomor sama.
-        const meja = (trx.items || []).map(i => i.nomor_meja).find(Boolean);
-        if (meja) document.getElementById('nomorMeja').value = meja;
-
         // Tampilkan pelanggan self-order (beserta poin, dipakai untuk redeem).
         if (trx.customer) {
             selectedCustomer = { nama: trx.customer.nama, no_wa: trx.customer.no_wa, poin: 0 };
@@ -792,7 +834,6 @@
                     selectedCustomer.poin = l.poin ?? 0;
                 }
             } catch (err) {
-                // poin gagal diambil — tetap tampilkan nama & no WA
             }
             tampilkanPelangganKetemu(selectedCustomer);
         }
@@ -819,14 +860,11 @@
 
     (async function init() {
         try {
-            await Promise.all([loadKategori(), loadMenu()]);
+            await Promise.all([loadKategori(), loadMenu(), loadOpsiMinuman()]);
             renderCart();
         } catch (err) {
             showError('Gagal memuat data awal. Coba refresh halaman.');
         }
-
-        // Antrean self-order: muat sekali, lalu polling ringan tiap 10 detik
-        // supaya pesanan baru dari SoyaScan muncul tanpa reload halaman.
         loadPesananMasuk();
         setInterval(loadPesananMasuk, 10000);
     })();

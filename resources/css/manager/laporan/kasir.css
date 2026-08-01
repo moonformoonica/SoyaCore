@@ -1,0 +1,28 @@
+.lk-table th, .lk-table td { white-space: nowrap; }
+.lk-table td.lk-nama { font-weight: 600; }
+.lk-table tr.lk-total td {
+    font-weight: 700;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-top: 2px solid #7FB77E;
+    border-bottom: none;
+}
+
+.lk-state { text-align: center; padding: 30px; color: #9CA3AF; font-size: 14px; }
+
+.lk-scroll {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #C4C8CE transparent;
+}
+.lk-scroll::-webkit-scrollbar { height: 8px; }
+.lk-scroll::-webkit-scrollbar-track { background: transparent; }
+.lk-scroll::-webkit-scrollbar-thumb { background: #C4C8CE; border-radius: 999px; }
+.lk-scroll::-webkit-scrollbar-thumb:hover { background: #A9ADB4; }
+.lk-error {
+    background: #FDECEA; color: #B3261E; padding: 10px 14px;
+    border-radius: 10px; margin-bottom: 18px; font-size: 13px; display: none;
+}
+.lk-sub { color: #6B7280; font-size: 13px; margin: 0 0 18px; }
+.lk-sub strong { color: #2E7D32; }

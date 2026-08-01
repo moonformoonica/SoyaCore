@@ -1,15 +1,11 @@
 /* ============================================================
    SoyaScan — self-order pelanggan (mobile).
-   Alur: GET /api/menu (publik) -> browse -> pilih ukuran ->
-   keranjang -> POST /api/order (publik, tanpa auth) -> overlay
-   "Menunggu Pembayaran" -> polling status -> "Pesanan Berhasil".
    ============================================================ */
 (function () {
     'use strict';
 
     const API_BASE = '/api';
 
-    // ---- KONFIGURASI STATUS PESANAN — WAJIB DICEK/DISESUAIKAN ----
     function statusEndpoint(kode) {
         return `${API_BASE}/order/${kode}`;
     }
@@ -19,13 +15,7 @@
     }
     const STATUS_POLL_INTERVAL_MS = 4000;
     const STATUS_POLL_TIMEOUT_MS = 15 * 60 * 1000;
-    // ------------------------------------------------------------
 
-    // ---- PERSISTENSI PESANAN AKTIF (FIX reload) ----
-    // Tanpa ini, status "sudah di-ACC kasir" cuma hidup di memori JS —
-    // begitu halaman di-reload, semuanya reset ke layar menu awal,
-    // padahal transaksinya di backend sudah lunas. Simpan ke
-    // localStorage supaya reload tetap menampilkan overlay yang benar.
     const STORAGE_KEY = 'soyascan_active_order';
 
     function saveActiveOrder(data) {
@@ -40,9 +30,7 @@
     function clearActiveOrder() {
         try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* abaikan */ }
     }
-    // ------------------------------------------------------------
 
-    // Peta nama menu (DB) -> file gambar di /images/menu.
     const IMG = {
         'Original':             { gelas: 'Soya Original.png',      botol: 'Original Botol.png' },
         'Taro Thanos':          { gelas: 'Taro Thanos.png',        botol: 'Taro Thanos Botol.png' },
@@ -85,8 +73,9 @@
     let metodeBayar = null;
     let statusPollTimer = null;
     let statusPollDeadline = 0;
-
-    // ---- Util
+    let opsiSugar = [];
+    let opsiIce = [];
+    let pendingOpsi = null;
     const $ = (id) => document.getElementById(id);
     const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
     const imgUrl = (file) => '/images/menu/' + encodeURIComponent(file);
@@ -101,6 +90,8 @@
         if (!res.ok) throw new Error('gagal');
         const json = await res.json();
         const kategori = (json.kategori || []).slice().sort((a, b) => katRank(a.nama) - katRank(b.nama));
+        opsiSugar = (json.meta && json.meta.opsi_sugar) || [];
+        opsiIce = (json.meta && json.meta.opsi_ice) || [];
 
         kategoriList = kategori.map((k) => ({ id: k.id, nama: k.nama }));
 
@@ -134,7 +125,14 @@
             label: botol ? `${baseLabel} Botol` : baseLabel,
             img: file ? imgUrl(file) : PLACEHOLDER,
             hargaMulai: Math.min.apply(null, varian.map((m) => m.harga)),
-            variants: varian.map((m) => ({ id: m.id, ukuran: m.ukuran, harga: m.harga })),
+            variants: varian.map((m) => ({
+                id: m.id,
+                ukuran: m.ukuran,
+                harga: m.harga,
+                bisaSugar: m.bisa_pilih_sugar === true,
+                bisaIce: m.bisa_pilih_ice === true,
+                pemanis: m.pemanis || null,
+            })),
         };
     }
 
@@ -206,10 +204,52 @@
     // ==================================================================
     function onAdd(card) {
         if (card.variants.length === 1) {
-            addToCart(card, card.variants[0]);
+            mulaiTambah(card, card.variants[0]);
         } else {
             openVariantSheet(card);
         }
+    }
+    function mulaiTambah(card, variant) {
+        if (!variant.bisaSugar && !variant.bisaIce) {
+            addToCart(card, variant, null, null);
+            return;
+        }
+        openOpsiSheet(card, variant);
+    }
+
+    function renderOpsiRow(rowId, daftar, terpilih) {
+        const row = $(rowId);
+        row.innerHTML = daftar.map((o) =>
+            `<button type="button" class="scan-opsi-btn ${o.kode === terpilih ? 'active' : ''}" data-kode="${o.kode}">${o.label}</button>`
+        ).join('');
+        row.querySelectorAll('.scan-opsi-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                row.querySelectorAll('.scan-opsi-btn').forEach((b) => b.classList.toggle('active', b === btn));
+                if (rowId === 'opsiSugarRow') pendingOpsi.sugar = btn.dataset.kode;
+                else pendingOpsi.ice = btn.dataset.kode;
+            });
+        });
+    }
+
+    function openOpsiSheet(card, variant) {
+        pendingOpsi = {
+            card,
+            variant,
+            sugar: variant.bisaSugar && opsiSugar.length ? opsiSugar[0].kode : null,
+            ice: variant.bisaIce && opsiIce.length ? opsiIce[0].kode : null,
+        };
+
+        $('opsiTitle').textContent = variant.ukuran ? `${card.label} (${variant.ukuran})` : card.label;
+        $('opsiSub').textContent = 'Atur takaran sesuai seleramu.';
+        const pemanis = variant.pemanis || {};
+        $('opsiSugarLabel').textContent = pemanis.jenis || 'Gula';
+        $('opsiSugarKet').textContent = pemanis.keterangan || '';
+        $('opsiSugarKet').hidden = ! pemanis.keterangan;
+        $('opsiSugarWrap').hidden = !variant.bisaSugar;
+        $('opsiIceWrap').hidden = !variant.bisaIce;
+        if (variant.bisaSugar) renderOpsiRow('opsiSugarRow', opsiSugar, pendingOpsi.sugar);
+        if (variant.bisaIce) renderOpsiRow('opsiIceRow', opsiIce, pendingOpsi.ice);
+        openSheet('opsiSheet');
     }
 
     function openVariantSheet(card) {
@@ -224,30 +264,62 @@
         ).join('');
         list.querySelectorAll('.scan-var').forEach((btn) => {
             btn.addEventListener('click', () => {
-                addToCart(card, card.variants[parseInt(btn.dataset.i, 10)]);
                 closeSheet('variantSheet');
+                mulaiTambah(card, card.variants[parseInt(btn.dataset.i, 10)]);
             });
         });
         openSheet('variantSheet');
     }
 
-    function addToCart(card, variant) {
-        const existing = cart.find((c) => c.menuId === variant.id);
+    $('opsiConfirm').addEventListener('click', () => {
+        if (!pendingOpsi) return;
+        addToCart(pendingOpsi.card, pendingOpsi.variant, pendingOpsi.sugar, pendingOpsi.ice);
+        pendingOpsi = null;
+        closeSheet('opsiSheet');
+    });
+
+    const cartKey = (menuId, sugar, ice) => `${menuId}|${sugar || ''}|${ice || ''}`;
+
+    function labelOpsi(daftar, kode) {
+        const found = daftar.find((o) => o.kode === kode);
+        return found ? found.label : null;
+    }
+
+    function addToCart(card, variant, sugar, ice) {
+        const key = cartKey(variant.id, sugar, ice);
+        const existing = cart.find((c) => c.key === key);
+
         if (existing) {
             existing.qty += 1;
         } else {
             const label = variant.ukuran ? `${card.label} (${variant.ukuran})` : card.label;
-            cart.push({ menuId: variant.id, label, ukuran: variant.ukuran, harga: variant.harga, qty: 1 });
+            const namaPemanis = (variant.pemanis && variant.pemanis.jenis) || 'Gula';
+            const bagian = [];
+            if (sugar) bagian.push(`${namaPemanis}: ${labelOpsi(opsiSugar, sugar)}`);
+            if (ice) bagian.push(`Ice: ${labelOpsi(opsiIce, ice)}`);
+            const opsiTeks = bagian.join(' · ');
+
+            cart.push({
+                key,
+                menuId: variant.id,
+                label,
+                ukuran: variant.ukuran,
+                harga: variant.harga,
+                qty: 1,
+                sugar: sugar || null,
+                ice: ice || null,
+                opsiTeks,
+            });
         }
         refreshCartUI();
         renderList();
     }
 
-    function changeQty(menuId, delta) {
-        const item = cart.find((c) => c.menuId === menuId);
+    function changeQty(key, delta) {
+        const item = cart.find((c) => c.key === key);
         if (!item) return;
         item.qty += delta;
-        if (item.qty <= 0) cart = cart.filter((c) => c.menuId !== menuId);
+        if (item.qty <= 0) cart = cart.filter((c) => c.key !== key);
         refreshCartUI();
         renderCartItems();
         renderList();
@@ -277,19 +349,20 @@
             `<div class="scan-cart-item">
                 <div class="ci-info">
                     <div class="ci-nama">${c.label}</div>
+                    ${c.opsiTeks ? `<div class="ci-opsi">${c.opsiTeks}</div>` : ''}
                     <div class="ci-sub">${rupiah(c.harga)} × ${c.qty} = ${rupiah(c.harga * c.qty)}</div>
                 </div>
                 <div class="scan-stepper">
-                    <button type="button" data-minus="${c.menuId}">−</button>
+                    <button type="button" data-minus="${c.key}">−</button>
                     <span class="qty">${c.qty}</span>
-                    <button type="button" data-plus="${c.menuId}">+</button>
+                    <button type="button" data-plus="${c.key}">+</button>
                 </div>
             </div>`
         ).join('');
         wrap.querySelectorAll('[data-minus]').forEach((b) =>
-            b.addEventListener('click', () => changeQty(parseInt(b.dataset.minus, 10), -1)));
+            b.addEventListener('click', () => changeQty(b.dataset.minus, -1)));
         wrap.querySelectorAll('[data-plus]').forEach((b) =>
-            b.addEventListener('click', () => changeQty(parseInt(b.dataset.plus, 10), +1)));
+            b.addEventListener('click', () => changeQty(b.dataset.plus, +1)));
     }
 
     // ==================================================================
@@ -298,8 +371,13 @@
     function openSheet(id) { $(id).hidden = false; document.body.style.overflow = 'hidden'; }
     function closeSheet(id) { $(id).hidden = true; document.body.style.overflow = ''; }
 
+    const SHEET_ID = { cart: 'cartSheet', variant: 'variantSheet', opsi: 'opsiSheet' };
+
     document.querySelectorAll('[data-close]').forEach((el) => {
-        el.addEventListener('click', () => closeSheet(el.dataset.close === 'cart' ? 'cartSheet' : 'variantSheet'));
+        el.addEventListener('click', () => {
+            if (el.dataset.close === 'opsi') pendingOpsi = null;
+            closeSheet(SHEET_ID[el.dataset.close] || 'variantSheet');
+        });
     });
 
     $('scanCartBar').addEventListener('click', () => {
@@ -329,12 +407,18 @@
     // ==================================================================
     // OVERLAY: state "Menunggu Pembayaran" <-> "Pesanan Berhasil"
     // ==================================================================
-    function setDoneWaiting() {
+    const SUB_MENUNGGU = {
+        qris: 'Segera selesaikan pembayaran QRIS-mu, pesanan langsung diproses setelah itu',
+        cash: 'Silakan bayar di kasir sambil menyebutkan kode pesanan di atas',
+    };
+
+    function setDoneWaiting(metode) {
         $('doneIconWaiting').hidden = false;
         $('doneIconSuccess').hidden = true;
         $('doneCheck').classList.remove('is-success');
         $('doneTitle').textContent = 'Menunggu Pembayaran';
-        $('doneSub').textContent = 'Lakukan pembayaran di kasir dan pesananmu akan segera diproses';
+        $('doneSub').textContent = SUB_MENUNGGU[metode]
+            ?? 'Lakukan pembayaran dan pesananmu akan segera diproses';
     }
 
     function setDoneSuccess() {
@@ -343,6 +427,66 @@
         $('doneCheck').classList.add('is-success');
         $('doneTitle').textContent = 'Pesanan Berhasil! 🎉';
         $('doneSub').textContent = 'Pesananmu sudah masuk ke kasir';
+        // Sudah dibayar — QRIS-nya tidak relevan lagi.
+        $('doneQris').hidden = true;
+    }
+
+    function tampilkanRincian(items) {
+        const wrap = $('doneItems');
+        if (!wrap) return;
+
+        if (!items.length) {
+            wrap.hidden = true;
+            return;
+        }
+
+        wrap.hidden = false;
+        wrap.innerHTML = items.map((i) => {
+            const nama = i.ukuran ? `${i.nama_menu} (${i.ukuran})` : i.nama_menu;
+            const takaran = [i.level_sugar_label, i.level_ice_label].filter(Boolean).join(' · ');
+
+            return `<div class="di-baris">
+                <div class="di-kiri">
+                    <div class="di-nama">${i.qty}× ${nama}</div>
+                    ${takaran ? `<div class="di-takaran">${takaran}</div>` : ''}
+                </div>
+                <div class="di-harga">${rupiah(i.subtotal)}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function tampilkanQris(metode, qrisUrl) {
+        const wrap = $('doneQris');
+        const img = $('doneQrisImg');
+        const note = $('doneQrisNote');
+        const unduh = $('doneQrisUnduh');
+        const hint = $('doneQrisHint');
+
+        if (metode !== 'qris') {
+            wrap.hidden = true;
+            return;
+        }
+
+        wrap.hidden = false;
+
+        if (qrisUrl) {
+            img.src = qrisUrl;
+            img.hidden = false;
+            note.hidden = true;
+            const cocok = qrisUrl.split('?')[0].match(/\.(png|jpe?g)$/i);
+            unduh.href = qrisUrl;
+            unduh.download = 'qris-gressoy.' + (cocok ? cocok[1].toLowerCase() : 'png');
+            unduh.hidden = false;
+            hint.hidden = false;
+        } else {
+            img.removeAttribute('src');
+            img.hidden = true;
+            unduh.removeAttribute('href');
+            unduh.hidden = true;
+            hint.hidden = true;
+            note.textContent = 'Kode QRIS belum tersedia. Silakan bayar di kasir sambil menyebutkan kode pesanan di atas.';
+            note.hidden = false;
+        }
     }
 
     function stopStatusPolling() {
@@ -372,30 +516,24 @@
                     stopStatusPolling();
                 }
             } catch (e) {
-                // koneksi bermasalah sesaat, coba lagi di interval berikutnya
             }
         };
 
         check();
         statusPollTimer = setInterval(check, STATUS_POLL_INTERVAL_MS);
     }
-
-    // Tampilkan kembali overlay dari data yang disimpan di localStorage
-    // (dipanggil saat halaman baru dimuat/di-reload, sebelum daftar menu
-    // dirender, supaya pelanggan tidak "kelempar" balik ke layar menu).
     function restoreActiveOrderOverlay() {
         const order = loadActiveOrder();
         if (!order || !order.kode) return false;
 
         $('doneKode').textContent = order.kode;
         $('doneNama').textContent = order.nama ?? '—';
-        $('doneMeja').textContent = order.meja ?? '—';
         $('doneTotal').textContent = rupiah(order.total ?? 0);
         $('donePoin').textContent = '+' + (order.poin ?? 0) + ' poin';
+        tampilkanQris(order.metode, order.qrisUrl ?? null);
+        tampilkanRincian(order.items || []);
 
-        setDoneWaiting(); // default; check() di startStatusPolling akan
-                           // langsung update ke sukses kalau statusnya
-                           // ternyata sudah lunas
+        setDoneWaiting(order.metode); 
         $('doneOverlay').hidden = false;
         document.body.style.overflow = 'hidden';
         startStatusPolling(order.kode);
@@ -417,8 +555,7 @@
 
         const nama = $('fNama').value.trim();
         const nomorWa = $('fWa').value.trim();
-        const nomorMeja = $('fMeja').value.trim();
-        if (!nama || !nomorWa || !nomorMeja) return showCartError('Nama, nomor WhatsApp, dan nomor meja wajib diisi.');
+        if (!nama || !nomorWa) return showCartError('Nama dan nomor WhatsApp wajib diisi.');
         if (!metodeBayar) return showCartError('Pilih metode pembayaran dulu (Tunai atau QRIS).');
 
         const btn = $('submitOrder');
@@ -432,9 +569,13 @@
                 body: JSON.stringify({
                     nama,
                     nomor_wa: nomorWa,
-                    nomor_meja: nomorMeja,
                     metode_bayar: metodeBayar,
-                    items: cart.map((c) => ({ menu_id: c.menuId, qty: c.qty })),
+                    items: cart.map((c) => {
+                        const item = { menu_id: c.menuId, qty: c.qty };
+                        if (c.sugar) item.level_sugar = c.sugar;
+                        if (c.ice) item.level_ice = c.ice;
+                        return item;
+                    }),
                 }),
             });
             const json = await res.json().catch(() => ({}));
@@ -442,21 +583,23 @@
 
             const kode = json.kode_pesanan || '—';
             const totalBayar = Number(json.total ?? cartTotal());
-            const nomorMejaFinal = json.nomor_meja ?? nomorMeja;
             const poin = Math.floor(totalBayar / 1000);
+            // Key ini cuma ada di response saat pembayarannya QRIS.
+            const qrisUrl = metodeBayar === 'qris' ? (json.qris_url ?? null) : null;
 
             $('doneKode').textContent = kode;
             $('doneNama').textContent = nama;
-            $('doneMeja').textContent = nomorMejaFinal;
             $('doneTotal').textContent = rupiah(totalBayar);
             $('donePoin').textContent = '+' + poin + ' poin';
+            tampilkanQris(metodeBayar, qrisUrl);
+            tampilkanRincian(json.items || []);
+            saveActiveOrder({
+                kode, nama, total: totalBayar, poin,
+                metode: metodeBayar, qrisUrl,
+                items: json.items || [],
+            });
 
-            // Simpan ke localStorage supaya kalau halaman di-reload SEBELUM
-            // atau SESUDAH kasir meng-ACC pesanan, overlay ini tetap
-            // muncul lagi (bukan balik ke layar menu awal).
-            saveActiveOrder({ kode, nama, meja: nomorMejaFinal, total: totalBayar, poin });
-
-            setDoneWaiting();
+            setDoneWaiting(metodeBayar);
             startStatusPolling(kode);
 
             closeSheet('cartSheet');
@@ -478,8 +621,7 @@
 
     $('doneClose').addEventListener('click', () => {
         stopStatusPolling();
-        clearActiveOrder(); // pesanan ini sudah "selesai dilihat" pelanggan,
-                             // reload berikutnya balik ke layar menu normal
+        clearActiveOrder(); 
         $('doneOverlay').hidden = true;
         document.body.style.overflow = '';
     });
@@ -493,19 +635,12 @@
         searchTimer = setTimeout(renderList, 200);
     });
 
-    const meja = new URLSearchParams(location.search).get('meja');
-    if (meja) $('fMeja').value = meja;
-
     $('fWa').addEventListener('input', function () {
         this.value = this.value.replace(/\D/g, '').slice(0, 12);
     });
 
     (async function init() {
-        // Tampilkan overlay pesanan aktif (kalau ada) SEGERA, tidak perlu
-        // menunggu katalog menu selesai dimuat — biar tidak "kelip" ke
-        // layar menu dulu sebelum overlay muncul.
         restoreActiveOrderOverlay();
-
         try {
             await loadKatalog();
             renderChips();

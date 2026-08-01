@@ -75,7 +75,6 @@
                     <label class="section-label">Ukuran <span class="req">*</span></label>
 
                     <div class="ukuran-grid" id="ukuranGrid">
-                        <!-- diisi lewat JS -->
                     </div>
 
                 </div>

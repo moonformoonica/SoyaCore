@@ -75,7 +75,6 @@ function initCustomSelectKategori() {
         wrap.classList.toggle("open");
     });
 
-    // event delegation supaya opsi yang ditambah belakangan tetap kepegang
     wrap.querySelector(".custom-options").addEventListener("click", (e) => {
         const option = e.target.closest("li");
         if (!option) return;
@@ -145,7 +144,6 @@ function groupRows(rows) {
                 rasa: r.rasa,
                 variants: [],
             };
-
         }
 
         groups[key].variants.push({
@@ -172,57 +170,40 @@ function render() {
     let filtered = allRows;
 
     if (kategoriFilter) {
-
         filtered = filtered.filter(
             (r) => String(r.kategori_id) === kategoriFilter
         );
-
     }
 
     if (keyword) {
-
         filtered = filtered.filter((r) =>
             r.nama.toLowerCase().includes(keyword)
         );
-
     }
 
     const groups = groupRows(filtered);
-
     const tbody = document.getElementById("menuTableBody");
     const kasir = isKasir();
     const colCount = kasir ? 6 : 7;
-
     if (groups.length === 0) {
-
         tbody.innerHTML =
             `<tr><td colspan="${colCount}" class="menu-empty">Tidak ada menu.</td></tr>`;
-
         return;
     }
 
     tbody.innerHTML = groups
         .map((g) => {
-
             const hargaList = g.variants.map((v) => v.harga);
-
             const min = Math.min(...hargaList);
             const max = Math.max(...hargaList);
-
             const hargaText =
                 min === max
                     ? rupiah(min)
                     : `${rupiah(min)} - ${rupiah(max)}`;
-
             const ukuranText =
                 g.variants.length + " Ukuran";
-
             const tersedia = g.variants.some((v) => v.is_active);
-
-            // id representatif untuk grup ini (dipakai halaman edit
-            // untuk meng-group ulang semua varian dengan kategori_id + nama yang sama)
             const representativeId = g.variants[0].id;
-
             const editUrl = `/menu/${representativeId}/edit`;
 
             return `
@@ -281,7 +262,6 @@ data-nama="${g.nama}">
                     btn.dataset.kategori,
                     btn.dataset.nama
                 );
-
         });
     }
 }
@@ -302,16 +282,13 @@ function openDeleteModal(kategoriId, nama) {
         "deleteMessage"
     ).textContent =
         `Apakah anda yakin ingin menghapus '${nama}'?`;
-
     deleteOverlay.classList.add("open");
 }
 
 document
     .getElementById("deleteCancelBtn")
     .addEventListener("click", () => {
-
         deleteOverlay.classList.remove("open");
-
         pendingDelete = null;
     });
 
@@ -342,17 +319,12 @@ document
             );
 
             deleteOverlay.classList.remove("open");
-
             pendingDelete = null;
-
             loadMenu();
-
         } catch (e) {
-
             showError(
                 "Gagal menghapus menu."
             );
-
         }
     });
 
@@ -364,13 +336,9 @@ document
     );
 
 function debounce(fn, delay) {
-
     let timer;
-
     return (...args) => {
-
         clearTimeout(timer);
-
         timer = setTimeout(
             () => fn(...args),
             delay
@@ -379,9 +347,17 @@ function debounce(fn, delay) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-
     loadKategori();
-
     loadMenu();
+});
 
+// Elemen khusus manager disembunyikan untuk kasir. Dipindahkan dari <script>
+// inline di manager/menu/index.blade.php; memakai isKasir() yang sudah ada di
+// berkas ini, bukan membaca ulang localStorage sendiri.
+document.addEventListener("DOMContentLoaded", function () {
+    if (!isKasir()) return;
+
+    document.querySelectorAll('.transaction-page [data-role="manager"]').forEach(function (el) {
+        el.style.display = "none";
+    });
 });

@@ -118,25 +118,27 @@ rasaInput.addEventListener("keydown", (e) => {
         UKURAN + HARGA
 =========================== */
 
+// Urutannya sengaja sama dengan urutan dari backend (Hot → Reguler → Large →
+// 250ml → 500ml → 1000ml); jangan di-sort ulang.
 const UKURAN_PRESET = ["Hot", "Reguler", "Large", "250ml", "500ml", "1000ml"];
+
+// Golongan tiap ukuran diambil dari `golongan_ukuran` milik backend, bukan
+// ditebak dari string — supaya penambahan ukuran baru cukup diurus di satu
+// tempat. Diisi saat data menu dimuat.
+let golonganUkuran = {};
 
 const ukuranGrid = document.getElementById("ukuranGrid");
 
-function renderUkuranGrid(existingVarian = []) {
-    // existingVarian: [{ id, ukuran, harga }]
-    const hargaMap = {};
-    existingVarian.forEach((v) => {
-        hargaMap[v.ukuran] = v;
-    });
+function barisUkuran(ukuran, hargaMap) {
+    const existing = hargaMap[ukuran];
+    const harga = existing ? existing.harga : "";
+    const varianId = existing ? existing.id : "";
+    // Dessert & cookies tersimpan dengan ukuran string kosong.
+    const label = ukuran === "" ? "Tanpa ukuran" : ukuran;
 
-    ukuranGrid.innerHTML = UKURAN_PRESET.map((ukuran) => {
-        const existing = hargaMap[ukuran];
-        const harga = existing ? existing.harga : "";
-        const varianId = existing ? existing.id : "";
-
-        return `
+    return `
         <div class="ukuran-row">
-            <span class="ukuran-pill">${ukuran}</span>
+            <span class="ukuran-pill">${label}</span>
             <input
                 type="number"
                 min="0"
@@ -147,8 +149,44 @@ function renderUkuranGrid(existingVarian = []) {
                 value="${harga}"
                 class="ukuran-harga-input">
         </div>
-        `;
-    }).join("");
+    `;
+}
+
+function renderUkuranGrid(existingVarian = []) {
+    // existingVarian: [{ id, ukuran, harga }]
+    const hargaMap = {};
+    existingVarian.forEach((v) => {
+        hargaMap[v.ukuran] = v;
+    });
+
+    // Preset dulu, lalu ukuran milik menu ini yang di luar preset (mis. dessert
+    // dengan ukuran kosong) supaya tidak hilang dari layar — kalau hilang,
+    // harganya ikut terhapus saat disimpan.
+    const daftar = UKURAN_PRESET.slice();
+    existingVarian.forEach((v) => {
+        if (!daftar.includes(v.ukuran)) daftar.push(v.ukuran);
+    });
+
+    const kolom = { cup: [], botol: [], lainnya: [] };
+    daftar.forEach((u) => {
+        const golongan = golonganUkuran[u] || "lainnya";
+        (kolom[golongan] || kolom.lainnya).push(barisUkuran(u, hargaMap));
+    });
+
+    const bagian = (judul, isi) =>
+        isi.length ? `<span class="ukuran-kolom-judul">${judul}</span>${isi.join("")}` : "";
+
+    // Cup di kiri, botol di kanan. "Lainnya" menempel di kolom kiri supaya
+    // tetap terlihat, bukan dibuang.
+    ukuranGrid.innerHTML = `
+        <div class="ukuran-kolom">
+            ${bagian("Cup", kolom.cup)}
+            ${bagian("Lainnya", kolom.lainnya)}
+        </div>
+        <div class="ukuran-kolom">
+            ${bagian("Botol", kolom.botol)}
+        </div>
+    `;
 }
 
 function getUkuranData() {
@@ -200,6 +238,11 @@ async function loadMenuData() {
 
         const json = await res.json();
         const allRows = json.data || [];
+
+        // Peta ukuran -> golongan dari backend, dipakai memisah kolom cup/botol.
+        allRows.forEach((r) => {
+            if (r.golongan_ukuran) golonganUkuran[r.ukuran ?? ""] = r.golongan_ukuran;
+        });
 
         const anchorRow = allRows.find((r) => String(r.id) === String(menuId));
 

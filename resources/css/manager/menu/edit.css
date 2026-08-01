@@ -417,3 +417,19 @@ body{
         gap:16px;
     }
 }
+/* Kolom ukuran: cup di kiri, botol di kanan (revisi pembimbing).
+   .ukuran-grid sudah 2 kolom; tiap kolom kini punya wadah sendiri supaya
+   isinya tidak mengalir campur kiri-kanan. */
+.ukuran-kolom{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.ukuran-kolom-judul{
+    font-size:12px;
+    font-weight:600;
+    color:#6B7280;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+}

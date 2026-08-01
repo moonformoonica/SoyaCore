@@ -118,8 +118,11 @@ body{
     cursor:pointer;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
+    /* Panah dirapatkan ke teks, sama seperti Transaksi & Loyalty. Warna
+       putih-bergaris di halaman ini sengaja DIPERTAHANKAN, tidak ikut
+       dikuningkan. */
+    justify-content:center;
+    gap:4px;
     transition:.2s ease;
 }
 

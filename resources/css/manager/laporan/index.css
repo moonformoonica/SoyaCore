@@ -3,7 +3,7 @@
     display: flex; justify-content: space-between; align-items: center;
     border-radius: 8px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
 }
-.lap-header h1 { font-size: 18px; margin: 0; color: #212B36; }
+.lap-header h1 { font-size: 18px; margin: 0; color: #fff; }
 .lap-header p { font-size: 12px; margin: 4px 0 0; opacity: .85; }
 
 .lap-header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -78,4 +78,28 @@ canvas#revenueUkuranChart { max-height: 260px; max-width: 100% !important; }
 
 @media (max-width: 900px) {
     .lap-grid { grid-template-columns: 1fr; }
+}
+
+.lap-select-kasir {
+    height: 36px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 0 10px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #212B36;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    max-width: 160px;
+}
+.lap-select-kasir:focus { border-color: #2F6B3F; }
+
+/* Kartu segmen bisa diklik untuk menyaring tabel RFM. */
+.lap-card[data-segmen] { cursor: pointer; transition: .15s; }
+.lap-card[data-segmen]:hover { box-shadow: 0 3px 10px rgba(0,0,0,.10); }
+.lap-card[data-segmen].aktif {
+    outline: 2px solid #2F6B3F;
+    outline-offset: -2px;
+    background: #F4F8F2;
 }

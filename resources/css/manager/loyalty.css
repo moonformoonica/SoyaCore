@@ -10,9 +10,6 @@
   --lm-white:#fff;
   --lm-radius:14px;
 }
-
-/* Bungkus semua style di bawah prefix .loyalty-manager supaya tidak bentrok
-   dengan class lain yang sudah ada di project kamu */
 .loyalty-manager{
   font-family:'Inter',sans-serif;
   color:var(--lm-ink);
@@ -54,6 +51,58 @@
   font-family:'Inter',sans-serif; font-weight:700; font-size:19px; margin:0; color:#212B36;
 }
 .loyalty-manager .section-sub{margin:6px 0 0; font-size:13px; color:var(--lm-ink-soft);}
+.loyalty-manager .custom-select{position:relative;}
+
+.loyalty-manager .custom-select-trigger{
+  height:38px;
+  padding:0 12px;
+  border:none;
+  background:#FFC94D;
+  color:#fff;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:600;
+  font-family:'Inter',sans-serif;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px; 
+  min-width:96px;
+}
+
+.loyalty-manager .custom-select-trigger svg{transition:transform .2s ease; flex-shrink:0;}
+.loyalty-manager .custom-select.open .custom-select-trigger svg{transform:rotate(180deg);}
+
+.loyalty-manager .custom-options{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0; 
+  min-width:150px;
+  background:#fff;
+  border-radius:10px;
+  list-style:none;
+  margin:0;
+  padding:6px;
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
+  display:none;
+  z-index:20;
+}
+
+.loyalty-manager .custom-select.open .custom-options{display:block;}
+
+.loyalty-manager .custom-options li{
+  padding:10px 14px;
+  border-radius:8px;
+  font-size:14px;
+  color:#4b5563;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:.15s ease;
+}
+
+.loyalty-manager .custom-options li:hover{background:#FFC94D; color:#fff;}
+.loyalty-manager .custom-options li.selected{background:#F7A932; color:#fff; font-weight:600;}
 .loyalty-manager .btn{
   border:none; border-radius:9px; padding:9px 16px;
   font-family:'Inter'; font-weight:600; font-size:13px;

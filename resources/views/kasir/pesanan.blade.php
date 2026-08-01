@@ -14,11 +14,7 @@
 
     <div class="pes-layout">
 
-        {{-- KIRI: kategori + grid menu --}}
         <div class="pes-left">
-
-            {{-- Pesanan masuk dari SoyaScan (self-order, status pending).
-                 Disembunyikan otomatis kalau tidak ada antrean. --}}
             <div class="pes-masuk" id="pesMasukWrap" style="display:none;">
                 <div class="pes-masuk-head">
                     <span class="pm-judul">
@@ -47,7 +43,6 @@
 
         </div>
 
-        {{-- KANAN: keranjang / daftar pesanan --}}
         <div class="pes-right">
             <h3>Daftar Pesanan</h3>
 
@@ -67,10 +62,9 @@
                     </button>
                 </div>
 
-                {{-- hasil pencarian: bisa lebih dari satu kalau dicari per nama --}}
+
                 <div id="custResults" class="pes-cust-results"></div>
 
-                {{-- ver 1: pelanggan ketemu (sudah pernah beli) --}}
                 <div id="custFoundCard" class="pes-cust-found" style="display:none;">
                     <div class="pes-cust-found-info">
                         <div class="cf-nama" id="custFoundNama"></div>
@@ -84,7 +78,6 @@
                     </button>
                 </div>
 
-                {{-- ver 2: pelanggan baru — daftar pakai nama + no WA --}}
                 <div id="custNewForm" class="pes-cust-new" style="display:none;">
                     <input type="text" id="custNama" class="pes-input" placeholder="Nama pelanggan">
                     <input type="text" id="custNoWa" class="pes-input" placeholder="No. WhatsApp" inputmode="numeric" maxlength="12" style="margin-bottom:0;">
@@ -104,9 +97,6 @@
                     <button type="button" class="pes-toggle-btn pes-tipe-btn" data-tipe="takeaway">
                         <i class="fa-solid fa-bag-shopping"></i> Bawa Pulang
                     </button>
-                </div>
-                <div id="nomorMejaWrap" style="margin-top: 8px;">
-                    <input type="text" id="nomorMeja" class="pes-input" placeholder="Nomor meja (opsional)" style="margin-bottom: 0;">
                 </div>
             </div>
 
@@ -164,10 +154,30 @@
     </div>
 
 </div>
-{{-- ============ MODAL REDEEM POIN ============
-     Opsi dibaca langsung dari LoyaltyRedemptionCatalog (sumber tunggal di
-     backend), jadi kalau owner mengubah poin/katalog tidak perlu menyentuh
-     file ini. --}}
+
+<div class="pes-redeem-backdrop" id="opsiBackdrop">
+    <div class="pes-redeem-modal">
+        <div class="pes-redeem-head">
+            <h3 id="opsiJudul">Takaran</h3>
+            <button type="button" class="pes-redeem-close" id="opsiClose">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="pes-opsi-grup" id="opsiSugarWrap">
+            <span class="pes-section-label" id="opsiSugarLabel">Gula</span>
+            <div class="pes-opsi-row" id="opsiSugarRow"></div>
+        </div>
+
+        <div class="pes-opsi-grup" id="opsiIceWrap">
+            <span class="pes-section-label">Ice</span>
+            <div class="pes-opsi-row" id="opsiIceRow"></div>
+        </div>
+
+        <button type="button" class="pes-diskon-terapkan-btn" id="opsiTambahBtn">Tambah ke Pesanan</button>
+    </div>
+</div>
+
 @php $katalogRedeem = \App\Support\LoyaltyRedemptionCatalog::all(); @endphp
 
 <div class="pes-redeem-backdrop" id="redeemBackdrop">
@@ -189,7 +199,6 @@
 
         <div class="pes-redeem-list">
             @foreach ($katalogRedeem as $kode => $item)
-                {{-- Reward yang dinonaktifkan manager tidak ditawarkan ke kasir --}}
                 @if (! ($item['is_active'] ?? true)) @continue @endif
                 <button type="button"
                         class="pes-redeem-item"
@@ -199,9 +208,6 @@
                     <span class="ri-info">
                         <span class="ri-label">{{ $item['label'] }}</span>
                         @php
-                            // Plafon ikut ditampilkan karena inilah yang paling
-                            // sering ditanya pelanggan di pesanan besar:
-                            // "kenapa diskon 50% cuma potong Rp 25.000?"
                             $syarat = [];
                             if (($item['min_subtotal'] ?? 0) > 0) {
                                 $syarat[] = 'min. belanja Rp '.number_format($item['min_subtotal'], 0, ',', '.');

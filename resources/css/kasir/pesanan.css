@@ -1,9 +1,7 @@
 .pes-layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
 
-/* ===== LEFT: kategori + menu grid ===== */
 .pes-left { min-width: 0; }
 
-/* ===== Pesanan masuk dari SoyaScan (self-order) ===== */
 .pes-masuk {
     background: #F4F8F2; border: 1px solid #D9E7DB; border-radius: 10px;
     padding: 12px 14px; margin-bottom: 14px;
@@ -290,3 +288,17 @@
 @media (max-width: 700px) {
     .pes-menu-grid { grid-template-columns: repeat(2, 1fr); }
 }
+/* ===== Opsi sugar & ice (modal) ===== */
+.pes-opsi-grup { margin-bottom: 14px; }
+.pes-opsi-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.pes-opsi-btn {
+    flex: 1 1 calc(50% - 4px);
+    border: 1.5px solid #ECECEC; background: #fff; border-radius: 9px;
+    padding: 9px 8px; font-family: inherit; font-size: 12.5px; font-weight: 600;
+    color: #5b6169; cursor: pointer; transition: .12s;
+}
+.pes-opsi-btn:hover { border-color: #2E7D32; }
+.pes-opsi-btn.active { border-color: #2E7D32; background: #EEF7EF; color: #2E7D32; }
+
+/* keterangan takaran di baris keranjang */
+.pes-cart-item .ci-takaran { font-size: 11px; color: #2F6B3F; margin: 2px 0; }

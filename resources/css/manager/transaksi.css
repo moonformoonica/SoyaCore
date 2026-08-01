@@ -12,9 +12,7 @@ body{
 }
 
 .transaction-page{
-
     padding:30px;
-
 }
 
 /* ===========================
@@ -22,69 +20,41 @@ body{
 =========================== */
 
 .page-header{
-
     display:flex;
-
     justify-content:space-between;
-
     align-items:flex-start;
-
     margin-bottom:30px;
-
 }
 
 .page-header h1{
-
     font-size:34px;
-
     color:#212B36;
-
     font-weight:700;
-
 }
 
 .page-header p{
-
     margin-top:8px;
-
     color:#6B7280;
-
     font-size:15px;
-
 }
 
 .download-btn{
-
     border:none;
-
     background:#2E7D32;
-
     color:white;
-
     padding:12px 20px;
-
     border-radius:10px;
-
     cursor:pointer;
-
     display:flex;
-
     align-items:center;
-
     gap:8px;
-
     font-size:14px;
-
     font-weight:600;
-
     transition:.25s;
-
 }
 
 .download-btn:hover{
-
     background:#256428;
-
 }
 
 /* ===========================
@@ -92,155 +62,91 @@ body{
 =========================== */
 
 .stats-grid{
-
     display:grid;
-
     grid-template-columns:repeat(4,1fr);
-
     gap:28px;
-
     margin-bottom:32px;
-
 }
 
 .stat-card{
-
     background:#fff;
-
     border-radius:14px;
-
     padding:14px 22px;
-
     border:1px solid #E5E7EB;
-
     box-shadow:0 5px 14px rgba(0,0,0,.05);
-
 }
 
 .stat-card h5{
-
     font-size:14px;
-
     color:#222;
-
     margin-bottom:8px;
-
     font-weight:600;
-
 }
 
 .stat-card h2{
-
     font-size:28px;
-
     color:#111827;
-
     margin-bottom:6px;
-
 }
 
 .stat-card span{
-
     color:#8A8A8A;
-
     font-size:13px;
-
 }
+
+.stats-note{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:-18px 0 26px;
+    padding:10px 14px;
+    background:#FFF8E6;
+    border:1px solid #F5DFA6;
+    border-radius:10px;
+    font-size:13px;
+    color:#8A6420;
+}
+
+.stats-note i{ flex-shrink:0; }
 
 /* ===========================
         FILTER
 =========================== */
 
 .filter-bar{
-
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
-
     margin-bottom:26px;
-
     margin-left:10px;
-
 }
 
-.search-box{
-
-    width:340px;
-
-    height:46px;
-
+.filter-bar .search-box{
+    width:100%;
+    height:38px;
     border:1px solid #E5E7EB;
-
     border-radius:10px;
-
     display:flex;
-
     align-items:center;
-
     padding:0 16px;
-
     background:white;
-
 }
 
-.search-box i{
-
+.filter-bar .search-box i{
     color:#9CA3AF;
-
     margin-right:12px;
-
 }
 
-.search-box input{
-
+.filter-bar .search-box input{
     flex:1;
-
     border:none;
-
     outline:none;
-
     font-size:14px;
-
-}
-
-.filter-right{
-
-    display:flex;
-
-    gap:14px;
-
 }
 
 .filter-dropdowns{
-
     display:flex;
-
     gap:14px;
-
-}
-
-.filter-right select{
-    height:44px;
-    padding:0 36px 0 18px;   /* tambah ruang kanan buat panah */
-    border:none;
-    background-color:#FFC94D;
-    color:white;
-    border-radius:10px;
-    font-size:14px;
-    cursor:pointer;
-    outline:none;
-
-    min-width:130px;         
-
-    appearance:none;
-    -webkit-appearance:none;
-    -moz-appearance:none;
-
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
-    background-repeat:no-repeat;
-    background-position:right 14px center;
 }
 
 /* ===========================
@@ -252,8 +158,8 @@ body{
 }
 
 .custom-select-trigger{
-    height:44px;
-    padding:0 16px;
+    height:38px;
+    padding:0 12px;
     border:none;
     background:#FFC94D;
     color:white;
@@ -264,9 +170,9 @@ body{
     cursor:pointer;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    min-width:130px;
+    justify-content:center;
+    gap:4px;
+    min-width:96px;
 }
 
 .custom-select-trigger svg{
@@ -319,7 +225,7 @@ body{
 
 .date-btn{
 
-    height:44px;
+    height:38px;
 
     padding:0 20px;
 
@@ -518,7 +424,7 @@ tbody td{
 
     width:38px;
 
-    height:38px;
+    height:44px;
 
     border-radius:12px;
 
@@ -578,9 +484,11 @@ tbody td{
 
     }
 
-    .filter-right{
+    /* Di layar sempit baris filter jadi menumpuk ke bawah, jadi rentang
+       tanggal tidak lagi perlu didorong ke kanan. */
+    .trx-date-range{
 
-        flex-wrap:wrap;
+        margin-left:0;
 
     }
 
@@ -850,3 +758,134 @@ tbody td{
     margin-left:5px;
     vertical-align:middle;
 }
+/* ===== Rentang tanggal (pola sama dengan Dashboard & Laporan) ===== */
+.trx-date-range{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    height:38px;
+    padding:0 12px;
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    background:#fff;
+}
+
+.trx-date-range i{ color:#9CA3AF; font-size:13px; }
+
+.trx-date-range input[type="date"]{
+    border:none;
+    outline:none;
+    font-family:inherit;
+    font-size:13px;
+    color:#212B36;
+    background:transparent;
+}
+
+.trx-date-sd{ color:#9CA3AF; font-size:12.5px; }
+
+.trx-date-reset{
+    border:none;
+    background:none;
+    color:#9CA3AF;
+    cursor:pointer;
+    font-size:12px;
+    padding:4px;
+    border-radius:6px;
+}
+.trx-date-reset:hover{ background:#F3F4F6; color:#4B5563; }
+
+/* ===== Keterangan sumber & kasir di tabel ===== */
+.trx-tag-kasir{
+    background:#EEF2FF;
+    color:#3F51B5;
+}
+
+.trx-kasir{
+    margin-top:4px;
+    font-size:11px;
+    color:#6B7280;
+    line-height:1.4;
+}
+
+/* ===== Pembatalan / koreksi pesanan (modal detail) ===== */
+.koreksi-field{ margin-bottom:14px; }
+.koreksi-field label{
+    display:block; font-size:12.5px; font-weight:600; color:#374151; margin-bottom:6px;
+}
+.koreksi-field label .wajib{ color:#C0392B; }
+.koreksi-field input[type="text"]{
+    width:100%; height:40px; border:1.5px solid #E5E7EB; border-radius:9px;
+    padding:0 12px; font-family:inherit; font-size:13.5px; color:#212B36; outline:none;
+}
+.koreksi-field input[type="text"]:focus{ border-color:#2E7D32; }
+.koreksi-hint{ margin:6px 0 0; font-size:11.5px; color:#9CA3AF; line-height:1.5; }
+
+.koreksi-items{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+
+.koreksi-item{
+    display:flex; align-items:center; gap:14px;
+    border:1.5px solid #E5E7EB; border-radius:10px; padding:12px 14px;
+    transition:.15s;
+}
+.koreksi-item.aktif{ border-color:#2E7D32; background:#F7FDF8; }
+
+/* Checkbox + nama jadi satu area klik yang lega. */
+.koreksi-item .ki-pilih{
+    display:flex; align-items:center; gap:10px;
+    flex:1; min-width:0; cursor:pointer; margin:0;
+}
+.koreksi-item .ki-pilih input[type="checkbox"]{
+    width:16px; height:16px; flex-shrink:0; accent-color:#2E7D32; cursor:pointer;
+}
+.koreksi-item .ki-teks{ display:flex; flex-direction:column; gap:2px; min-width:0; text-align:left; }
+.koreksi-item .ki-nama{ font-size:13.5px; color:#212B36; font-weight:500; }
+.koreksi-item .ki-takaran{ font-size:11.5px; color:#2F6B3F; }
+
+/* Stepper +/- untuk jumlah yang dibatalkan. */
+.koreksi-item .ki-stepper{
+    display:flex; align-items:center; gap:4px; flex-shrink:0;
+    border:1px solid #E5E7EB; border-radius:9px; padding:3px; background:#fff;
+}
+.koreksi-item .ki-stepper button{
+    width:28px; height:28px; border:none; border-radius:6px; background:#F3F4F6;
+    color:#374151; font-size:15px; line-height:1; cursor:pointer;
+    display:grid; place-items:center; transition:.12s; font-family:inherit;
+}
+.koreksi-item .ki-stepper button:hover:not(:disabled){ background:#E5E7EB; }
+.koreksi-item .ki-stepper button:disabled{ opacity:.35; cursor:not-allowed; }
+.koreksi-item .ki-qty{
+    min-width:30px; text-align:center; font-size:13.5px; font-weight:600; color:#212B36;
+}
+.koreksi-item .ki-dari{ font-size:12px; color:#9CA3AF; flex-shrink:0; white-space:nowrap; }
+
+.koreksi-hasil{
+    border-top:1px solid #E5E7EB; margin-top:18px; padding-top:16px;
+}
+.koreksi-hasil .kh-judul{ font-size:14px; font-weight:700; color:#2F6B3F; margin-bottom:10px; }
+.koreksi-hasil .kh-baris{
+    display:flex; justify-content:space-between; gap:12px;
+    font-size:13px; color:#4B5563; padding:5px 0;
+}
+.koreksi-hasil .kh-saldo{
+    margin-top:10px; background:#F4F8F2; border-radius:9px;
+    padding:10px 12px; font-size:13px; color:#2F6B3F;
+}
+/* Susunan baris filter: kotak cari & dropdown menumpuk dari KIRI, rentang
+   tanggal sendirian di KANAN.
+   `justify-content:space-between` bawaan diganti `flex-start` karena sejak
+   pembungkus `.filter-right` dibongkar isinya jadi tiga kelompok — dengan
+   space-between ketiganya akan terserak merata, bukan mengumpul di kiri. */
+.filter-bar{
+    flex-wrap:wrap;
+    gap:12px;
+    justify-content:flex-start;
+    align-items:center;
+}
+
+/* Baris kedua: dropdown menumpuk dari kiri, rentang tanggal terdorong ke
+   kanan lewat margin-left:auto di bawah. */
+.filter-dropdowns{ flex-wrap:wrap; justify-content:flex-start; }
+
+/* Didorong ke kanan lewat margin, bukan lewat urutan: dengan begini rentang
+   tanggal tetap menempel di kanan walau dropdown-nya membungkus ke bawah. */
+.trx-date-range{ margin-left:auto; }

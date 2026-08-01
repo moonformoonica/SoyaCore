@@ -14,12 +14,12 @@
     }
 
     function rupiah(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+    function angkaBulat(n) {
+        return Number(n || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+    }
 
     const errorEl = document.getElementById('lapError');
     function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
-
-    // Segmen mengikuti data RFM sumber (Data_RFM_Pelanggan.csv):
-    // Pelanggan Baru (hijau) / Butuh Perhatian (biru) / Potensial (kuning) / Loyal (merah).
     const SEGMEN_CLASS = {
         'Pelanggan Baru': 'segmen-loyal',
         'Butuh Perhatian': 'segmen-potensial',
@@ -38,7 +38,6 @@
     let rfmChart = null;
     let revenueUkuranChart = null;
 
-    // Query string rentang tanggal (start/end) dari input di header.
     function rentangQS() {
         const s = document.getElementById('exportStart').value;
         const e = document.getElementById('exportEnd').value;
@@ -49,11 +48,36 @@
         return qs ? '?' + qs : '';
     }
 
-    // ---- Revenue per Ukuran (ikut rentang tanggal) ----
     async function loadRevenueUkuran() {
-        const res = await fetch(`${API_BASE}/dashboard/revenue-ukuran${rentangQS()}`, fetchOptions());
+        const pemisah = rentangQS() ? '&' : '?';
+        const res = await fetch(
+            `${API_BASE}/dashboard/revenue-ukuran${rentangQS()}${pemisah}sembunyikan_tidak_diketahui=true`,
+            fetchOptions(),
+        );
         if (!res.ok) throw new Error('Gagal memuat data revenue ukuran.');
         return res.json();
+    }
+
+    function fmtTanggal(iso) {
+        if (!iso) return null;
+        const d = new Date(iso + 'T00:00:00');
+        return Number.isNaN(d.getTime())
+            ? null
+            : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    async function updatePeriodeLabel() {
+        const el = document.getElementById('periodeLabel');
+        if (!el) return;
+        try {
+            const res = await fetch(`${API_BASE}/dashboard/ringkasan${rentangQS()}`, fetchOptions());
+            if (!res.ok) return;
+            const p = (await res.json()).periode || {};
+            const mulai = fmtTanggal(p.start);
+            const selesai = fmtTanggal(p.end);
+            el.textContent = mulai && selesai ? `${mulai} – ${selesai}` : '—';
+        } catch (e) {
+            // biarkan label sebelumnya kalau koneksi bermasalah
+        }
     }
 
     function renderRevenueUkuran(rows) {
@@ -142,7 +166,6 @@
         }).join('');
     }
 
-    // ---- Switch / rekomendasi upsell ----
     async function loadSwitch(keyword) {
         const qs = keyword ? `?rekomendasi=${encodeURIComponent(keyword)}` : '';
         const res = await fetch(`${API_BASE}/dashboard/switch${qs}`, fetchOptions());
@@ -167,18 +190,16 @@
                 <td>${r.beli_large ?? 0}</td>
                 <td>${r.beli_botol ?? 0}</td>
                 <td>${r.total_transaksi}</td>
-                <td>${Number(r.qty_per_kunjungan).toFixed(1)}</td>
+                <td>${angkaBulat(r.qty_per_kunjungan)}</td>
                 <td>${rupiah(r.total_belanja)}</td>
                 <td>${r.rekomendasi ?? '-'}</td>
             </tr>`;
         }).join('');
     }
 
-    // ---- Init & event wiring ----
     async function initRfm() {
         try {
             const json = await loadRfm(document.getElementById('rfmSegmenFilter').value);
-            document.getElementById('periodeLabel').textContent = json.periode_label ?? '-';
             rfmData = json.data || [];
             renderCards(json.ringkasan_segmen || {});
             renderRfmChart(json.ringkasan_segmen || {});
@@ -199,14 +220,54 @@
         }
     }
 
-    document.getElementById('rfmSegmenFilter').addEventListener('change', initRfm);
+    document.getElementById('rfmSegmenFilter').addEventListener('change', function () {
+        sorotKartuSegmen(this.value);
+        initRfm();
+    });
+
+    function sorotKartuSegmen(segmen) {
+        document.querySelectorAll('.lap-card[data-segmen]').forEach((el) => {
+            el.classList.toggle('aktif', el.dataset.segmen === segmen && segmen !== '');
+        });
+    }
+
+    document.querySelectorAll('.lap-card[data-segmen]').forEach((kartu) => {
+        function pilih() {
+            const select = document.getElementById('rfmSegmenFilter');
+            const segmen = select.value === kartu.dataset.segmen ? '' : kartu.dataset.segmen;
+            select.value = segmen;
+            sorotKartuSegmen(segmen);
+            initRfm();
+        }
+        kartu.addEventListener('click', pilih);
+        kartu.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pilih(); }
+        });
+    });
     document.getElementById('rfmSearch').addEventListener('input', debounce(renderRfmTable, 250));
     document.getElementById('switchSearch').addEventListener('input', debounce(initSwitch, 400));
+    async function muatDaftarKasir() {
+        const sel = document.getElementById('exportKasir');
+        if (!sel) return;
+        try {
+            const res = await fetch(`${API_BASE}/laporan/kasir`, fetchOptions());
+            if (!res.ok) return;
+            ((await res.json()).data || []).forEach((r) => {
+                const opt = document.createElement('option');
+                opt.value = r.user_id;
+                opt.textContent = r.nama;
+                sel.appendChild(opt);
+            });
+        } catch (e) {
+        }
+    }
 
-    // Ganti tanggal -> grafik revenue ukuran ikut menyesuaikan rentang.
-    // (RFM & Switch sengaja tetap snapshot penuh — lihat keterangan di panel.)
-    document.getElementById('exportStart').addEventListener('change', initRevenueUkuran);
-    document.getElementById('exportEnd').addEventListener('change', initRevenueUkuran);
+    function terapkanRentang() {
+        initRevenueUkuran();
+        updatePeriodeLabel();
+    }
+    document.getElementById('exportStart').addEventListener('change', terapkanRentang);
+    document.getElementById('exportEnd').addEventListener('change', terapkanRentang);
 
     function debounce(fn, delay) {
         let timer;
@@ -216,8 +277,6 @@
         };
     }
 
-    // ---- Unduh laporan (butuh header Authorization, jadi lewat fetch + blob,
-    // bukan link <a href> biasa yang tidak bawa token) ----
     document.getElementById('unduhBtn').addEventListener('click', async function () {
         const btn = this;
         errorEl.style.display = 'none';
@@ -225,7 +284,6 @@
         const s = document.getElementById('exportStart').value;
         const e = document.getElementById('exportEnd').value;
 
-        // Validasi rentang di klien (backend juga menolak end < start).
         if (s && e && s > e) {
             showError('Tanggal akhir tidak boleh lebih awal dari tanggal mulai.');
             return;
@@ -235,7 +293,6 @@
         btn.textContent = 'Menyiapkan...';
 
         try {
-            // Cek dulu: ada data nggak di rentang ini? Kalau kosong, jangan unduh.
             const cek = await fetch(`${API_BASE}/dashboard/ringkasan${rentangQS()}`, fetchOptions());
             if (cek.ok) {
                 const cekJson = await cek.json();
@@ -244,7 +301,10 @@
                 }
             }
 
-            const res = await fetch(`${API_BASE}/laporan/export${rentangQS()}`, fetchOptions());
+            const kasirId = document.getElementById('exportKasir')?.value || '';
+            const paramKasir = kasirId ? (rentangQS() ? '&' : '?') + 'kasir_user_id=' + kasirId : '';
+
+            const res = await fetch(`${API_BASE}/laporan/export${rentangQS()}${paramKasir}`, fetchOptions());
             if (!res.ok) throw new Error('Gagal mengunduh laporan.');
 
             const blob = await res.blob();
@@ -269,6 +329,9 @@
     });
 
     (async function init() {
-        await Promise.all([initRfm(), initSwitch(), initRevenueUkuran()]);
+        await Promise.all([
+            initRfm(), initSwitch(), initRevenueUkuran(),
+            updatePeriodeLabel(), muatDaftarKasir(),
+        ]);
     })();
 })();

@@ -1,7 +1,5 @@
 /* ============================================================
    SoyaScan — halaman self-order pelanggan (mobile-first).
-   Standalone, tidak memakai shell kasir (layouts.app).
-   Font Poppins — samakan dengan web kasir.
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
@@ -52,6 +50,8 @@ body {
 
 /* -------------------------------------------------- HEADER */
 .scan-header {
+    --maskot-w: clamp(104px, 30vw, 150px);
+
     background: linear-gradient(135deg, var(--scan-grad-a) 0%, var(--scan-grad-b) 100%);
     color: #fff;
     padding: 18px 20px 26px;
@@ -66,18 +66,43 @@ body {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-bottom: -10px;
-    margin-left: -35px; /* narik logo lewati padding kiri header; makin negatif makin ke kiri */
+    margin: 4px 0 0;
 }
 
 .scan-brand img {
-    height: 76px;
+    height: clamp(56px, 17vw, 80px);
     width: auto;
     display: block;
 }
 
 .scan-welcome {
-    margin-top: 12px;
+    margin-top: 12px; 
+    padding-right: calc(var(--maskot-w) - 30px);
+}
+
+.scan-welcome-text {
+    min-width: 0;
+}
+
+.scan-maskot {
+    position: absolute;
+    top: 30px;
+    right: -6px;
+    width: var(--maskot-w);
+    height: auto;
+    display: block;
+    pointer-events: none;
+
+    -webkit-mask-image:
+        linear-gradient(to bottom, #000 58%, rgba(0, 0, 0, 0.5) 82%, transparent 100%),
+        linear-gradient(to left, transparent 0%, rgba(0, 0, 0, 0.5) 8%, #000 22%);
+
+    mask-image:
+        linear-gradient(to bottom, #000 58%, rgba(0, 0, 0, 0.5) 82%, transparent 100%),
+        linear-gradient(to left, transparent 0%, rgba(0, 0, 0, 0.5) 8%, #000 22%);
+
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
 }
 
 .scan-welcome h1 {
@@ -90,6 +115,12 @@ body {
     margin: 3px 0 0;
     font-size: 12.5px;
     color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 390px) {
+    .scan-header { padding: 14px 16px 22px; }
+    .scan-welcome h1 { font-size: 14.5px; }
+    .scan-welcome p { font-size: 11.5px; }
 }
 
 .scan-search {
@@ -124,7 +155,7 @@ body {
 /* -------------------------------------------------- KATEGORI CHIPS */
 .scan-cats {
     display: flex;
-    align-items: flex-start;   /* chip di atas, scrollbar punya lajur sendiri di bawah */
+    align-items: flex-start;  
     gap: 8px;
     overflow-x: auto;
     padding: 14px 12px 0;
@@ -587,8 +618,8 @@ body {
 .scan-done .done-box {
     width: 100%;
     max-width: var(--scan-max);
-    min-height: 100%;           /* hijau mengisi penuh tinggi kolom */
-    background: #f4f8f2;        /* hijau hanya selebar tampilan mobile */
+    min-height: 100%;           
+    background: #f4f8f2;        
     padding: 56px 26px 40px;
     text-align: center;
     animation: scan-pop 0.28s ease;
@@ -634,7 +665,7 @@ body {
     margin-bottom: 26px;
 }
 
-/* baris detail (garis putus-putus) */
+
 .scan-done .done-detail {
     background: #ffffff;
     border-radius: 14px;
@@ -654,13 +685,11 @@ body {
     font-size: 13px;
 }
 
-/* baris terakhir tanpa garis, biar rapi di dalam kartu */
 .scan-done .done-row:last-child { border-bottom: none; }
 
 .scan-done .done-row span { color: #8a9096; }
 .scan-done .done-row strong { color: var(--scan-ink); font-weight: 600; }
 
-/* kartu poin */
 .scan-done .done-poin {
     background: #fdf3d3;
     border-radius: 14px;
@@ -705,4 +734,175 @@ body {
 @keyframes scan-pop {
     0% { transform: scale(0.85); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================================
+   PILIHAN SUGAR & ICE (bottom sheet)
+   ============================================================ */
+.scan-opsi-grup { margin-bottom: 16px; }
+.scan-opsi-label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #5b6169;
+    margin-bottom: 8px;
+}
+.scan-opsi-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.scan-opsi-btn {
+    flex: 1 1 calc(50% - 4px);
+    border: 1.5px solid var(--scan-line);
+    background: #fff;
+    border-radius: 11px;
+    padding: 11px 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #5b6169;
+    cursor: pointer;
+    transition: all 0.12s ease;
+}
+.scan-opsi-btn:hover { border-color: var(--scan-green); }
+.scan-opsi-btn.active {
+    border-color: var(--scan-green);
+    background: #eef7f0;
+    color: var(--scan-green-dark);
+}
+
+/* keterangan takaran di baris keranjang */
+.scan-cart-item .ci-opsi {
+    font-size: 11.5px;
+    color: var(--scan-green-dark);
+    margin-top: 2px;
+}
+
+/* ============================================================
+   QRIS di layar pembayaran
+   ============================================================ */
+.scan-done .done-qris {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    margin: 0 0 22px;
+    box-shadow: 0 2px 10px rgba(31, 38, 45, 0.04);
+}
+.scan-done .qris-judul {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--scan-ink);
+}
+.scan-done #doneQrisImg {
+    width: 100%;
+    max-width: 260px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 10px;
+}
+.scan-done .qris-unduh {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin: 14px 0 0;
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.scan-done .qris-unduh:hover { background: #276b2a; }
+.scan-done .qris-unduh:active { background: #225c25; }
+
+.scan-done .qris-hint {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--scan-muted, #6b7280);
+    text-align: center;
+}
+
+.scan-done .qris-note {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #8a6420;
+    background: #fdf3d3;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.scan-opsi-ket {
+    margin: -4px 0 8px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--scan-muted);
+}
+
+.scan-done .done-items {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 6px 16px;
+    margin: 0 0 22px;
+    text-align: left;
+    box-shadow: 0 2px 10px rgba(31, 38, 45, 0.04);
+}
+.scan-done .di-baris {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px dashed #dfe3e6;
+}
+.scan-done .di-baris:last-child { border-bottom: none; }
+.scan-done .di-nama { font-size: 13px; font-weight: 600; color: var(--scan-ink); }
+.scan-done .di-takaran { font-size: 11.5px; color: var(--scan-green-dark); margin-top: 2px; }
+.scan-done .di-harga { font-size: 13px; font-weight: 600; color: var(--scan-ink); white-space: nowrap; }
+
+/* ============================================================
+   ANIMASI IKON JAM PASIR (layar "Menunggu Pembayaran")
+   Dipindahkan dari <style> inline di scan/index.blade.php.
+   ============================================================ */
+
+/* Atribut [hidden] HARUS menang atas aturan display apa pun di berkas ini.
+   Tanpa !important, ikon jam pasir dan centang pernah tampil menumpuk karena
+   selector lain men-set display:block/flex dan mengalahkan bawaan [hidden]. */
+[hidden] { display: none !important; }
+
+.hourglass-icon { animation: hourglassFlip 3s ease-in-out infinite; }
+@keyframes hourglassFlip {
+    0%, 40%   { transform: rotate(0deg); }
+    55%, 95%  { transform: rotate(180deg); }
+    100%      { transform: rotate(360deg); }
+}
+
+/* Pasir atas mengecil & pasir bawah membesar, lalu reset saat jamnya terbalik. */
+.sand-top { transform-origin: 12px 4px; animation: sandTopShrink 3s ease-in-out infinite; }
+@keyframes sandTopShrink {
+    0%        { transform: scaleY(1); }
+    35%       { transform: scaleY(.15); }
+    40%, 100% { transform: scaleY(1); }
+}
+
+.sand-bottom { transform-origin: 12px 20px; animation: sandBottomGrow 3s ease-in-out infinite; }
+@keyframes sandBottomGrow {
+    0%        { transform: scaleY(.15); }
+    35%       { transform: scaleY(1); }
+    40%, 100% { transform: scaleY(.15); }
+}
+
+/* Butiran yang jatuh di tengah — muncul-hilang biar terkesan menetes. */
+.sand-drip { opacity: 0; animation: sandDrip .5s linear infinite; }
+@keyframes sandDrip {
+    0%, 100% { opacity: 0; }
+    50%      { opacity: 1; }
 }

@@ -1,98 +1,74 @@
-/* =====================================================================
-   Loyalty Manager — logic
-   Saat ini semua data masih di-memory (dummy) supaya UI bisa langsung
-   dicoba. Titik-titik yang perlu disambungkan ke backend Laravel
-   ditandai dengan komentar "TODO: sambungkan ke API".
-
-   Perubahan dari versi sebelumnya:
-   - Pengelolaan "Tingkatan Membership" dihapus dari halaman ini.
-   - Katalog reward sekarang FIXED (8 jenis), detail (nama, ikon,
-     ukuran minuman yang tersedia, apakah butuh minimal pembelian)
-     dikunci di REWARD_CATALOG. Manager hanya bisa:
-       a) mengaktifkan/menambah salah satu jenis dari katalog
-       b) mengatur poin, minimal pembelian & maksimal potongan per jenis
-       c) menghapus jenis yang sedang aktif
-   ===================================================================== */
 (function () {
 
-  /* ================= KATALOG REWARD (FIXED) =================
-     key ini yang harus dikirim ke backend saat redeem/CRUD.       */
+  /* ================= KATALOG REWARD (FIXED) ================= */
   const REWARD_CATALOG = {
     diskon_10: {
-      name: 'Voucher Diskon 10%', icon: '🏷️',
+      name: 'Diskon 10%', icon: '🏷️',
       desc: 'Berlaku untuk semua menu, dengan minimum pembelian.',
       needsMinPurchase: true, hasMaxDiscount: true,
     },
     diskon_20: {
-      name: 'Voucher Diskon 20%', icon: '🏷️',
+      name: 'Diskon 20%', icon: '🏷️',
       desc: 'Berlaku untuk semua menu, dengan minimum pembelian.',
       needsMinPurchase: true, hasMaxDiscount: true,
     },
     diskon_30: {
-      name: 'Voucher Diskon 30%', icon: '🏷️',
+      name: 'Diskon 30%', icon: '🏷️',
       desc: 'Berlaku untuk semua menu, dengan minimum pembelian.',
       needsMinPurchase: true, hasMaxDiscount: true,
     },
     diskon_50: {
-      name: 'Voucher Diskon 50%', icon: '🏷️',
+      name: 'Diskon 50% (Khusus)', icon: '🏷️',
       desc: 'Diskon besar, berlaku dengan minimum pembelian.',
       needsMinPurchase: true, hasMaxDiscount: true,
     },
     gratis_original: {
-      name: 'Gratis Soy Milk Original', icon: '🥛',
+      name: 'Gratis Original', icon: '🥛',
       desc: 'Tukar poin dengan Soy Milk Original favorit.',
-      sizes: ['Hot', 'Regular'],
+      sizes: ['Hot', 'Reguler'],
     },
     gratis_coffee_kopi: {
       name: 'Gratis Coffee Kopi', icon: '☕',
       desc: 'Tukar poin dengan Coffee Kopi.',
-      sizes: ['Hot', 'Regular'],
+      sizes: ['Hot', 'Reguler'],
     },
     gratis_honey_lemon: {
       name: 'Gratis Honey Lemon', icon: '🍋',
       desc: 'Tukar poin dengan Honey Lemon segar.',
-      sizes: ['Regular'],
+      sizes: ['Reguler'],
     },
     gratis_mango_monggo: {
       name: 'Gratis Mango Monggo', icon: '🥭',
       desc: 'Tukar poin dengan Mango Monggo.',
-      sizes: ['Regular'],
+      sizes: ['Reguler'],
     },
   };
-  // Sama dengan batas bawah backend (KatalogRedeem::POIN_MIN). Pagar salah
-  // ketik saja — berapa poin yang wajar adalah keputusan manager.
+
   const MIN_REDEEM_POINTS = 1;
 
   /* ================= STATE ================= */
-  // rewards = jenis dari katalog yang sedang aktif ditawarkan ke member.
-  // "points" & "minPurchase" boleh diatur manager, sisanya ikut REWARD_CATALOG[key].
   let rewards = [
-    { key: 'diskon_10', points: 100, minPurchase: 25000, maxDiscount: 5000 },
-    { key: 'diskon_20', points: 200, minPurchase: 25000, maxDiscount: 10000 },
-    { key: 'diskon_30', points: 300, minPurchase: 25000, maxDiscount: 15000 },
-    { key: 'diskon_50', points: 500, minPurchase: 25000, maxDiscount: 25000 },
-    { key: 'gratis_original', points: 350 },
-    { key: 'gratis_coffee_kopi', points: 450 },
-    { key: 'gratis_honey_lemon', points: 400 },
-    { key: 'gratis_mango_monggo', points: 400 },
+    { key: 'diskon_10', label: 'Diskon 10%', points: 100, minPurchase: 25000, maxDiscount: 5000 },
+    { key: 'diskon_20', label: 'Diskon 20%', points: 200, minPurchase: 25000, maxDiscount: 10000 },
+    { key: 'diskon_30', label: 'Diskon 30%', points: 300, minPurchase: 25000, maxDiscount: 15000 },
+    { key: 'diskon_50', label: 'Diskon 50% (Khusus)', points: 500, minPurchase: 25000, maxDiscount: 25000 },
+    { key: 'gratis_original', label: 'Gratis Original', points: 350 },
+    { key: 'gratis_coffee_kopi', label: 'Gratis Coffee Kopi', points: 450 },
+    { key: 'gratis_honey_lemon', label: 'Gratis Honey Lemon', points: 400 },
+    { key: 'gratis_mango_monggo', label: 'Gratis Mango Monggo', points: 400 },
   ];
 
-  // Diisi dari data transaksi asli (GET /api/transaksi) di loadHistory().
-  let historyAll = [];              // seluruh riwayat, dipaginasi di klien
+  let historyAll = [];              
   let historyPage = 1;
+  let historySort = 'terbaru';      
   const HISTORY_PER_PAGE = 10;
-
-  // Diisi dari data asli (GET /api/dashboard/rfm) di loadStats().
-  // redeemedThisMonth = null -> belum ada pencatatan penukaran di layer laporan.
   let members = 0;
   let activePoints = 0;
   let redeemedThisMonth = null;
   let newMembers = 0;
-
   let editingRewardKey = null;
   let addingReward = false;
 
-  /* Header standar untuk request ber-auth (token Sanctum). */
   function apiHeaders() {
     const token = localStorage.getItem('auth_token');
     return {
@@ -145,11 +121,6 @@
     `;
   }
 
-  /* Kartu loyalty:
-     - Total Member & Member Baru  -> CSV (RFM) saja; gabung live butuh dedup
-       pelanggan unik di backend, jadi belum dicampur di sini.
-     - Total Poin Aktif            -> poin CSV + poin didapat dari transaksi live.
-     - Reward ditukar bulan ini    -> jumlah redeem di transaksi live bulan ini. */
   async function loadStats() {
     const token = localStorage.getItem('auth_token');
     if (token) {
@@ -180,7 +151,6 @@
           }).length;
         }
       } catch (e) {
-        // biarkan nilai default kalau gagal
       }
     }
     renderStats();
@@ -210,11 +180,12 @@
     el.innerHTML = rewards.map(r => {
       const c = REWARD_CATALOG[r.key];
       if (!c) return '';
+      const nama = r.label || c.name;
 
       if (kasir) {
         return `
         <div class="reward-card">
-          <h4>${escapeHtml(c.name)}</h4>
+          <h4>${escapeHtml(nama)}</h4>
           <p>${escapeHtml(c.desc)}</p>
           <span class="reward-points">${r.points} poin</span>
           <div class="reward-tags">${rewardTags(c, r.minPurchase, r.maxDiscount)}</div>
@@ -225,7 +196,7 @@
         return `
         <div class="reward-card">
           <div class="edit-form">
-            <label>${escapeHtml(c.name)}</label>
+            <label>${escapeHtml(nama)}</label>
             <label>Poin dibutuhkan</label>
             <input type="number" id="edit-points-${r.key}" value="${r.points}">
             ${c.needsMinPurchase ? `
@@ -251,7 +222,7 @@
           <button data-edit-reward="${r.key}" title="Edit poin"><i class="fa-regular fa-pen-to-square"></i></button>
           <button data-remove-reward="${r.key}" title="Hapus"><i class="fa-regular fa-trash-can"></i></button>
         </div>
-        <h4>${escapeHtml(c.name)}</h4>
+        <h4>${escapeHtml(nama)}</h4>
         <p>${escapeHtml(c.desc)}</p>
         <span class="reward-points">${r.points} poin</span>
         <div class="reward-tags">${rewardTags(c, r.minPurchase, r.maxDiscount)}</div>
@@ -290,9 +261,6 @@
       }
       if (sel) { sel.addEventListener('change', syncMinField); syncMinField(); }
     }
-
-    // Hapus reward = nonaktifkan (PATCH is_active:false). Struktur reward
-    // fixed di backend, jadi bukan hapus permanen — bisa diaktifkan lagi.
     el.querySelectorAll('[data-remove-reward]').forEach(b => b.addEventListener('click', async () => {
       const key = b.dataset.removeReward;
       b.disabled = true;
@@ -309,9 +277,6 @@
     el.querySelectorAll('[data-cancel-reward]').forEach(b => b.addEventListener('click', () => {
       editingRewardKey = null; renderRewards();
     }));
-    // Simpan edit -> PATCH { poin, min_subtotal, maks_potongan }. Ketiganya
-    // sudah dibuka backend; field yang tidak relevan per tipe reward tidak
-    // dirender, jadi tidak ikut terkirim.
     el.querySelectorAll('[data-save-reward]').forEach(b => b.addEventListener('click', async () => {
       const key = b.dataset.saveReward;
       const r = rewards.find(x => x.key === key);
@@ -387,27 +352,44 @@
 
   /* Muat katalog reward (poin & status aktif) dari backend, ganti data dummy. */
   async function loadKatalog() {
+    let gagalMuatKatalog = false;
     const token = localStorage.getItem('auth_token');
     if (token) {
       try {
         const res = await fetch('/api/pengaturan/loyalty/katalog', { headers: apiHeaders() });
         if (res.ok) {
           const items = (await res.json()).data || [];
-          // rewards = yang aktif (ditawarkan ke pelanggan); nonaktif tetap ada
-          // di REWARD_CATALOG untuk bisa diaktifkan lagi.
           rewards = items.filter(i => i.is_active).map(i => ({
             key: i.kode,
+            label: i.label,
             points: i.poin,
             minPurchase: i.min_subtotal || 0,
             maxDiscount: i.maks_potongan || 0,
           }));
+        } else {
+          gagalMuatKatalog = true;
         }
-      } catch (e) { /* pakai data default kalau gagal */ }
+      } catch (e) {
+        gagalMuatKatalog = true;
+      }
     }
+    if (gagalMuatKatalog) {
+      toast('Gagal memuat katalog reward — angka di bawah ini setelan bawaan, belum tentu sama dengan yang tersimpan.');
+    }
+
     renderRewards();
   }
 
   /* ================= RENDER: HISTORY ================= */
+  function historyTerurut() {
+    const rows = historyAll.slice();
+
+    if (historySort === 'poin_desc') return rows.sort((a, b) => b.points - a.points);
+    if (historySort === 'poin_asc') return rows.sort((a, b) => a.points - b.points);
+
+    return rows.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  }
+
   function renderHistory() {
     const el = document.getElementById('lm-history');
     if (!el) return;
@@ -423,7 +405,7 @@
     const totalPage = Math.ceil(historyAll.length / HISTORY_PER_PAGE);
     if (historyPage > totalPage) historyPage = totalPage;
     const mulai = (historyPage - 1) * HISTORY_PER_PAGE;
-    const rows = historyAll.slice(mulai, mulai + HISTORY_PER_PAGE);
+    const rows = historyTerurut().slice(mulai, mulai + HISTORY_PER_PAGE);
 
     el.innerHTML = rows.map(h => `
       <tr>
@@ -492,10 +474,6 @@
     return sizes.length ? sizes.join(', ') : '—';
   }
 
-  /* Susun riwayat poin dari transaksi asli:
-     - poin_ditukar > 0        -> baris redeem (poin berkurang)
-     - status lunas & poin>0   -> baris pembelian (poin bertambah)
-     Satu transaksi bisa menghasilkan dua baris (redeem lalu bayar). */
   async function loadHistory() {
     const token = localStorage.getItem('auth_token');
     if (!token) { renderHistory(); return; }
@@ -542,19 +520,49 @@
         activity: e.activity,
         ukuran: e.ukuran,
         points: e.points,
+        ts: e.ts,
         date: fmtTgl(e.ts),
       }));
     } catch (e) {
-      // biarkan history kosong -> tampil empty state
     }
 
     renderHistory();
   }
 
   /* ================= EVENTS ================= */
+  function bindSortDropdown() {
+    const select = document.getElementById('lm-history-sort');
+    if (!select) return;
+
+    const trigger = select.querySelector('.custom-select-trigger');
+    const label = select.querySelector('.selected-label');
+    const options = select.querySelectorAll('.custom-options li');
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      select.classList.toggle('open');
+    });
+
+    options.forEach((option) => {
+      option.addEventListener('click', () => {
+        options.forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+
+        label.textContent = option.textContent;
+        historySort = option.dataset.value;
+        historyPage = 1;
+        select.classList.remove('open');
+        renderHistory();
+      });
+    });
+
+    document.addEventListener('click', () => select.classList.remove('open'));
+  }
+
   function bindTopEvents() {
     const btnAddReward = document.getElementById('btnAddReward');
     const btnSaveRule = document.getElementById('btnSaveRule');
+    bindSortDropdown();
 
     if (btnAddReward) btnAddReward.addEventListener('click', () => { addingReward = true; renderRewards(); });
     if (btnSaveRule) btnSaveRule.addEventListener('click', async () => {
@@ -582,7 +590,6 @@
     });
   }
 
-  /* Prefill rasio Rp/poin dari GET /api/pengaturan/loyalty */
   async function loadPengaturan() {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
@@ -595,9 +602,6 @@
     } catch (e) { /* biarkan nilai default */ }
   }
 
-  /* ================= CEK POIN PELANGGAN (kasir) =================
-     Reuse endpoint publik yang sama dipakai di halaman Pesanan:
-     GET /api/loyalty/{no_wa} -> {nomor_wa, nama, poin} atau 404. */
   let cariPoinTimer = null;
   function bindCekPoin() {
     const input = document.getElementById('lmCariNoWa');
@@ -606,7 +610,6 @@
 
     input.addEventListener('input', function () {
       clearTimeout(cariPoinTimer);
-      // Hanya angka, maksimal 12 digit.
       input.value = input.value.replace(/\D/g, '').slice(0, 12);
       const noWa = input.value.trim();
 
@@ -621,8 +624,6 @@
         hasil.innerHTML = '<p class="lm-cek-poin-loading">Mencari...</p>';
 
         try {
-          // Pencarian PARSIAL (LIKE) via customers/cari — nggak harus nomor
-          // lengkap. Bisa muncul lebih dari satu kandidat.
           const res = await fetch('/api/customers/cari?' + new URLSearchParams({ no_wa: noWa }), {
             headers: apiHeaders(),
           });
@@ -661,7 +662,6 @@
       loadPengaturan();
     }
 
-    // Katalog reward dipakai kasir (read-only) & manager (bisa atur).
     loadKatalog();
   });
 

@@ -16,39 +16,25 @@ body{
 =========================== */
 
 .profile-page{
-
     width:100%;
-
     padding:35px;
-
 }
 
 .page-header{
-
     margin-bottom:20px;
     margin-top:-35px;
-
 }
 
 .page-header h2{
-
     font-size:30px;
-
     font-weight:700;
-
     color:#212B36;
-
     margin-bottom:6px;
-
 }
 
 .page-header p{
-
     color:#6B7280;
-
     font-size:14px;
-    
-
 }
 
 /* ===========================
@@ -56,65 +42,39 @@ body{
 =========================== */
 
 .profile-photo-card{
-
     background:#fff;
-
     border-radius:16px;
-
     padding:25px;
-
     display:flex;
-
     gap:28px;
-
     align-items:center;
-
     box-shadow:0 5px 18px rgba(0,0,0,.05);
-
     border:1px solid #ECECEC;
-
     margin-bottom:28px;
-
 }
 
 .photo-left img{
-
     width:90px;
-
     height:90px;
-
     border-radius:50%;
-
     object-fit:cover;
-
     border:4px solid #E6F4DD;
-
 }
 
 .photo-right{
-
     flex:1;
-
 }
 
 .photo-right h4{
-
     font-size:18px;
-
     margin-bottom:8px;
-
     color:#212B36;
-
 }
 
 .photo-right p{
-
     color:#6B7280;
-
     font-size:14px;
-
     margin-bottom:18px;
-
 }
 
 /* ===========================
@@ -122,73 +82,46 @@ body{
 =========================== */
 
 .photo-button{
-
     display:flex;
-
     gap:12px;
-
     margin-bottom:18px;
-
 }
 
 .photo-button button{
-
     border:none;
-
     cursor:pointer;
-
     border-radius:8px;
-
     padding:10px 18px;
-
     font-size:14px;
-
     font-weight:600;
-
     transition:.25s;
-
 }
 
 .btn-upload{
-
     background:#5D8A43;
-
     color:white;
-
 }
 
 .btn-upload:hover{
-
     background:#4B7137;
-
 }
 
 .btn-secondary{
-
     background:#F3F4F6;
-
     color:#374151;
-
 }
 
 .btn-secondary:hover{
-
     background:#E5E7EB;
-
 }
 
 .btn-danger{
-
     background:#EF4444;
-
     color:white;
-
 }
 
 .btn-danger:hover{
-
     background:#DC2626;
-
 }
 
 /* ===========================
@@ -196,19 +129,12 @@ body{
 =========================== */
 
 .photo-info{
-
     background:#EAF9E5;
-
     color:#4B7A2D;
-
     padding:12px 16px;
-
     border-radius:10px;
-
     font-size:13px;
-
     line-height:22px;
-
 }
 
 /* ===========================
@@ -216,87 +142,52 @@ body{
 =========================== */
 
 .form-grid{
-
     display:grid;
-
     grid-template-columns:1fr 1fr;
-
     gap:25px;
-
     margin-bottom:30px;
-
 }
 
 .card{
-
     background:white;
-
     border-radius:16px;
-
     border:1px solid #ECECEC;
-
     box-shadow:0 5px 18px rgba(0,0,0,.05);
-
     padding:28px;
-
 }
 
 .card h3{
-
     font-size:20px;
-
     color:#212B36;
-
     margin-bottom:24px;
-
 }
 
 .form-group{
-
     margin-bottom:18px;
-
 }
 
 .form-group label{
-
     display:block;
-
     margin-bottom:8px;
-
     font-size:14px;
-
     color:#374151;
-
     font-weight:500;
-
 }
 
 .form-group input{
-
     width:100%;
-
     height:50px;
-
     border:1px solid #D9D9D9;
-
     border-radius:10px;
-
     padding:0 18px;
-
     font-size:15px;
-
     transition:.25s;
-
 }
 
 .form-group input:focus{
-
     outline:none;
-
     border-color:#5D8A43;
-
     box-shadow:0 0 0 3px rgba(93,138,67,.15);
-
 }
 
 /* ===========================
@@ -304,35 +195,21 @@ body{
 =========================== */
 
 .btn-primary{
-
     width:100%;
-
     height:50px;
-
     background:#5D8A43;
-
     color:white;
-
     border:none;
-
     border-radius:10px;
-
     font-size:15px;
-
     font-weight:600;
-
     cursor:pointer;
-
     transition:.25s;
-
 }
 
 .btn-primary:hover{
-
     background:#4B7137;
-
     transform:translateY(-2px);
-
 }
 
 /* ===========================
@@ -340,63 +217,38 @@ body{
 =========================== */
 
 .support-card{
-
     background:#DDF6D8;
-
     border:1px solid #B8E3AF;
-
     border-radius:14px;
-
     padding:22px 28px;
-
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
-
 }
 
 .support-card h4{
-
     color:#2E5B1C;
-
     margin-bottom:6px;
-
 }
 
 .support-card p{
-
     color:#558045;
-
     font-size:14px;
-
 }
 
 .btn-support{
-
     border:none;
-
     background:#5D8A43;
-
     color:white;
-
     padding:12px 22px;
-
     border-radius:10px;
-
     cursor:pointer;
-
     font-weight:600;
-
     transition:.25s;
-
 }
 
 .btn-support:hover{
-
     background:#4B7137;
-
 }
 
 /* ===========================
@@ -406,17 +258,12 @@ body{
 @media(max-width:992px){
 
     .form-grid{
-
         grid-template-columns:1fr;
-
     }
 
     .profile-photo-card{
-
         flex-direction:column;
-
         align-items:flex-start;
-
     }
 
 }
@@ -424,29 +271,21 @@ body{
 @media(max-width:800px){
 
     .profile-page{
-
         padding:20px;
-
     }
 
     .photo-button{
-
         flex-wrap:wrap;
-
     }
 
     .support-card{
-
         flex-direction:column;
-
         gap:20px;
-
         align-items:flex-start;
-
     }
 
 }
-/* Pesan feedback tombol foto profil */
+
 .photo-msg{
     margin-top:10px;
     font-size:12.5px;
@@ -457,7 +296,6 @@ body{
 .photo-msg.info{ background:#EEF6FF; color:#1D5FA8; }
 .photo-msg.error{ background:#FEECEC; color:#C0392B; }
 
-/* Pesan feedback form profil & password */
 .profil-msg{
     margin:0 0 12px;
     font-size:12.5px;

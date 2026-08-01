@@ -10,6 +10,10 @@
 :root{
     --primary:#5D8A43;
     --primary-hover:#4B7137;
+
+    --green-dark:#2F6B3F;
+    --green-light:#7FB77E;
+
     --border:#D9D9D9;
     --text:#1E1E1E;
     --text-light:#666;
@@ -18,9 +22,13 @@
 }
 
 body{
-    background:#F8F8F8;
+    background: linear-gradient(
+        45deg,
+        var(--green-dark) 0%,
+        var(--green-dark) 30%,
+        var(--green-light) 85%
+    );
 }
-
 /* ====================================
             LAYOUT
 ==================================== */
@@ -28,11 +36,8 @@ body{
 .container{
 
     display:flex;
-
     width:100%;
-
     height:100vh;
-
 }
 
 /* ====================================
@@ -40,78 +45,76 @@ body{
 ==================================== */
 
 .left{
-
     width:50%;
-
-    background:#7FB77E;
-
+    background: linear-gradient(
+        45deg,
+        var(--green-dark) 0%,
+        var(--green-dark) 35%,
+        var(--green-light) 85%
+    );
+    
     display:flex;
-
     flex-direction:column;
-
     justify-content:center;
-
     align-items:center;
+}
 
+.brand-wrap{
+    position:relative;
+    display:inline-block;
+    margin-bottom:25px;
 }
 
 .logo{
+    width:450px;
+    max-width:78vw;
+    max-height:76vh;
+    object-fit:contain;
+    display:block;
 
-    width:500px;
+    -webkit-mask-image:
+        linear-gradient(to bottom, #000 62%, rgba(0,0,0,.55) 84%, transparent 100%),
+        linear-gradient(to right, transparent 0%, rgba(0,0,0,.55) 6%, #000 16%);
 
-    margin-bottom:40px;
+    mask-image:
+        linear-gradient(to bottom, #000 62%, rgba(0,0,0,.55) 84%, transparent 100%),
+        linear-gradient(to right, transparent 0%, rgba(0,0,0,.55) 6%, #000 16%);
 
+    -webkit-mask-composite: source-in;
+
+
+    mask-composite: intersect;
 }
-
 
 /* ====================================
             RIGHT
 ==================================== */
 
 .right{
-
     width:50%;
-
     display:flex;
-
     justify-content:center;
-
     align-items:center;
-
     background:white;
-
 }
 
 .login-card{
-
     width:430px;
-
     animation:fadeUp .6s ease;
-
 }
 
 .login-card h1{
-
     font-size:32px;
-
     font-weight:700;
-
     color:var(--text);
-
     margin-bottom:12px;
-
 }
 
 .login-card p{
-
     color:var(--text-light);
-
     font-size:15px;
-
     line-height:28px;
-
     margin-bottom:35px;
-
 }
 
 /* ====================================
@@ -119,49 +122,30 @@ body{
 ==================================== */
 
 .input-group{
-
     margin-bottom:22px;
-
 }
 
 .input-group label{
-
     display:block;
-
     margin-bottom:8px;
-
     font-weight:500;
-
     color:#333;
-
 }
 
 .input-group input{
-
     width:100%;
-
     height:52px;
-
     border:1px solid var(--border);
-
     border-radius:10px;
-
     padding:0 18px;
-
     font-size:15px;
-
     transition:.25s;
-
 }
 
 .input-group input:focus{
-
     outline:none;
-
     border-color:var(--primary);
-
     box-shadow:0 0 0 3px rgba(93,138,67,.12);
-
 }
 
 /* ====================================
@@ -169,43 +153,27 @@ body{
 ==================================== */
 
 .input-box{
-
     position:relative;
-
 }
 
 .input-box input{
-
     padding-right:52px;
-
 }
 
 .toggle-password{
-
     position:absolute;
-
     right:18px;
-
     top:50%;
-
     transform:translateY(-50%);
-
     cursor:pointer;
-
     color:#B7BDC7;
-
     font-size:18px;
-
     user-select:none;
-
     transition:.25s;
-
 }
 
 .toggle-password:hover{
-
     color:var(--primary);
-
 }
 
 /* ====================================
@@ -213,60 +181,38 @@ body{
 ==================================== */
 
 .login-option{
-
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
-
     margin-bottom:30px;
-
 }
 
 .remember{
     display:flex;
-
     align-items:center;
-
     gap:8px;
-
     font-size:14px;
-
     margin-bottom:0;
-
 }
 
 .forgot-password{
 
     text-decoration:none;
-
     font-size:14px;
-
     color:var(--primary);
-
     font-weight:500;
-
     transition:.25s;
-
 }
 
 .forgot-password:hover{
-
     text-decoration:underline;
-
     color:var(--primary-hover);
-
 }
 
 .login-option input{
-
     width:17px;
-
     height:17px;
-
     accent-color:var(--primary);
-
 }
 
 /* ====================================
@@ -276,47 +222,29 @@ body{
 button{
 
     width:100%;
-
     height:54px;
-
     border:none;
-
     border-radius:10px;
-
     background:var(--primary);
-
     color:white;
-
     font-size:17px;
-
     font-weight:600;
-
     cursor:pointer;
-
     transition:.25s;
-
 }
 
 button:hover{
-
     background:var(--primary-hover);
-
     transform:translateY(-2px);
-
 }
 
 button:active{
-
     transform:scale(.98);
-
 }
 
 button:disabled{
-
     opacity:.7;
-
     cursor:not-allowed;
-
 }
 
 /* ====================================
@@ -324,21 +252,13 @@ button:disabled{
 ==================================== */
 
 .auth-error{
-
     background:var(--danger-bg);
-
     border:1px solid #FECACA;
-
     color:#B91C1C;
-
     padding:14px;
-
     border-radius:10px;
-
     margin-bottom:20px;
-
     font-size:14px;
-
 }
 
 /* ====================================
@@ -346,29 +266,19 @@ button:disabled{
 ==================================== */
 
 .input-error{
-
     display:block;
-
     color:var(--danger);
-
     font-size:13px;
-
     margin-top:6px;
-
 }
 
 .input-error-border{
-
     border-color:var(--danger)!important;
-
 }
 
 .input-error-border:focus{
-
     border-color:var(--danger)!important;
-
     box-shadow:0 0 0 3px rgba(220,38,38,.12)!important;
-
 }
 
 /* ====================================
@@ -376,29 +286,19 @@ button:disabled{
 ==================================== */
 
 .footer{
-
     margin-top:20px;
-
     text-align:center;
-
     font-size:14px;
-
 }
 
 .footer a{
-
     color:var(--primary);
-
     text-decoration:none;
-
     font-weight:600;
-
 }
 
 .footer a:hover{
-
     text-decoration:underline;
-
 }
 
 /* ====================================
@@ -408,21 +308,14 @@ button:disabled{
 @keyframes fadeUp{
 
     from{
-
         opacity:0;
-
         transform:translateY(25px);
-
     }
 
     to{
-
         opacity:1;
-
         transform:translateY(0);
-
     }
-
 }
 
 /* ====================================
@@ -432,39 +325,26 @@ button:disabled{
 @media(max-width:992px){
 
     .left{
-
         display:none;
-
     }
 
     .right{
-
         width:100%;
-
     }
 
     .login-card{
-
         width:90%;
-
         max-width:420px;
-
     }
-
 }
 
 @media(max-width:576px){
 
     .login-card h1{
-
         font-size:32px;
-
     }
 
     .login-card{
-
         padding:0 18px;
-
     }
-
 }

@@ -113,11 +113,23 @@ rasaInput.addEventListener("keydown", (e) => {
 =========================== */
 
 const UKURAN_PRESET = ["Hot", "Reguler", "Large", "250ml", "500ml", "1000ml"];
+let golonganUkuran = {};
 
 const ukuranGrid = document.getElementById("ukuranGrid");
 
+async function loadGolonganUkuran() {
+    try {
+        const res = await fetch(`${API_BASE}/menu-internal`, fetchOptions());
+        if (!res.ok) return;
+        ((await res.json()).data || []).forEach((r) => {
+            if (r.golongan_ukuran) golonganUkuran[r.ukuran ?? ""] = r.golongan_ukuran;
+        });
+    } catch (e) {
+    }
+}
+
 function renderUkuranGrid() {
-    ukuranGrid.innerHTML = UKURAN_PRESET.map((ukuran) => `
+    const baris = (ukuran) => `
         <div class="ukuran-row">
             <span class="ukuran-pill">${ukuran}</span>
             <input
@@ -128,7 +140,25 @@ function renderUkuranGrid() {
                 data-ukuran="${ukuran}"
                 class="ukuran-harga-input">
         </div>
-    `).join("");
+    `;
+
+    const kolom = { cup: [], botol: [], lainnya: [] };
+    UKURAN_PRESET.forEach((u) => {
+        const golongan = golonganUkuran[u] || "lainnya";
+        (kolom[golongan] || kolom.lainnya).push(baris(u));
+    });
+
+    const bagian = (judul, isi) =>
+        isi.length ? `<span class="ukuran-kolom-judul">${judul}</span>${isi.join("")}` : "";
+    ukuranGrid.innerHTML = `
+        <div class="ukuran-kolom">
+            ${bagian("Cup", kolom.cup)}
+            ${bagian("Lainnya", kolom.lainnya)}
+        </div>
+        <div class="ukuran-kolom">
+            ${bagian("Botol", kolom.botol)}
+        </div>
+    `;
 }
 
 function getUkuranData() {
@@ -228,8 +258,10 @@ form.addEventListener("submit", async (e) => {
         INIT
 =========================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     loadKategori();
     renderRasaTags();
+    renderUkuranGrid();
+    await loadGolonganUkuran();
     renderUkuranGrid();
 });

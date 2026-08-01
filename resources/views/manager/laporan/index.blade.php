@@ -12,7 +12,7 @@
     <div class="lap-header">
         <div>
             <h1>Laporan</h1>
-            <p>Segmentasi pelanggan &amp; rekomendasi upsell — periode <span id="periodeLabel">-</span></p>
+            <p>Periode <span id="periodeLabel">—</span> — dipakai untuk grafik revenue &amp; unduhan Excel</p>
         </div>
         <div class="lap-header-actions">
             <div class="lap-date-range">
@@ -20,6 +20,9 @@
                 <span>s/d</span>
                 <input type="date" id="exportEnd">
             </div>
+            <select id="exportKasir" class="lap-select-kasir" title="Filter unduhan per kasir">
+                <option value="">Semua kasir</option>
+            </select>
             <button type="button" class="btn-unduh" id="unduhBtn">
                 <i class="fa-solid fa-download"></i> Unduh
             </button>
@@ -30,19 +33,19 @@
     <div id="lapError" class="lap-error"></div>
 
     <div class="lap-cards">
-        <div class="lap-card">
+        <div class="lap-card" data-segmen="Pelanggan Baru" role="button" tabindex="0">
             <div class="label"><span class="dot" style="background:#63c088;"></span>Pelanggan Baru</div>
             <div class="value" id="cardBaru">0</div>
         </div>
-        <div class="lap-card">
+        <div class="lap-card" data-segmen="Butuh Perhatian" role="button" tabindex="0">
             <div class="label"><span class="dot" style="background:#5aa9e6;"></span>Butuh Perhatian</div>
             <div class="value" id="cardPerhatian">0</div>
         </div>
-        <div class="lap-card">
+        <div class="lap-card" data-segmen="Potensial" role="button" tabindex="0">
             <div class="label"><span class="dot" style="background:#f4c542;"></span>Potensial</div>
             <div class="value" id="cardPotensial">0</div>
         </div>
-        <div class="lap-card">
+        <div class="lap-card" data-segmen="Loyal" role="button" tabindex="0">
             <div class="label"><span class="dot" style="background:#e05a5a;"></span>Loyal</div>
             <div class="value" id="cardLoyal">0</div>
         </div>
