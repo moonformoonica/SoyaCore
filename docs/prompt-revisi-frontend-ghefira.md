@@ -29,29 +29,29 @@ yang kelihatan kurang, **laporkan**, jangan tambal dari frontend.
 
 Peta butir revisi pembimbing dan penanggung jawabnya:
 
-| Butir revisi                                          | Status     | Penanggung jawab           |
-| ----------------------------------------------------- | ---------- | -------------------------- |
-| **SoyaScan**                                          |            |                            |
-| Nomor meja dihilangkan                                | ⬜         | **Frontend — Blok A** ⚠️ rusak |
-| Keterangan pilih sugar **dan ice** setelah pilih menu | ⬜         | **Frontend — Blok B**      |
-| Tampilan QRIS saat pembayaran                         | ⬜         | **Frontend — Blok C**      |
-| Sidebar tambah logo landing page                      | ⬜         | **Frontend — Blok D**      |
-| QR untuk scan menu                                    | ⬜         | Backend selesai; UI di Blok H |
-| **Manager**                                           |            |                            |
-| Bar chart "other" dihilangkan                         | ⬜         | **Frontend — Blok E1**     |
-| Tren penjualan: tanggal → hari                        | ⬜         | **Frontend — Blok E2**     |
-| Edit menu: kiri cup, kanan botol                      | ⬜         | **Frontend — Blok F**      |
-| Sidebar lawan arah                                    | ⬜         | **Frontend — Blok D**      |
-| Laporan langsung berubah saat diklik                  | ⬜         | **Frontend — Blok E3**     |
-| Bagian transaksi diatur tanggalnya                    | ⬜         | **Frontend — Blok G**      |
-| Transaksi bisa memunculkan data yang ingin dilihat    | ⬜         | **Frontend — Blok G**      |
-| Perbedaan data kasir 1 vs kasir 2 (per akun)          | ⬜         | **Frontend — Blok G + H**  |
-| Keterangan pemesanan lewat kasir vs SoyaScan          | ⬜         | **Frontend — Blok G**      |
-| Urutan poin loyalty termahal/termurah                 | ✅ selesai | —                          |
-| Numerasi diskon & redeem poin                         | ✅ selesai | —                          |
-| **Kasir**                                             |            |                            |
+| Butir revisi                                          | Status     | Penanggung jawab                 |
+| ----------------------------------------------------- | ---------- | -------------------------------- |
+| **SoyaScan**                                          |            |                                  |
+| Nomor meja dihilangkan                                | ⬜         | **Frontend — Blok A** ⚠️ rusak   |
+| Keterangan pilih sugar **dan ice** setelah pilih menu | ⬜         | **Frontend — Blok B**            |
+| Tampilan QRIS saat pembayaran                         | ⬜         | **Frontend — Blok C**            |
+| Sidebar tambah logo landing page                      | ⬜         | **Frontend — Blok D**            |
+| QR untuk scan menu                                    | ⬜         | Backend selesai; UI di Blok H    |
+| **Manager**                                           |            |                                  |
+| Bar chart "other" dihilangkan                         | ⬜         | **Frontend — Blok E1**           |
+| Tren penjualan: tanggal → hari                        | ⬜         | **Frontend — Blok E2**           |
+| Edit menu: kiri cup, kanan botol                      | ⬜         | **Frontend — Blok F**            |
+| Sidebar lawan arah                                    | ⬜         | **Frontend — Blok D**            |
+| Laporan langsung berubah saat diklik                  | ⬜         | **Frontend — Blok E3**           |
+| Bagian transaksi diatur tanggalnya                    | ⬜         | **Frontend — Blok G**            |
+| Transaksi bisa memunculkan data yang ingin dilihat    | ⬜         | **Frontend — Blok G**            |
+| Perbedaan data kasir 1 vs kasir 2 (per akun)          | ⬜         | **Frontend — Blok G + H**        |
+| Keterangan pemesanan lewat kasir vs SoyaScan          | ⬜         | **Frontend — Blok G**            |
+| Urutan poin loyalty termahal/termurah                 | ✅ selesai | —                                |
+| Numerasi diskon & redeem poin                         | ✅ selesai | —                                |
+| **Kasir**                                             |            |                                  |
 | Pembatalan/koreksi pesanan salah                      | ⬜         | **Blok I** — pemilik belum pasti |
-| Pencarian nomor HP pelanggan                          | ⬜         | **Frontend — Blok J**      |
+| Pencarian nomor HP pelanggan                          | ⬜         | **Frontend — Blok J**            |
 
 Urutan pengerjaan: **A → B → C → J → E → F → G → H → D → I**.
 Blok A paling dulu karena **checkout SoyaScan sekarang rusak**.
@@ -68,7 +68,8 @@ estimasinya jauh melenceng.
 `resources/js/scan/index.js:318` masih mewajibkan nomor meja:
 
 ```js
-if (!nama || !nomorWa || !nomorMeja) return showCartError('Nama, nomor WhatsApp, dan nomor meja wajib diisi.');
+if (!nama || !nomorWa || !nomorMeja)
+    return showCartError("Nama, nomor WhatsApp, dan nomor meja wajib diisi.");
 ```
 
 Backend sudah menghapus `nomor_meja` sepenuhnya (termasuk kolomnya). Backend
@@ -136,12 +137,12 @@ Lihat temuan **T1**.
 
 **`resources/js/scan/index.js`** — empat titik:
 
-| Baris | Sekarang                                                    | Lakukan                                              |
-| ----- | ----------------------------------------------------------- | ---------------------------------------------------- |
-| ~318  | `!nomorMeja` di kondisi validasi + pesan errornya            | Hapus dari kondisi **dan** dari teks pesannya         |
-| ~332  | `nomor_meja: nomorMeja,` di body `POST /api/order`           | Hapus baris ini                                      |
-| ~344  | `$('doneMeja').textContent = json.nomor_meja ?? nomorMeja;`  | Hapus — `json.nomor_meja` sekarang `undefined`        |
-| ~383  | Prefill `?meja=5` dari query string QR                       | Hapus — QR dari backend tidak lagi berisi `?meja`     |
+| Baris | Sekarang                                                    | Lakukan                                           |
+| ----- | ----------------------------------------------------------- | ------------------------------------------------- |
+| ~318  | `!nomorMeja` di kondisi validasi + pesan errornya           | Hapus dari kondisi **dan** dari teks pesannya     |
+| ~332  | `nomor_meja: nomorMeja,` di body `POST /api/order`          | Hapus baris ini                                   |
+| ~344  | `$('doneMeja').textContent = json.nomor_meja ?? nomorMeja;` | Hapus — `json.nomor_meja` sekarang `undefined`    |
+| ~383  | Prefill `?meja=5` dari query string QR                      | Hapus — QR dari backend tidak lagi berisi `?meja` |
 
 **`resources/views/scan/index.blade.php`** — hapus input nomor meja (`fMeja`)
 beserta label/wrapper-nya, dan elemen `doneMeja` di layar sukses.
@@ -214,8 +215,14 @@ lihat Blok I.)
 Tiap menu membawa flag-nya sendiri — **jangan menebak dari string ukuran**:
 
 ```json
-{ "id": 1, "nama": "Original", "ukuran": "Hot",
-  "golongan_ukuran": "cup", "bisa_pilih_sugar": true, "bisa_pilih_ice": false }
+{
+    "id": 1,
+    "nama": "Original",
+    "ukuran": "Hot",
+    "golongan_ukuran": "cup",
+    "bisa_pilih_sugar": true,
+    "bisa_pilih_ice": false
+}
 ```
 
 - `bisa_pilih_sugar === false` → jangan tampilkan pilihan sugar
@@ -241,7 +248,7 @@ Keduanya **opsional** — item tanpa pilihan tetap sah.
 
 ### B4. ⚠️ Keranjang: opsi berbeda = baris berbeda
 
-Backend **tidak** menggabungkan Original *less sugar* dengan Original *normal* —
+Backend **tidak** menggabungkan Original _less sugar_ dengan Original _normal_ —
 itu dua instruksi berbeda buat barista, dan menggabungkannya akan menghapus salah
 satu permintaan pelanggan.
 
@@ -270,11 +277,11 @@ yang belum ada layar penampil gambarnya.
 Response `POST /api/order` menyertakan `qris_url` **hanya** saat
 `metode_bayar: "qris"`. Tiga kondisi, semuanya harus ditangani:
 
-| Kondisi                                       | Tampilan                                                            |
-| --------------------------------------------- | ------------------------------------------------------------------- |
-| `metode_bayar = "qris"`, `qris_url` = URL      | Tampilkan gambarnya besar & jelas di layar pembayaran                |
-| `metode_bayar = "qris"`, `qris_url` = `null`   | Manager belum unggah → pesan "silakan bayar di kasir". **Jangan** `<img>` kosong |
-| `metode_bayar = "cash"` / tidak dipilih        | Key `qris_url` **tidak ada** di response — jangan diakses buta        |
+| Kondisi                                      | Tampilan                                                                         |
+| -------------------------------------------- | -------------------------------------------------------------------------------- |
+| `metode_bayar = "qris"`, `qris_url` = URL    | Tampilkan gambarnya besar & jelas di layar pembayaran                            |
+| `metode_bayar = "qris"`, `qris_url` = `null` | Manager belum unggah → pesan "silakan bayar di kasir". **Jangan** `<img>` kosong |
+| `metode_bayar = "cash"` / tidak dipilih      | Key `qris_url` **tidak ada** di response — jangan diakses buta                   |
 
 > QRIS ini **gambar statis merchant**. Tidak ada polling status, tidak ada
 > callback. **Jangan** bangun UI yang menunggu konfirmasi pembayaran otomatis —
@@ -313,8 +320,14 @@ ada lagi selisih yang tidak bisa dijelaskan.
 `GET /api/dashboard/time-series` (belum dipanggil frontend — lihat T3):
 
 ```json
-{ "periode": "2026-07-27", "periode_label": "Sen, 27 Jul", "hari": "Senin",
-  "revenue": 340000, "transaksi": 12, "qty": 18 }
+{
+    "periode": "2026-07-27",
+    "periode_label": "Sen, 27 Jul",
+    "hari": "Senin",
+    "revenue": 340000,
+    "transaksi": 12,
+    "qty": 18
+}
 ```
 
 - **`periode_label`** → label sumbu X. Sudah bahasa Indonesia dan menyesuaikan
@@ -383,7 +396,7 @@ Lihat temuan **T2** — halaman ini praktis dibangun dari awal.
 | Param                              | Isi                                                             |
 | ---------------------------------- | --------------------------------------------------------------- |
 | `tanggal_mulai`, `tanggal_selesai` | `YYYY-MM-DD`, inklusif kedua ujung                              |
-| `preset`                           | `hari_ini` \| `kemarin` \| `7_hari` \| `30_hari` \| `bulan_ini`  |
+| `preset`                           | `hari_ini` \| `kemarin` \| `7_hari` \| `30_hari` \| `bulan_ini` |
 | `urut`                             | `terbaru` (default) \| `terlama`                                |
 
 `tanggal_selesai < tanggal_mulai` ditolak `422` — validasi juga di UI supaya user
@@ -401,16 +414,16 @@ dikirim, batas eksplisit yang menang.
 
 ### G2. Filter "data yang ingin dilihat"
 
-| Param                          | Isi                                                              |
-| ------------------------------ | ---------------------------------------------------------------- |
-| `status`                       | `pending` \| `lunas` \| `batal` \| `batal_sebagian`               |
-| `sumber`                       | `kasir` \| `self_order`                                          |
-| `metode_bayar`                 | `cash` \| `qris`                                                 |
-| `ada_redeem`                   | `true` \| `false`                                                |
-| `cari`                         | kode pesanan / nama / no WA — lihat Blok J                        |
-| `total_min`, `total_max`       | rentang nilai transaksi                                          |
-| `dibuat_oleh`, `dibayar_oleh`  | per akun kasir                                                   |
-| `per_page`                     | maks 200                                                         |
+| Param                         | Isi                                                 |
+| ----------------------------- | --------------------------------------------------- |
+| `status`                      | `pending` \| `lunas` \| `batal` \| `batal_sebagian` |
+| `sumber`                      | `kasir` \| `self_order`                             |
+| `metode_bayar`                | `cash` \| `qris`                                    |
+| `ada_redeem`                  | `true` \| `false`                                   |
+| `cari`                        | kode pesanan / nama / no WA — lihat Blok J          |
+| `total_min`, `total_max`      | rentang nilai transaksi                             |
+| `dibuat_oleh`, `dibayar_oleh` | per akun kasir                                      |
+| `per_page`                    | maks 200                                            |
 
 Semua opsional & bisa digabung (AND). Nilai di luar daftar ditolak `422` — jadi
 pakai `<select>` dengan nilai persis di atas, jangan input bebas.
@@ -434,10 +447,13 @@ membuat filternya berguna buat manager, karena angkanya ikut berubah.
 ### G4. Kolom baru: channel & dua peran kasir
 
 ```json
-{ "sumber": "self_order", "sumber_label": "SoyaScan",
-  "kasir_pembuat":    { "id": 1, "nama": "Kasir Satu" },
-  "kasir_penyelesai": { "id": 2, "nama": "Kasir Dua" },
-  "kasir":            { "id": 2, "nama": "Kasir Dua" } }
+{
+    "sumber": "self_order",
+    "sumber_label": "SoyaScan",
+    "kasir_pembuat": { "id": 1, "nama": "Kasir Satu" },
+    "kasir_penyelesai": { "id": 2, "nama": "Kasir Dua" },
+    "kasir": { "id": 2, "nama": "Kasir Dua" }
+}
 ```
 
 - **`sumber_label`** → badge "Kasir" / "SoyaScan". Ini butir revisi "keterangan
@@ -501,12 +517,12 @@ Arti tiap kolom: [`laporan-kasir.md`](laporan-kasir.md) §4–§5.
 
 ### H2. Pengaturan QRIS & QR menu
 
-| Endpoint                                                      | Untuk                                       |
-| ------------------------------------------------------------- | ------------------------------------------- |
-| `POST /api/pengaturan/toko/qris` (multipart, field `qris`)      | Unggah/ganti gambar QRIS                    |
-| `DELETE /api/pengaturan/toko/qris`                             | Hapus                                       |
-| `GET /api/pengaturan/toko`                                     | Menyertakan `qris_url` (bisa `null`)         |
-| `GET /api/pengaturan/toko/qr-menu?format=svg\|png&ukuran=512`  | QR untuk dicetak & ditempel di meja          |
+| Endpoint                                                      | Untuk                                |
+| ------------------------------------------------------------- | ------------------------------------ |
+| `POST /api/pengaturan/toko/qris` (multipart, field `qris`)    | Unggah/ganti gambar QRIS             |
+| `DELETE /api/pengaturan/toko/qris`                            | Hapus                                |
+| `GET /api/pengaturan/toko`                                    | Menyertakan `qris_url` (bisa `null`) |
+| `GET /api/pengaturan/toko/qr-menu?format=svg\|png&ukuran=512` | QR untuk dicetak & ditempel di meja  |
 
 - Validasi unggah: `jpg`/`jpeg`/`png`, maks **2 MB**. Non-gambar → `422`.
   Validasi juga di UI supaya user tidak menunggu upload gagal.
@@ -546,9 +562,15 @@ POST /api/transaksi/{id}/pembatalan
 Response `201`:
 
 ```json
-{ "data": { "nilai_dibatalkan": 16000, "poin_ditarik": 16, "poin_dikembalikan": 0 },
-  "status_transaksi": "batal_sebagian",
-  "saldo_poin_pelanggan": 84 }
+{
+    "data": {
+        "nilai_dibatalkan": 16000,
+        "poin_ditarik": 16,
+        "poin_dikembalikan": 0
+    },
+    "status_transaksi": "batal_sebagian",
+    "saldo_poin_pelanggan": 84
+}
 ```
 
 **Tampilkan `saldo_poin_pelanggan` di layar konfirmasi.** Itu sebabnya field ini
@@ -573,10 +595,10 @@ juga sudah membawa `pemanis`.
 
 ⚠️ **Yang BERBEDA dari SoyaScan: judul pemanis tidak selalu ditampilkan.**
 
-| Layar                    | Takaran gula | Takaran ice | Judul pemanis                     |
-| ------------------------ | ------------ | ----------- | --------------------------------- |
-| **SoyaScan** (pelanggan) | ✅ tampil     | ✅ tampil    | ✅ **SELALU**                      |
-| **Pemesanan kasir**      | ✅ tampil     | ✅ tampil    | ⚠️ **hanya bila `pemanis.khusus`** |
+| Layar                    | Takaran gula | Takaran ice | Judul pemanis                      |
+| ------------------------ | ------------ | ----------- | ---------------------------------- |
+| **SoyaScan** (pelanggan) | ✅ tampil    | ✅ tampil   | ✅ **SELALU**                      |
+| **Pemesanan kasir**      | ✅ tampil    | ✅ tampil   | ⚠️ **hanya bila `pemanis.khusus`** |
 
 Kasir sudah hafal bahwa bawaannya Gula Kelapa, jadi mengulanginya di tiap item hanya
 memperlambat input saat ada antrean. Tapi untuk **Honey Lemon** dan **Mango Monggo**
@@ -614,11 +636,11 @@ diterima di payload item kasir.
 Backend **menjamin** satu kontrak yang sama, dan sudah ada test-nya: pelanggan
 terdaftar ketemu baik dari **nomor lengkap** maupun dari **4 digit terakhir**.
 
-| Yang diketik user            | Contoh                                                | Hasil  |
-| ---------------------------- | ----------------------------------------------------- | ------ |
+| Yang diketik user            | Contoh                                                  | Hasil  |
+| ---------------------------- | ------------------------------------------------------- | ------ |
 | Nomor lengkap, ejaan apa pun | `081234567890` · `0812-3456-7890` · `+62 812 3456 7890` | ketemu |
-| **4 digit terakhir**         | `7890`                                                | ketemu |
-| Potongan tengah              | `3456`                                                | ketemu |
+| **4 digit terakhir**         | `7890`                                                  | ketemu |
+| Potongan tengah              | `3456`                                                  | ketemu |
 
 ⚠️ **Jangan menormalkan/membersihkan nomor di frontend sebelum dikirim.** Backend
 sudah menanganinya. Kalau frontend menambahkan `62` di depan, potongan 4 digit
@@ -627,7 +649,16 @@ terakhir justru rusak.
 ### J1. `GET /api/customers/cari?no_wa=` — auto-detect di halaman Pesanan
 
 ```json
-{ "data": [ { "id": 1, "nama": "Budi Santoso", "no_wa": "6281234567890", "poin": 400 } ] }
+{
+    "data": [
+        {
+            "id": 1,
+            "nama": "Budi Santoso",
+            "no_wa": "6281234567890",
+            "poin": 400
+        }
+    ]
+}
 ```
 
 - **Kirim mulai 3 digit.** Di bawah itu backend mengembalikan `data: []` (bukan
@@ -709,12 +740,12 @@ lingkup:
 
 ## 6. Referensi
 
-| Dokumen                                                        | Isi                                             |
-| -------------------------------------------------------------- | ----------------------------------------------- |
-| [`revisi-frontend-v13.md`](revisi-frontend-v13.md)             | Rincian payload & nomor baris tiap perubahan     |
-| [`kontrak-api-v1.md`](kontrak-api-v1.md)                       | Kontrak SoyaScan (v1.3)                          |
+| Dokumen                                                          | Isi                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------- |
+| [`revisi-frontend-v13.md`](revisi-frontend-v13.md)               | Rincian payload & nomor baris tiap perubahan      |
+| [`kontrak-api-v1.md`](kontrak-api-v1.md)                         | Kontrak SoyaScan (v1.3)                           |
 | [`kontrak-api-kasir-v1-draft.md`](kontrak-api-kasir-v1-draft.md) | Endpoint kasir & manager, kontrak pencarian nomor |
-| [`kontrak-dashboard-v1.md`](kontrak-dashboard-v1.md)           | Endpoint dashboard & laporan                     |
-| [`laporan-kasir.md`](laporan-kasir.md)                         | Arti kolom laporan kasir & export                |
-| [`pembatalan-pesanan.md`](pembatalan-pesanan.md)               | Aturan pembatalan & kode error                   |
-| [`local-preview-setup.md`](local-preview-setup.md)             | Setup dev server & CORS                          |
+| [`kontrak-dashboard-v1.md`](kontrak-dashboard-v1.md)             | Endpoint dashboard & laporan                      |
+| [`laporan-kasir.md`](laporan-kasir.md)                           | Arti kolom laporan kasir & export                 |
+| [`pembatalan-pesanan.md`](pembatalan-pesanan.md)                 | Aturan pembatalan & kode error                    |
+| [`local-preview-setup.md`](local-preview-setup.md)               | Setup dev server & CORS                           |
