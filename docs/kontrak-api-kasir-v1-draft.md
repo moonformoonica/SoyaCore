@@ -271,7 +271,7 @@ Response `200`:
         "id": 1, "menu_id": 1, "nama": "Original",
         "rasa": "Soya Original Premium + Brown Sugar", "ukuran": "Reguler",
         "qty": 2, "harga_satuan": 17000, "subtotal": 34000, "is_reward": false,
-        "level_sugar": "less", "level_sugar_label": "Less Sugar",
+        "level_sugar": "less", "level_sugar_label": "Less Gula Kelapa",
         "level_ice": "no", "level_ice_label": "No Ice",
         "sumber": "kasir", "platform": null,
         "diskon_persen": 0, "diskon_nilai": 0, "catatan": null

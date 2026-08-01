@@ -24,12 +24,35 @@ use App\Exceptions\ApiException;
  */
 class OpsiMinuman
 {
-    /** @var array<string, string> */
+    /**
+     * Pemanis bawaan Gres'Soy: Gula Kelapa, BUKAN gula pasir. Itu salah satu
+     * nilai jual produknya, jadi harus disebut ke pelanggan — tidak bisa
+     * diasumsikan sudah diketahui dari label "Less Sugar" saja.
+     */
+    public const JENIS_GULA = 'Gula Kelapa';
+
+    /**
+     * Label opsi sengaja hanya berisi AKSI-nya ("Less", "No", "Extra"), bukan
+     * "Less Sugar".
+     *
+     * Alasannya: pemanis tiap menu tidak sama. Sebagian besar memakai Gula
+     * Kelapa, tapi Soya Tropical dimaniskan buah/madu — Honey Lemon dengan
+     * Special Madu Lemon, Mango Monggo dengan Special Mangga Gandaria. Label
+     * "Less Sugar" di Honey Lemon menjanjikan sesuatu yang tidak ada di
+     * gelasnya, dan barista tidak tahu apa yang harus dikurangi.
+     *
+     * Nama pemanis yang benar dikirim per menu lewat {@see self::pemanis()},
+     * dipakai frontend sebagai judul kelompok pilihan. Jadi tombolnya tetap
+     * pendek (penting di layar HP) sementara pelanggan tetap tahu persis apa
+     * yang sedang dia atur.
+     *
+     * @var array<string, string>
+     */
     public const SUGAR = [
         'normal' => 'Normal',
-        'less' => 'Less Sugar',
-        'no' => 'No Sugar',
-        'extra' => 'Extra Sugar',
+        'less' => 'Less',
+        'no' => 'No',
+        'extra' => 'Extra',
     ];
 
     /** @var array<string, string> */
@@ -57,6 +80,77 @@ class OpsiMinuman
     public static function daftarIce(): array
     {
         return self::daftar(self::ICE);
+    }
+
+    /**
+     * Nama pemanis sebuah menu, diturunkan dari komponen TERAKHIR kolom `rasa`.
+     *
+     * `rasa` di database memang disusun sebagai daftar komposisi berurutan yang
+     * diakhiri pemanisnya:
+     *
+     *     "Soya Original Premium + Brown Sugar"                 → Gula Kelapa
+     *     "Soya Original Premium + Taro Premium + Brown Sugar"  → Gula Kelapa
+     *     "Soya Original Premium + Special Madu Lemon"          → Special Madu Lemon
+     *     "Soya Original Premium + Special Mangga Gandaria"     → Special Mangga Gandaria
+     *
+     * Diturunkan dari data, BUKAN dari daftar nama menu yang di-hardcode: menu
+     * baru bertambah terus, dan yang pakai pemanis non-gula ikut bertambah.
+     * Dengan cara ini menu baru "… + Special Sirup Pandan" otomatis benar tanpa
+     * ada yang perlu ingat memperbarui kode.
+     *
+     * Ejaan gula apa pun ("Brown Sugar", "Gula Aren", …) dinormalkan ke satu
+     * nama resmi supaya pelanggan tidak melihat istilah yang berbeda-beda untuk
+     * pemanis yang sama.
+     */
+    public static function pemanis(?string $rasa): string
+    {
+        $bagian = array_values(array_filter(array_map('trim', explode('+', (string) $rasa))));
+
+        // Tanpa pemisah '+' berarti `rasa` bukan daftar komposisi (mis. deskripsi
+        // dessert). Tidak ada pemanis yang bisa disimpulkan — jatuh ke bawaan.
+        if (count($bagian) < 2) {
+            return self::JENIS_GULA;
+        }
+
+        $terakhir = $bagian[count($bagian) - 1];
+
+        return preg_match('/sugar|gula/i', $terakhir) === 1 ? self::JENIS_GULA : $terakhir;
+    }
+
+    /**
+     * Keterangan pemanis untuk sebuah menu — dipakai frontend sebagai judul
+     * kelompok pilihan di atas tombol Normal/Less/No/Extra.
+     *
+     * `khusus` menjawab satu pertanyaan yang dibutuhkan layar kasir: apakah
+     * pemanis menu ini BUKAN gula kelapa bawaan. Dikirim sebagai boolean, bukan
+     * dibiarkan frontend membandingkan `jenis !== 'Gula Kelapa'` sendiri —
+     * perbandingan string seperti itu langsung salah begitu nama resminya
+     * diubah, dan salahnya tidak kelihatan (judulnya cuma hilang/muncul di
+     * tempat yang keliru, tanpa error).
+     *
+     * Kedua layar memakai data yang sama tapi menampilkannya berbeda:
+     *
+     * | Layar               | Judul pemanis                                  |
+     * | ------------------- | ---------------------------------------------- |
+     * | SoyaScan (pelanggan) | SELALU — Gula Kelapa adalah nilai jual produk  |
+     * | Pemesanan kasir      | Hanya bila `khusus` — kasir sudah hafal bahwa
+     *                          bawaannya gula kelapa, jadi mengulangnya di tiap
+     *                          item cuma memperlambat input                    |
+     *
+     * @return array{jenis: string, keterangan: string, khusus: bool}
+     */
+    public static function keteranganPemanis(?string $rasa): array
+    {
+        $jenis = self::pemanis($rasa);
+        $bawaan = $jenis === self::JENIS_GULA;
+
+        return [
+            'jenis' => $jenis,
+            'keterangan' => $bawaan
+                ? 'Dimaniskan dengan Gula Kelapa, bukan gula pasir.'
+                : "Dimaniskan dengan {$jenis}, tanpa tambahan gula.",
+            'khusus' => ! $bawaan,
+        ];
     }
 
     /**
@@ -137,9 +231,28 @@ class OpsiMinuman
         return self::alasan($ukuran);
     }
 
-    public static function labelSugar(?string $kode): ?string
+    /**
+     * Label LENGKAP untuk nota & tiket barista, mis. `Less Gula Kelapa` atau
+     * `Extra Special Madu Lemon`.
+     *
+     * Di layar pemesanan tombolnya cukup pendek karena ada judul kelompoknya,
+     * tapi di nota tidak ada judul apa pun — "Less" sendirian tidak memberi tahu
+     * barista apa yang harus dikurangi.
+     *
+     * `$rasa` boleh null (mis. menunya sudah terhapus); yang keluar aksinya saja.
+     */
+    public static function labelSugar(?string $kode, ?string $rasa = null): ?string
     {
-        return $kode === null ? null : (self::SUGAR[$kode] ?? null);
+        if ($kode === null) {
+            return null;
+        }
+
+        $aksi = self::SUGAR[$kode] ?? null;
+        if ($aksi === null) {
+            return null;
+        }
+
+        return $rasa === null ? $aksi : $aksi.' '.self::pemanis($rasa);
     }
 
     public static function labelIce(?string $kode): ?string

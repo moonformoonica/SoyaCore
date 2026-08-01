@@ -8,7 +8,7 @@
 >
 > **Sebelum mulai:**
 >
-> 1. `git pull` — backend revisi ini sudah selesai & dites (245 test lulus).
+> 1. `git pull` — backend revisi ini sudah selesai & dites (249 test lulus).
 > 2. Buat branch baru: `git checkout -b revisi-pembimbing-frontend`.
 > 3. `php artisan storage:link` — wajib, kalau tidak gambar QRIS 404 tanpa error.
 >
@@ -114,6 +114,8 @@ samakan urutannya.
   yang tampil di layar tapi ditolak `422`. Konkretnya:
     - daftar opsi sugar/ice → `meta.opsi_sugar` / `meta.opsi_ice`
     - menu mana boleh pilih apa → `bisa_pilih_sugar` / `bisa_pilih_ice`
+    - nama pemanis tiap menu → `menu[].pemanis.jenis` (beda per menu, jangan
+      diasumsikan selalu "Gula Kelapa")
     - label channel → `sumber_label` (bukan memetakan `self_order` sendiri)
     - label periode chart → `periode_label` / `hari`
     - golongan ukuran → `golongan_ukuran`
@@ -161,15 +163,51 @@ layar, dan layar sukses tidak menampilkan slot kosong.
 "meta": {
   "opsi_sugar": [
     { "kode": "normal", "label": "Normal" },
-    { "kode": "less",   "label": "Less Sugar" },
-    { "kode": "no",     "label": "No Sugar" },
-    { "kode": "extra",  "label": "Extra Sugar" }
+    { "kode": "less",   "label": "Less" },
+    { "kode": "no",     "label": "No" },
+    { "kode": "extra",  "label": "Extra" }
   ],
-  "opsi_ice": [ { "kode": "normal", "label": "Normal" }, … ]
+  "opsi_ice": [ { "kode": "normal", "label": "Normal" }, … ],
+  "pemanis_bawaan": "Gula Kelapa"
 }
 ```
 
 Render tombol/pilihan dari sini. **Jangan hardcode daftarnya.**
+
+### B1b. ⚠️ Judul kelompok gula diambil per menu, bukan dari satu label tetap
+
+Label `opsi_sugar` sengaja hanya berisi aksinya (`Less`, bukan `Less Sugar`) karena
+**pemanis tiap menu tidak sama**:
+
+| Menu                       | `pemanis.jenis`           |
+| -------------------------- | ------------------------- |
+| Original, Choco, Tea, dll. | `Gula Kelapa`             |
+| Honey Lemon                | `Special Madu Lemon`      |
+| Mango Monggo               | `Special Mangga Gandaria` |
+
+Gres'Soy memakai **Gula Kelapa**, bukan gula pasir — itu nilai jual produk dan harus
+terlihat pelanggan. Tapi Soya Tropical dimaniskan buah/madu, jadi "Less Sugar" di
+Honey Lemon menjanjikan sesuatu yang tidak ada di gelasnya.
+
+Render: **judul** dari `menu.pemanis.jenis`, **tombol** dari `meta.opsi_sugar`.
+
+```
+Original                      Honey Lemon
+─────────────────────         ─────────────────────
+Gula Kelapa                   Special Madu Lemon
+Normal Less No Extra          Normal Less No Extra
+```
+
+`menu.pemanis.keterangan` bisa jadi teks bantu kecil di bawah judulnya
+("Dimaniskan dengan Gula Kelapa, bukan gula pasir." / "…tanpa tambahan gula.").
+
+**Jangan menyusun string sendiri** seperti `"Less " + pemanis`. Untuk nota,
+`level_sugar_label` di response transaksi sudah lengkap (`"Less Gula Kelapa"` /
+`"Less Special Madu Lemon"`).
+
+**Di SoyaScan judul pemanis SELALU tampil** — tanpa syarat, karena pelanggan perlu
+tahu minumannya dimaniskan Gula Kelapa dan bukan gula pasir. (Layar kasir beda:
+lihat Blok I.)
 
 ### B2. Tampilkan hanya yang relevan
 
@@ -214,7 +252,7 @@ kombinasi itu.
 ### B5. Layar sukses
 
 Response order sudah memantulkan `level_sugar_label` / `level_ice_label` yang siap
-tampil — pakai itu, jangan memetakan `"less"` → `"Less Sugar"` sendiri.
+tampil (mis. `"Less Gula Kelapa"`) — pakai itu, jangan menyusun labelnya sendiri.
 
 ### B6. ❌ TIDAK ada field catatan/notes
 
@@ -352,6 +390,11 @@ Lihat temuan **T2** — halaman ini praktis dibangun dari awal.
 tidak perlu menunggu round-trip. Batas hari dihitung **WIB** oleh backend, jadi
 frontend tidak perlu mengoreksi zona apa pun.
 
+**Satu batas saja boleh** (rentang terbuka): kirim `tanggal_mulai` tanpa
+`tanggal_selesai` untuk "sejak tanggal X sampai sekarang", atau sebaliknya untuk
+"semua sampai tanggal X". Jadi date-picker tidak perlu memaksa user mengisi
+keduanya.
+
 Sediakan tombol preset (Hari ini / Kemarin / 7 hari / 30 hari / Bulan ini) — itu
 yang dipakai sehari-hari, date-picker manual untuk kasus khusus. Kalau keduanya
 dikirim, batas eksplisit yang menang.
@@ -371,6 +414,9 @@ dikirim, batas eksplisit yang menang.
 
 Semua opsional & bisa digabung (AND). Nilai di luar daftar ditolak `422` — jadi
 pakai `<select>` dengan nilai persis di atas, jangan input bebas.
+
+`total_min`/`total_max` juga boleh dikirim salah satu saja. `total_max` lebih kecil
+dari `total_min` ditolak `422` hanya kalau keduanya dikirim.
 
 ### G3. Ringkasan yang ikut berubah
 
@@ -473,10 +519,12 @@ Arti tiap kolom: [`laporan-kasir.md`](laporan-kasir.md) §4–§5.
 
 ---
 
-## BLOK I — Panel kasir: pembatalan pesanan
+## BLOK I — Panel kasir
 
 > ⚠️ **Pastikan dulu ini tugas siapa.** Dokumen repo tidak menyebut pemilik panel
 > kasir (`resources/js/kasir/pesanan.js`). Tanyakan sebelum mengerjakan.
+
+### I1. Pembatalan / koreksi pesanan
 
 > **Ini pembatalan pesanan yang salah, BUKAN pengembalian uang.** Jangan pakai
 > kata "refund" di UI, dan jangan bikin field metode pengembalian dana.
@@ -515,10 +563,49 @@ Kode error yang perlu ditampilkan apa adanya: `qty_pembatalan_melebihi`,
 `item_bukan_milik_transaksi`, `transaksi_sudah_batal` (409).
 Aturan lengkap: [`pembatalan-pesanan.md`](pembatalan-pesanan.md).
 
-**Juga di panel kasir:** input `level_sugar`/`level_ice` (aturan sama dengan
-Blok B) di `POST /api/transaksi/{id}/items` dan `PATCH .../items/{item}`, dan
-keduanya ikut tercetak di nota supaya barista membacanya. `nomor_meja` sudah
-tidak diterima di payload item kasir.
+### I2. Input sugar & ice di panel kasir
+
+Aturan ketersediaan (`bisa_pilih_sugar` / `bisa_pilih_ice`) **sama persis** dengan
+Blok B — kasir harus bisa mencatat hal yang sama seperti pelanggan. Kirim
+`level_sugar`/`level_ice` di `POST /api/transaksi/{id}/items` dan
+`PATCH .../items/{item}`. Menunya dari `GET /api/menu-internal?is_active=1`, yang
+juga sudah membawa `pemanis`.
+
+⚠️ **Yang BERBEDA dari SoyaScan: judul pemanis tidak selalu ditampilkan.**
+
+| Layar                    | Takaran gula | Takaran ice | Judul pemanis                     |
+| ------------------------ | ------------ | ----------- | --------------------------------- |
+| **SoyaScan** (pelanggan) | ✅ tampil     | ✅ tampil    | ✅ **SELALU**                      |
+| **Pemesanan kasir**      | ✅ tampil     | ✅ tampil    | ⚠️ **hanya bila `pemanis.khusus`** |
+
+Kasir sudah hafal bahwa bawaannya Gula Kelapa, jadi mengulanginya di tiap item hanya
+memperlambat input saat ada antrean. Tapi untuk **Honey Lemon** dan **Mango Monggo**
+judulnya **wajib** tampil — kalau tidak, kasir tidak tahu kedua menu itu diracik
+madu/mangga, bukan gula.
+
+```js
+// Layar kasir
+if (menu.pemanis.khusus) tampilkanJudulPemanis(menu.pemanis.jenis);
+```
+
+⚠️ **Pakai `pemanis.khusus`, jangan `pemanis.jenis !== 'Gula Kelapa'`.**
+Perbandingan string langsung salah begitu nama resminya diubah, dan salahnya tidak
+memicu error apa pun — judulnya hanya hilang atau muncul di tempat yang keliru.
+
+Hasil di layar kasir:
+
+```
+Original / Choco / Coffee / Tea     Honey Lemon / Mango Monggo
+──────────────────────────────      ────────────────────────────────
+Gula                                Special Madu Lemon
+Normal Less No Extra                Normal Less No Extra
+Ice                                 Ice
+Normal Less No Extra                Normal Less No Extra
+```
+
+Keduanya ikut tercetak di nota supaya barista membacanya —
+`level_sugar_label` sudah berisi versi lengkapnya. `nomor_meja` sudah tidak
+diterima di payload item kasir.
 
 ---
 
@@ -610,7 +697,7 @@ lingkup:
 - Semua butir revisi pembimbing di tabel §1 yang bertanda **Frontend** sudah ⬜ → ✅.
 - Tidak ada perubahan di `app/`, `database/`, `routes/api.php`, `tests/`
   (`routes/web.php` hanya untuk komentar QR di Blok A).
-- `php artisan test` tetap **245 lulus** (1 kegagalan `ExampleTest` memang sudah
+- `php artisan test` tetap **249 lulus** (1 kegagalan `ExampleTest` memang sudah
   ada sebelumnya: route `/` di-comment di `routes/web.php`). Kalau angka lulusnya
   turun, ada yang tersenggol — perbaiki, jangan diabaikan.
 - Diuji di **layar HP** untuk SoyaScan, bukan cuma desktop.

@@ -1,7 +1,7 @@
 # Breakdown Pekerjaan Frontend — Revisi Pembimbing (kontrak v1.3)
 
 > **Untuk: Ghefira** (SoyaScan + dashboard/halaman manager)
-> **Backend: sudah selesai & dites** — 240 feature test lulus, branch
+> **Backend: sudah selesai & dites** — 249 feature test lulus, branch
 > `revisi-pembimbing-backend`.
 >
 > Dokumen ini menerjemahkan revisi backend menjadi daftar kerja frontend.
@@ -74,16 +74,17 @@ mengirimkannya di `meta`:
 "meta": {
   "opsi_sugar": [
     { "kode": "normal", "label": "Normal" },
-    { "kode": "less",   "label": "Less Sugar" },
-    { "kode": "no",     "label": "No Sugar" },
-    { "kode": "extra",  "label": "Extra Sugar" }
+    { "kode": "less",   "label": "Less" },
+    { "kode": "no",     "label": "No" },
+    { "kode": "extra",  "label": "Extra" }
   ],
   "opsi_ice": [
     { "kode": "normal", "label": "Normal" },
     { "kode": "less",   "label": "Less Ice" },
     { "kode": "no",     "label": "No Ice" },
     { "kode": "extra",  "label": "Extra Ice" }
-  ]
+  ],
+  "pemanis_bawaan": "Gula Kelapa"
 }
 ```
 
@@ -92,7 +93,92 @@ membawa flag-nya sendiri:
 
 ```json
 { "id": 1, "nama": "Original", "ukuran": "Hot",
-  "golongan_ukuran": "cup", "bisa_pilih_sugar": true, "bisa_pilih_ice": false }
+  "golongan_ukuran": "cup", "bisa_pilih_sugar": true, "bisa_pilih_ice": false,
+  "pemanis": { "jenis": "Gula Kelapa",
+               "keterangan": "Dimaniskan dengan Gula Kelapa, bukan gula pasir." } }
+```
+
+#### ⚠️ Label sugar hanya berisi aksinya — nama pemanisnya per menu
+
+Perhatikan `opsi_sugar` di atas: labelnya `"Less"`, **bukan** `"Less Sugar"`. Itu
+disengaja, karena pemanis tiap menu tidak sama:
+
+| Menu                        | `pemanis.jenis`           |
+| --------------------------- | ------------------------- |
+| Original, Choco, Tea, dll.  | `Gula Kelapa`             |
+| Honey Lemon                 | `Special Madu Lemon`      |
+| Mango Monggo                | `Special Mangga Gandaria` |
+
+Gres'Soy memakai **Gula Kelapa**, bukan gula pasir — itu nilai jual produknya, jadi
+harus terlihat pelanggan. Tapi Soya Tropical dimaniskan buah/madu, jadi label
+"Less Sugar" di Honey Lemon menjanjikan sesuatu yang tidak ada di gelasnya, dan
+barista tidak tahu apa yang harus dikurangi.
+
+Cara render: **judul kelompok** dari `menu.pemanis.jenis`, **tombol** dari
+`meta.opsi_sugar`.
+
+```
+Original                      Honey Lemon
+─────────────────────         ─────────────────────
+Gula Kelapa                   Special Madu Lemon
+Normal Less No Extra          Normal Less No Extra
+```
+
+`pemanis.keterangan` bisa dipakai sebagai teks bantu kecil di bawah judulnya.
+
+**Frontend tidak perlu menyusun string apa pun.** Untuk nota/struk,
+`level_sugar_label` di response transaksi sudah berisi versi lengkapnya
+(`"Less Gula Kelapa"` / `"Less Special Madu Lemon"`).
+
+`pemanis` diturunkan backend dari komponen terakhir kolom `rasa`, jadi menu baru
+dengan pemanis lain otomatis benar tanpa perubahan kode di kedua sisi.
+
+#### Aturan tampil: SoyaScan vs layar kasir — BEDA
+
+Ini keputusan pemilik produk, dan dua layarnya sengaja tidak sama:
+
+| Layar                    | Takaran gula | Takaran ice | Judul pemanis                     |
+| ------------------------ | ------------ | ----------- | --------------------------------- |
+| **SoyaScan** (pelanggan) | ✅ tampil     | ✅ tampil    | ✅ **SELALU** tampil               |
+| **Pemesanan kasir**      | ✅ tampil     | ✅ tampil    | ⚠️ **hanya bila `pemanis.khusus`** |
+
+Kenapa berbeda: pelanggan perlu tahu minumannya dimaniskan **Gula Kelapa**, bukan
+gula pasir — itu nilai jual produknya. Kasir sudah hafal itu, jadi mengulanginya di
+setiap item hanya memperlambat input saat ada antrean. Tapi kasir **wajib** melihat
+judulnya untuk Honey Lemon & Mango Monggo, karena kalau tidak dia tidak tahu kedua
+menu itu diracik madu/mangga, bukan gula.
+
+Backend mengirim boolean untuk itu:
+
+```json
+"pemanis": {
+  "jenis": "Special Madu Lemon",
+  "keterangan": "Dimaniskan dengan Special Madu Lemon, tanpa tambahan gula.",
+  "khusus": true
+}
+```
+
+```js
+// Layar kasir
+if (menu.pemanis.khusus) tampilkanJudulPemanis(menu.pemanis.jenis);
+
+// SoyaScan — tanpa syarat
+tampilkanJudulPemanis(menu.pemanis.jenis);
+```
+
+⚠️ **Pakai `pemanis.khusus`, jangan `pemanis.jenis !== 'Gula Kelapa'`.**
+Perbandingan string langsung salah begitu nama resminya diubah, dan salahnya tidak
+memicu error apa pun — judulnya hanya hilang atau muncul di tempat yang keliru.
+
+Hasil praktisnya di layar kasir:
+
+```
+Original / Choco / Coffee / Tea     Honey Lemon / Mango Monggo
+──────────────────────────────      ────────────────────────────────
+Gula                                Special Madu Lemon
+Normal Less No Extra                Normal Less No Extra
+Ice                                 Ice
+Normal Less No Extra                Normal Less No Extra
 ```
 
 Aturan render:
@@ -112,8 +198,8 @@ Kirim per item di `POST /api/order`:
 ```
 
 Keduanya **opsional** — item tanpa pilihan tetap sah. Response order memantulkan
-`level_sugar_label` / `level_ice_label` yang siap tampil, jadi layar sukses tidak
-perlu memetakan `"less"` → `"Less Sugar"` sendiri.
+`level_sugar_label` / `level_ice_label` yang siap tampil (mis.
+`"Less Gula Kelapa"`), jadi layar sukses tidak perlu menyusun labelnya sendiri.
 
 ⚠️ **Kalau ini dikirim untuk menu yang tidak boleh**, backend menolak `422`
 `opsi_tidak_tersedia` — sengaja tidak diabaikan diam-diam, supaya salah kirim

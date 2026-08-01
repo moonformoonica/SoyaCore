@@ -44,14 +44,23 @@ class MenuController extends Controller
                         'golongan_ukuran' => GolonganUkuran::dari($m->ukuran),
                         'bisa_pilih_sugar' => OpsiMinuman::bisaPilihSugar($m->ukuran),
                         'bisa_pilih_ice' => OpsiMinuman::bisaPilihIce($m->ukuran),
+                        // Pemanis menu ini — dipakai frontend sebagai judul
+                        // kelompok pilihan di atas tombol Normal/Less/No/Extra.
+                        // Beda per menu: Gula Kelapa untuk sebagian besar,
+                        // Special Madu Lemon untuk Honey Lemon, dst.
+                        'pemanis' => OpsiMinuman::keteranganPemanis($m->rasa),
                     ])->values(),
                 ]),
             'meta' => [
                 // Daftar opsi dikirim dari sini supaya frontend merender
                 // tombol/dropdown-nya dari satu sumber, tidak menyalin label
                 // yang lalu lepas sinkron dengan validasi backend.
+                // Label opsi hanya berisi aksinya (Normal/Less/No/Extra).
+                // Nama pemanisnya ada di `menu[].pemanis` karena beda per menu —
+                // lihat catatan di OpsiMinuman::SUGAR.
                 'opsi_sugar' => OpsiMinuman::daftarSugar(),
                 'opsi_ice' => OpsiMinuman::daftarIce(),
+                'pemanis_bawaan' => OpsiMinuman::JENIS_GULA,
                 'golongan_ukuran' => GolonganUkuran::semua(),
             ],
         ]);

@@ -27,6 +27,9 @@ class MenuResource extends JsonResource
             'golongan_ukuran' => GolonganUkuran::dari($this->ukuran),
             'bisa_pilih_sugar' => OpsiMinuman::bisaPilihSugar($this->ukuran),
             'bisa_pilih_ice' => OpsiMinuman::bisaPilihIce($this->ukuran),
+            // Pemanis menu ini, diturunkan dari `rasa` — beda per menu, jadi
+            // tidak bisa diasumsikan selalu Gula Kelapa.
+            'pemanis' => OpsiMinuman::keteranganPemanis($this->rasa),
             'harga' => $this->harga,
             'is_active' => $this->is_active,
         ];

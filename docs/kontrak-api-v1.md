@@ -16,9 +16,16 @@
 > 3. Response `POST /api/order` menyertakan `qris_url` **hanya** saat
 >    `metode_bayar = "qris"` — lihat §2.
 > 4. `GET /api/menu` menambah `meta.opsi_sugar`, `meta.opsi_ice`,
->    `meta.golongan_ukuran`, serta per menu: `golongan_ukuran`,
->    `bisa_pilih_sugar`, `bisa_pilih_ice`. Urutan ukuran kini eksplisit
->    (Hot → Reguler → Large → 250ml → 500ml → 1000ml), bukan alfabetis — lihat §1.
+>    `meta.pemanis_bawaan`, `meta.golongan_ukuran`, serta per menu:
+>    `golongan_ukuran`, `bisa_pilih_sugar`, `bisa_pilih_ice`, dan **`pemanis`**.
+>    Urutan ukuran kini eksplisit (Hot → Reguler → Large → 250ml → 500ml →
+>    1000ml), bukan alfabetis — lihat §1.
+> 5. Label `meta.opsi_sugar` sekarang **hanya aksinya** (`Less`, bukan
+>    `Less Sugar`), karena pemanis tiap menu berbeda: Gula Kelapa untuk sebagian
+>    besar, Special Madu Lemon / Special Mangga Gandaria untuk Soya Tropical.
+>    Nama pemanisnya dibaca dari `menu[].pemanis.jenis`, dan
+>    `menu[].pemanis.khusus` menandai yang bukan gula kelapa — SoyaScan selalu
+>    menampilkan judul pemanis, kasir hanya untuk yang `khusus` — lihat §1.
 >
 > **Revisi v1.2 — yang berubah untuk frontend:**
 > 1. `GET /api/loyalty/{nomor_wa}` menambah field `poin_kedaluwarsa_pada`
@@ -78,7 +85,12 @@ Tanpa parameter.
           "harga": 17000,
           "golongan_ukuran": "cup",
           "bisa_pilih_sugar": true,
-          "bisa_pilih_ice": false
+          "bisa_pilih_ice": false,
+          "pemanis": {
+            "jenis": "Gula Kelapa",
+            "keterangan": "Dimaniskan dengan Gula Kelapa, bukan gula pasir.",
+            "khusus": false
+          }
         },
         {
           "id": 2,
@@ -88,7 +100,12 @@ Tanpa parameter.
           "harga": 39000,
           "golongan_ukuran": "botol",
           "bisa_pilih_sugar": false,
-          "bisa_pilih_ice": false
+          "bisa_pilih_ice": false,
+          "pemanis": {
+            "jenis": "Gula Kelapa",
+            "keterangan": "Dimaniskan dengan Gula Kelapa, bukan gula pasir.",
+            "khusus": false
+          }
         }
       ]
     },
@@ -104,7 +121,12 @@ Tanpa parameter.
           "harga": 15000,
           "golongan_ukuran": "lainnya",
           "bisa_pilih_sugar": false,
-          "bisa_pilih_ice": false
+          "bisa_pilih_ice": false,
+          "pemanis": {
+            "jenis": "Gula Kelapa",
+            "keterangan": "Dimaniskan dengan Gula Kelapa, bukan gula pasir.",
+            "khusus": false
+          }
         }
       ]
     }
@@ -112,9 +134,9 @@ Tanpa parameter.
   "meta": {
     "opsi_sugar": [
       { "kode": "normal", "label": "Normal" },
-      { "kode": "less", "label": "Less Sugar" },
-      { "kode": "no", "label": "No Sugar" },
-      { "kode": "extra", "label": "Extra Sugar" }
+      { "kode": "less", "label": "Less" },
+      { "kode": "no", "label": "No" },
+      { "kode": "extra", "label": "Extra" }
     ],
     "opsi_ice": [
       { "kode": "normal", "label": "Normal" },
@@ -122,6 +144,7 @@ Tanpa parameter.
       { "kode": "no", "label": "No Ice" },
       { "kode": "extra", "label": "Extra Ice" }
     ],
+    "pemanis_bawaan": "Gula Kelapa",
     "golongan_ukuran": ["cup", "botol", "lainnya"]
   }
 }
@@ -139,6 +162,45 @@ Catatan:
   jangan menyalin daftarnya ke frontend. Daftar yang disalin akan lepas sinkron
   dengan validasi backend, dan gejalanya adalah pilihan yang tampil di layar tapi
   ditolak `422` saat dikirim.
+- **`menu[].pemanis`** — pemanis menu itu (`jenis` + `keterangan`), dipakai sebagai
+  **judul kelompok** di atas tombol sugar.
+
+  Label di `meta.opsi_sugar` sengaja hanya berisi aksinya (`Normal`, `Less`, `No`,
+  `Extra`), **bukan** `Less Sugar`. Alasannya: pemanis tiap menu tidak sama.
+  Sebagian besar memakai **Gula Kelapa** (bukan gula pasir — ini nilai jual
+  produknya), tapi Soya Tropical dimaniskan buah/madu:
+
+  | Menu           | `pemanis.jenis`           |
+  | -------------- | ------------------------- |
+  | Original, dll. | `Gula Kelapa`             |
+  | Honey Lemon    | `Special Madu Lemon`      |
+  | Mango Monggo   | `Special Mangga Gandaria` |
+
+  Label `Less Sugar` di Honey Lemon menjanjikan sesuatu yang tidak ada di
+  gelasnya, dan barista tidak tahu apa yang harus dikurangi. Jadi render:
+
+  ```
+  [ Special Madu Lemon ]            ← menu.pemanis.jenis
+   Normal   Less   No   Extra       ← meta.opsi_sugar
+  ```
+
+  Frontend **tidak perlu menyusun string** apa pun: judul dari `pemanis.jenis`,
+  tombol dari `opsi_sugar`. Untuk nota, `level_sugar_label` di response transaksi
+  sudah berisi versi lengkapnya (`"Less Special Madu Lemon"`).
+
+  `pemanis` diturunkan backend dari komponen terakhir kolom `rasa`, jadi menu baru
+  dengan pemanis lain otomatis benar tanpa perubahan kode.
+- **`menu[].pemanis.khusus`** (boolean) — `true` kalau pemanisnya BUKAN gula kelapa
+  bawaan. Ini yang membedakan cara dua layar menampilkannya:
+
+  | Layar                 | Judul pemanis                                      |
+  | --------------------- | -------------------------------------------------- |
+  | **SoyaScan** (pelanggan) | **SELALU** tampil — Gula Kelapa adalah nilai jual produk, pelanggan perlu tahu |
+  | **Pemesanan kasir**   | Hanya bila `khusus === true` — kasir sudah hafal bahwa bawaannya gula kelapa, mengulanginya di tiap item cuma memperlambat input |
+
+  Pakai boolean ini, **jangan** membandingkan `jenis !== "Gula Kelapa"` di
+  frontend: perbandingan string langsung salah begitu nama resminya diubah, dan
+  salahnya tidak memicu error — judulnya hanya hilang/muncul di tempat yang keliru.
 - **`bisa_pilih_sugar` / `bisa_pilih_ice`** per menu — cukup baca flag ini;
   frontend tidak perlu tahu ukuran mana termasuk golongan apa.
 - **`golongan_ukuran`** (`cup` | `botol` | `lainnya`) — dipakai halaman Edit Menu
@@ -227,7 +289,7 @@ Asia/Jakarta; melewati 99 lanjut `#A100` dst).
       "harga_satuan": 15000,
       "subtotal": 30000,
       "level_sugar": "less",
-      "level_sugar_label": "Less Sugar",
+      "level_sugar_label": "Less Gula Kelapa",
       "level_ice": "no",
       "level_ice_label": "No Ice"
     },

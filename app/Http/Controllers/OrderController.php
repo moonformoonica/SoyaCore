@@ -31,7 +31,7 @@ class OrderController extends Controller
                 'harga_satuan' => $d->harga_satuan,
                 'subtotal' => $d->subtotal,
                 'level_sugar' => $d->level_sugar,
-                'level_sugar_label' => OpsiMinuman::labelSugar($d->level_sugar),
+                'level_sugar_label' => OpsiMinuman::labelSugar($d->level_sugar, $d->menu->rasa),
                 'level_ice' => $d->level_ice,
                 'level_ice_label' => OpsiMinuman::labelIce($d->level_ice),
             ])->values(),

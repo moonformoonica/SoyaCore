@@ -27,7 +27,16 @@ class DetailTransaksiResource extends JsonResource
             // keduanya ikut tercetak di nota. Label dikirim sekalian supaya
             // 'less' tidak dirender apa adanya ke barista.
             'level_sugar' => $this->level_sugar,
-            'level_sugar_label' => OpsiMinuman::labelSugar($this->level_sugar),
+            // Label lengkap ikut nama pemanis menunya ("Less Gula Kelapa" /
+            // "Less Special Madu Lemon") supaya nota & tiket barista jelas
+            // tanpa perlu judul kelompok seperti di layar pemesanan.
+            'level_sugar_label' => OpsiMinuman::labelSugar(
+                $this->level_sugar,
+                // relationLoaded() dipakai langsung, bukan whenLoaded():
+                // whenLoaded() mengembalikan MissingValue kalau relasinya belum
+                // dimuat, dan MissingValue tidak boleh masuk ke argumen fungsi.
+                $this->relationLoaded('menu') ? $this->menu?->rasa : null,
+            ),
             'level_ice' => $this->level_ice,
             'level_ice_label' => OpsiMinuman::labelIce($this->level_ice),
             'sumber' => $this->sumber,

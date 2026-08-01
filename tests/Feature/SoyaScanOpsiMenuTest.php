@@ -8,6 +8,7 @@ use App\Models\PengaturanToko;
 use App\Models\Transaksi;
 use App\Models\User;
 use App\Support\GolonganUkuran;
+use App\Support\OpsiMinuman;
 use App\Support\QrMenu;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -40,13 +41,22 @@ class SoyaScanOpsiMenuTest extends TestCase
         parent::setUp();
 
         $signature = Kategori::create(['nama' => 'Soya Signature']);
-        $this->hot = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'ukuran' => 'Hot', 'harga' => 17000]);
-        $this->reguler = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'ukuran' => 'Reguler', 'harga' => 17000]);
-        $this->large = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'ukuran' => 'Large', 'harga' => 21000]);
-        $this->botol500 = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'ukuran' => '500ml', 'harga' => 39000]);
+
+        // `rasa` diisi seperti data seeder aslinya: pemanis menu diturunkan dari
+        // komponen terakhirnya, jadi test yang membiarkannya null tidak akan
+        // mencerminkan label yang benar-benar dilihat pelanggan.
+        $rasa = 'Soya Original Premium + Brown Sugar';
+
+        $this->hot = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'rasa' => $rasa, 'ukuran' => 'Hot', 'harga' => 17000]);
+        $this->reguler = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'rasa' => $rasa, 'ukuran' => 'Reguler', 'harga' => 17000]);
+        $this->large = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'rasa' => $rasa, 'ukuran' => 'Large', 'harga' => 21000]);
+        $this->botol500 = Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'rasa' => $rasa, 'ukuran' => '500ml', 'harga' => 39000]);
 
         $manis = Kategori::create(['nama' => 'Dessert & Cookies']);
-        $this->dessert = Menu::create(['kategori_id' => $manis->id, 'nama' => 'Soy Milk Pudding', 'ukuran' => '', 'harga' => 15000]);
+        $this->dessert = Menu::create([
+            'kategori_id' => $manis->id, 'nama' => 'Soy Milk Pudding',
+            'rasa' => 'Puding susu kedelai lembut', 'ukuran' => '', 'harga' => 15000,
+        ]);
 
         $this->kasir = User::factory()->create(['role' => 'kasir', 'nama' => 'Adrian']);
     }
@@ -115,6 +125,136 @@ class SoyaScanOpsiMenuTest extends TestCase
         $this->assertNull(Transaksi::first()->detailTransaksi()->first()->catatan);
     }
 
+    /**
+     * Pemanis tiap menu tidak sama, jadi label pilihannya harus ikut menunya.
+     * Sebelum ini semua minuman menawarkan "Less Sugar" — termasuk Honey Lemon
+     * yang di gelasnya tidak ada gula sama sekali, sehingga barista tidak tahu
+     * apa yang harus dikurangi.
+     */
+    public function test_pemanis_mengikuti_menu_bukan_selalu_gula_kelapa(): void
+    {
+        $kategori = Kategori::create(['nama' => 'Soya Tropical']);
+
+        $honeyLemon = Menu::create([
+            'kategori_id' => $kategori->id,
+            'nama' => 'Honey Lemon',
+            'rasa' => 'Soya Original Premium + Special Madu Lemon',
+            'ukuran' => 'Reguler',
+            'harga' => 20000,
+        ]);
+        $mangoMonggo = Menu::create([
+            'kategori_id' => $kategori->id,
+            'nama' => 'Mango Monggo',
+            'rasa' => 'Soya Original Premium + Special Mangga Gandaria',
+            'ukuran' => 'Reguler',
+            'harga' => 20000,
+        ]);
+
+        $json = $this->getJson('/api/menu')->assertOk()->json();
+
+        $pemanis = [];
+        foreach ($json['kategori'] as $kat) {
+            foreach ($kat['menu'] as $m) {
+                $pemanis[$m['nama']] = $m['pemanis']['jenis'];
+            }
+        }
+
+        // Menu ber-"Brown Sugar" dinormalkan ke satu nama resmi.
+        $this->assertSame('Gula Kelapa', $pemanis['Original']);
+
+        // Soya Tropical memakai pemanis buah/madu, bukan gula.
+        $this->assertSame('Special Madu Lemon', $pemanis['Honey Lemon']);
+        $this->assertSame('Special Mangga Gandaria', $pemanis['Mango Monggo']);
+
+        // Keterangannya ikut menyesuaikan, bukan menjanjikan gula kelapa.
+        $this->assertNotSame('Gula Kelapa', OpsiMinuman::pemanis($honeyLemon->rasa));
+        $this->assertStringContainsString(
+            'tanpa tambahan gula',
+            OpsiMinuman::keteranganPemanis($mangoMonggo->rasa)['keterangan'],
+        );
+        $this->assertStringContainsString(
+            'bukan gula pasir',
+            OpsiMinuman::keteranganPemanis('Soya Original Premium + Brown Sugar')['keterangan'],
+        );
+    }
+
+    /**
+     * Flag `khusus` yang dipakai layar kasir untuk memutuskan kapan judul
+     * pemanis perlu ditampilkan.
+     *
+     * SoyaScan selalu menampilkannya (Gula Kelapa itu nilai jual produk), kasir
+     * hanya untuk pemanis non-bawaan — dan keputusan itu harus bisa dibaca dari
+     * satu boolean, bukan dari frontend membandingkan string nama pemanis.
+     */
+    public function test_flag_khusus_menandai_pemanis_non_gula_kelapa(): void
+    {
+        $tropical = Kategori::create(['nama' => 'Soya Tropical']);
+        Menu::create([
+            'kategori_id' => $tropical->id, 'nama' => 'Honey Lemon',
+            'rasa' => 'Soya Original Premium + Special Madu Lemon',
+            'ukuran' => 'Reguler', 'harga' => 20000,
+        ]);
+
+        $json = $this->getJson('/api/menu')->assertOk()->json();
+
+        $khusus = [];
+        foreach ($json['kategori'] as $kat) {
+            foreach ($kat['menu'] as $m) {
+                $khusus[$m['nama']] = $m['pemanis']['khusus'];
+            }
+        }
+
+        // Gula kelapa = bawaan → kasir tidak perlu judul pemanis.
+        $this->assertFalse($khusus['Original']);
+
+        // Pemanis non-bawaan → kasir WAJIB melihat judulnya, kalau tidak dia
+        // tidak tahu Honey Lemon diracik dengan madu, bukan gula.
+        $this->assertTrue($khusus['Honey Lemon']);
+
+        // Ikut terkirim di endpoint internal yang dipakai layar kasir.
+        Sanctum::actingAs($this->kasir);
+        $this->getJson('/api/menu-internal?is_active=1')
+            ->assertOk()
+            ->assertJsonPath('data.0.pemanis.khusus', false);
+    }
+
+    /**
+     * Label opsi di layar pemesanan pendek (ada judul kelompoknya), tapi di nota
+     * harus lengkap — "Less" sendirian tidak memberi tahu barista apa pun.
+     */
+    public function test_label_sugar_di_nota_menyebut_pemanis_menunya(): void
+    {
+        $this->assertSame('Less Gula Kelapa', OpsiMinuman::labelSugar('less', 'Soya Original Premium + Brown Sugar'));
+        $this->assertSame('Extra Special Madu Lemon', OpsiMinuman::labelSugar('extra', 'Soya Original Premium + Special Madu Lemon'));
+        $this->assertSame('No Special Mangga Gandaria', OpsiMinuman::labelSugar('no', 'Soya Original Premium + Special Mangga Gandaria'));
+
+        // Tanpa rasa (menu sudah terhapus) → aksinya saja, tidak menebak pemanis.
+        $this->assertSame('Less', OpsiMinuman::labelSugar('less'));
+        $this->assertNull(OpsiMinuman::labelSugar(null));
+
+        // `rasa` yang bukan daftar komposisi tidak boleh dianggap nama pemanis.
+        $this->assertSame('Gula Kelapa', OpsiMinuman::pemanis('Puding susu kedelai lembut'));
+        $this->assertSame('Gula Kelapa', OpsiMinuman::pemanis(null));
+    }
+
+    public function test_level_sugar_label_di_detail_transaksi_ikut_pemanis(): void
+    {
+        $kategori = Kategori::create(['nama' => 'Soya Tropical']);
+        $honeyLemon = Menu::create([
+            'kategori_id' => $kategori->id,
+            'nama' => 'Honey Lemon',
+            'rasa' => 'Soya Original Premium + Special Madu Lemon',
+            'ukuran' => 'Reguler',
+            'harga' => 20000,
+        ]);
+
+        $this->postJson('/api/order', $this->payloadOrder([
+            'items' => [['menu_id' => $honeyLemon->id, 'qty' => 1, 'level_sugar' => 'less']],
+        ]))
+            ->assertCreated()
+            ->assertJsonPath('items.0.level_sugar_label', 'Less Special Madu Lemon');
+    }
+
     // ------------------------------------------------------- E1: sugar & ice
 
     public function test_level_sugar_dan_ice_di_luar_daftar_ditolak(): void
@@ -132,7 +272,7 @@ class SoyaScanOpsiMenuTest extends TestCase
     {
         $this->postJson('/api/order', $this->payloadOrder([
             'items' => [['menu_id' => $this->hot->id, 'qty' => 1, 'level_sugar' => 'less']],
-        ]))->assertCreated()->assertJsonPath('items.0.level_sugar_label', 'Less Sugar');
+        ]))->assertCreated()->assertJsonPath('items.0.level_sugar_label', 'Less Gula Kelapa');
 
         // Es tidak relevan di minuman panas — dan itu harus terlihat, bukan
         // diabaikan diam-diam.
@@ -160,7 +300,7 @@ class SoyaScanOpsiMenuTest extends TestCase
             ]))
                 ->assertCreated()
                 ->assertJsonPath('items.0.level_sugar', 'no')
-                ->assertJsonPath('items.0.level_sugar_label', 'No Sugar')
+                ->assertJsonPath('items.0.level_sugar_label', 'No Gula Kelapa')
                 ->assertJsonPath('items.0.level_ice', 'extra')
                 ->assertJsonPath('items.0.level_ice_label', 'Extra Ice');
         }
@@ -191,7 +331,10 @@ class SoyaScanOpsiMenuTest extends TestCase
         // Frontend merender dari sini, tidak menyalin daftarnya sendiri.
         $respon->assertJsonCount(4, 'meta.opsi_sugar')
             ->assertJsonPath('meta.opsi_sugar.0.kode', 'normal')
-            ->assertJsonPath('meta.opsi_sugar.1.label', 'Less Sugar')
+            // Label di meta hanya AKSI-nya. Nama pemanisnya per menu, lewat
+            // `menu[].pemanis`, karena tidak semua menu pakai gula kelapa.
+            ->assertJsonPath('meta.opsi_sugar.1.label', 'Less')
+            ->assertJsonPath('meta.pemanis_bawaan', 'Gula Kelapa')
             ->assertJsonCount(4, 'meta.opsi_ice')
             ->assertJsonPath('meta.opsi_ice.1.label', 'Less Ice')
             ->assertJsonPath('meta.golongan_ukuran', ['cup', 'botol', 'lainnya']);
@@ -225,7 +368,7 @@ class SoyaScanOpsiMenuTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonPath('data.items.0.level_sugar', 'less')
-            ->assertJsonPath('data.items.0.level_sugar_label', 'Less Sugar')
+            ->assertJsonPath('data.items.0.level_sugar_label', 'Less Gula Kelapa')
             ->assertJsonPath('data.items.0.level_ice_label', 'No Ice');
 
         // Aturan ketersediaan berlaku sama untuk kasir.
