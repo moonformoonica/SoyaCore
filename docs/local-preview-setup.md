@@ -11,8 +11,12 @@
 | Satu WiFi (mis. WFO bareng di Gressoy) | **Opsi A — LAN** (lebih cepat, tidak butuh internet keluar, bisa tes scan QR dari HP) |
 | Beda lokasi / WFH                      | **Opsi B — ngrok**                                                                    |
 
-Database tetap Supabase (sudah dikonfigurasi di `.env` Monica) — dua opsi
-ini hanya soal bagaimana SoyaScan menjangkau API-nya.
+> **Prasyarat:** SoyaCore-nya sudah disetup mengikuti `docs/setup-lokal.md`.
+> Penting terutama soal database — sejak 2026-08-01 development lokal memakai
+> SQLite, BUKAN Supabase. Menyambungkan `.env` lokal ke Supabase membuat setiap
+> request SoyaScan menunggu ~600-1.700 ms per query ke AWS Mumbai, dan preview
+> alur self-order jadi tidak enak dipakai. Dua opsi di bawah hanya mengatur
+> bagaimana SoyaScan menjangkau API-nya, bukan di mana datanya disimpan.
 
 ---
 
