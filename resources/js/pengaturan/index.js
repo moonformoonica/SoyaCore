@@ -47,7 +47,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let userId = null;
 
-  (async function muatProfil() {
+  // Dipegang sebagai promise karena tabel Akun Kasir menandai baris "Kamu"
+  // dengan membandingkan `userId` — kalau ia dirender sebelum profil selesai
+  // dimuat, `userId` masih null dan manager melihat tombol "Nonaktifkan" aktif
+  // pada akunnya sendiri, yang baru ditolak setelah diklik.
+  const profilSiap = (async function muatProfil() {
     if (!token) return;
     try {
       const res = await fetch('/api/me', { headers: headers() });
@@ -394,6 +398,202 @@ document.addEventListener('DOMContentLoaded', function () {
       );
       w.document.close();
     });
+  }
+
+  // ---------------- AKUN KASIR (manager only) ----------------
+  //
+  // Tanpa halaman ini manager tidak punya jalan membuat akun kasir kedua, dan
+  // dua orang yang bergantian shift terpaksa berbagi satu login — seluruh
+  // laporan per-kasir lalu menumpuk di satu nama dan tidak menjawab apa pun.
+  if (peranSekarang === 'manager') {
+    document.getElementById('tabAkun').hidden = false;
+
+    const akBody = document.getElementById('akBody');
+    const akForm = document.getElementById('akForm');
+    const akBtnTambah = document.getElementById('akBtnTambah');
+    const akSimpanBtn = document.getElementById('akSimpanBtn');
+    const fieldBaru = {
+      nama: document.getElementById('akNama'),
+      email: document.getElementById('akEmail'),
+      no_telepon: document.getElementById('akTelepon'),
+      role: document.getElementById('akRole'),
+      password: document.getElementById('akPassword'),
+    };
+
+    // Teks apa pun yang berasal dari database (nama, email) masuk lewat sini
+    // dulu. Tabel ini dirakit dengan innerHTML, jadi nama berisi `<` sudah
+    // cukup untuk merusak markup-nya.
+    function aman(teks) {
+      const div = document.createElement('div');
+      div.textContent = teks == null ? '' : String(teks);
+      return div.innerHTML;
+    }
+
+    function barisAkun(u) {
+      const diriSendiri = String(u.id) === String(userId);
+      const kelasBaris = u.is_active ? '' : ' class="ak-nonaktif"';
+
+      // Akun sendiri tidak bisa dinonaktifkan lewat sini — backend juga
+      // menolaknya. Tombolnya dinonaktifkan supaya penolakan itu tidak datang
+      // sebagai kejutan setelah diklik.
+      const tombolStatus = diriSendiri
+        ? '<button class="ak-btn" disabled title="Akun sendiri tidak bisa dinonaktifkan">Nonaktifkan</button>'
+        : u.is_active
+          ? '<button class="ak-btn danger" data-aksi="nonaktifkan" data-id="' + u.id + '">Nonaktifkan</button>'
+          : '<button class="ak-btn aktifkan" data-aksi="aktifkan" data-id="' + u.id + '">Aktifkan</button>';
+
+      return '<tr' + kelasBaris + '>'
+        + '<td class="ak-nama">' + aman(u.nama)
+        + (diriSendiri ? '<span class="ak-badge ak-diri">Kamu</span>' : '') + '</td>'
+        + '<td class="ak-email">' + aman(u.email) + '</td>'
+        + '<td><span class="ak-badge role-' + (u.role === 'manager' ? 'manager' : 'kasir') + '">'
+        + (u.role === 'manager' ? 'Manager' : 'Kasir') + '</span></td>'
+        + '<td><span class="ak-badge status-' + (u.is_active ? 'aktif' : 'nonaktif') + '">'
+        + (u.is_active ? 'Aktif' : 'Nonaktif') + '</span></td>'
+        + '<td><div class="ak-aksi">'
+        + '<button class="ak-btn" data-aksi="reset" data-id="' + u.id + '" data-nama="' + aman(u.nama) + '">Reset Password</button>'
+        + tombolStatus
+        + '</div></td>'
+        + '</tr>';
+    }
+
+    async function muatAkun() {
+      akBody.innerHTML = '<tr><td colspan="5" class="ak-state">Memuat akun…</td></tr>';
+      try {
+        const res = await fetch('/api/users', { headers: headers() });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.message || 'Gagal memuat daftar akun.');
+
+        const daftar = json.data || [];
+        akBody.innerHTML = daftar.length
+          ? daftar.map(barisAkun).join('')
+          : '<tr><td colspan="5" class="ak-state">Belum ada akun.</td></tr>';
+      } catch (err) {
+        akBody.innerHTML = '<tr><td colspan="5" class="ak-state">Gagal memuat akun.</td></tr>';
+        pesan('akMsg', err.message, 'error');
+      }
+    }
+
+    function resetForm() {
+      Object.values(fieldBaru).forEach((el) => { el.value = ''; });
+      fieldBaru.role.value = 'kasir';
+    }
+
+    akBtnTambah.addEventListener('click', function () {
+      akForm.hidden = !akForm.hidden;
+      if (!akForm.hidden) fieldBaru.nama.focus();
+    });
+
+    document.getElementById('akBatalBtn').addEventListener('click', function () {
+      akForm.hidden = true;
+      resetForm();
+      pesan('akMsg', '');
+    });
+
+    akSimpanBtn.addEventListener('click', async function () {
+      pesan('akMsg', '');
+
+      const payload = {
+        nama: fieldBaru.nama.value.trim(),
+        email: fieldBaru.email.value.trim(),
+        no_telepon: fieldBaru.no_telepon.value.trim() || null,
+        role: fieldBaru.role.value,
+        password: fieldBaru.password.value,
+      };
+
+      if (!payload.nama || !payload.email) {
+        return pesan('akMsg', 'Nama dan email wajib diisi.', 'error');
+      }
+      if (payload.password.length < 8) {
+        return pesan('akMsg', 'Password minimal 8 karakter.', 'error');
+      }
+
+      const labelAwal = akSimpanBtn.textContent;
+      akSimpanBtn.disabled = true;
+      akSimpanBtn.textContent = 'Menyimpan…';
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.message || 'Gagal membuat akun.');
+
+        akForm.hidden = true;
+        resetForm();
+        await muatAkun();
+        pesan('akMsg', 'Akun ' + json.user.nama + ' berhasil dibuat dan sudah bisa dipakai login.', 'success');
+      } catch (err) {
+        pesan('akMsg', err.message, 'error');
+      } finally {
+        akSimpanBtn.disabled = false;
+        akSimpanBtn.textContent = labelAwal;
+      }
+    });
+
+    async function ubahStatus(id, aktif) {
+      const res = await fetch('/api/users/' + id, {
+        method: 'PATCH',
+        headers: headers(),
+        body: JSON.stringify({ is_active: aktif }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.message || 'Gagal mengubah status akun.');
+
+      return json.user;
+    }
+
+    async function resetPassword(id, nama) {
+      const baru = prompt('Password baru untuk ' + nama + ' (minimal 8 karakter):');
+      if (baru === null) return null;
+      if (baru.length < 8) throw new Error('Password baru minimal 8 karakter.');
+
+      const res = await fetch('/api/users/' + id + '/password', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ password_baru: baru }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.message || 'Gagal mereset password.');
+
+      return json.message;
+    }
+
+    // Satu listener di tbody, bukan per tombol: isinya dirender ulang tiap
+    // kali daftar berubah, dan listener yang dipasang ke tombol lama akan ikut
+    // hilang bersamanya.
+    akBody.addEventListener('click', async function (e) {
+      const btn = e.target.closest('button[data-aksi]');
+      if (!btn) return;
+
+      const { aksi, id, nama } = btn.dataset;
+      pesan('akMsg', '');
+      btn.disabled = true;
+
+      try {
+        if (aksi === 'nonaktifkan') {
+          if (confirm('Nonaktifkan akun ini? Sesi yang sedang berjalan langsung diputus dan akun tidak bisa login lagi. Riwayat penjualannya tetap ada di laporan.')) {
+            const u = await ubahStatus(id, false);
+            await muatAkun();
+            pesan('akMsg', 'Akun ' + u.nama + ' dinonaktifkan.', 'success');
+          }
+        } else if (aksi === 'aktifkan') {
+          const u = await ubahStatus(id, true);
+          await muatAkun();
+          pesan('akMsg', 'Akun ' + u.nama + ' diaktifkan kembali.', 'success');
+        } else if (aksi === 'reset') {
+          const msg = await resetPassword(id, nama);
+          if (msg) pesan('akMsg', msg, 'success');
+        }
+      } catch (err) {
+        pesan('akMsg', err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    profilSiap.then(muatAkun);
   }
 
 });

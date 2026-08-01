@@ -1,9 +1,16 @@
 # Kontrak API SoyaCore — v1
 
 > **Status: v1 — locked, 6 Juli 2026. Direvisi ke v1.1 — 17 Juli 2026 (M3),
-> v1.2 — 31 Juli 2026 (konsep redeem poin v2), lalu v1.3 — 1 Agustus 2026
-> (revisi pembimbing).**
+> v1.2 — 31 Juli 2026 (konsep redeem poin v2), v1.3 — 1 Agustus 2026
+> (revisi pembimbing), lalu v1.4 — 1 Agustus 2026 (polling status pembayaran).**
 > Kontrak ini sudah disepakati tim dan bersifat mengikat untuk integrasi self-order.
+>
+> **Revisi v1.4 — yang berubah untuk frontend:**
+>
+> 1. **Endpoint baru `GET /api/order/{kode_pesanan}`** — publik tanpa auth,
+>    mengembalikan status pesanan saja. Inilah yang dipanggil layar "Menunggu
+>    Pembayaran" SoyaScan tiap 4 detik supaya berubah sendiri jadi "Sudah
+>    Dibayar" begitu kasir menandai lunas — lihat §4.
 >
 > **Revisi v1.3 — yang berubah untuk frontend:**
 >
@@ -370,7 +377,69 @@ nomor belum terdaftar.
 
 ---
 
-## 4. Endpoint Kasir Baru (v1.1 — auth Sanctum, role kasir/manager)
+## 4. GET /api/order/{kode_pesanan} (v1.4 — publik, tanpa auth)
+
+Status sebuah pesanan. Dipakai layar "Menunggu Pembayaran" SoyaScan untuk
+polling sampai kasir menandai lunas, tanpa payment gateway apa pun: pelanggan
+unduh QRIS → bayar di aplikasi banknya → tunjukkan bukti ke kasir → kasir
+tandai lunas → layar pelanggan berubah sendiri.
+
+### Request
+
+Path parameter: `kode_pesanan` — kode dari response `POST /api/order`.
+
+**`#` wajib di-encode jadi `%23`.** Di URL, `#` memulai fragment dan tidak
+pernah terkirim ke server. Supaya tidak jadi jebakan, server juga menerima
+kode tanpa `#` dan huruf kecil — keempat bentuk ini setara:
+
+```
+GET /api/order/%23A01
+GET /api/order/A01
+GET /api/order/a01
+GET /api/order/%23a01
+```
+
+Berlaku juga untuk kode pesanan kasir (`#K001`), bukan cuma self-order.
+
+### Response `200 OK`
+
+```json
+{ "status": "lunas" }
+```
+
+Hanya `status`, tidak ada field lain. Nilai yang mungkin:
+
+| `status`         | Arti untuk layar SoyaScan                                  |
+| ---------------- | ---------------------------------------------------------- |
+| `pending`        | Belum dibayar — tetap di layar "Menunggu Pembayaran"        |
+| `lunas`          | Kasir sudah menandai lunas — ganti ke "Sudah Dibayar"       |
+| `batal`          | Pesanan dibatalkan — hentikan polling, beri tahu pelanggan  |
+| `batal_sebagian` | Sebagian item dibatalkan, sisanya sudah dibayar             |
+
+> **Kenapa cuma `status`.** Kode pesanan pendek dan berurutan (`#A01`, `#A02`),
+> jadi siapa pun bisa menebaknya tanpa pernah memesan. Nama pelanggan, nomor
+> WA, dan rincian item **tidak** ikut di sini, dan permintaan menambahkannya
+> akan ditolak. Kalau SoyaScan suatu saat butuh rincian pesanan setelah lunas,
+> itu harus lewat jalur yang mengikat pelanggan ke pesanannya — misalnya token
+> sekali pakai yang dikembalikan `POST /api/order` — bukan dengan memperbanyak
+> field di endpoint publik ini.
+
+### Error
+
+`404 {"error": "pesanan_tidak_ditemukan", "message": "Pesanan #A01 tidak ditemukan."}`
+
+`429` bila polling melebihi **180 request/menit per IP**. Batas itu memuat 12
+pelanggan yang menunggu berbarengan pada interval 4 detik (15 request/menit
+per orang); pelanggan yang memakai WiFi kedai berbagi satu IP publik, jadi
+hitungannya per kedai, bukan per HP.
+
+> **Catatan penomoran.** Kode pesanan di-reset tiap hari, jadi `#A01` hari ini
+> dan `#A01` kemarin dua-duanya ada di database. Endpoint ini selalu menjawab
+> yang **terbaru** — itu yang dimaksud SoyaScan saat pelanggan baru memesan.
+
+---
+
+## 5. Endpoint Kasir Baru (v1.1 — auth Sanctum, role kasir/manager)
 
 Dua aksi kasir M3 di bawah `Authorization: Bearer <token>` (login via
 `POST /api/login`).

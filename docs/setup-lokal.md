@@ -52,12 +52,17 @@ php artisan migrate --seed
 
 File `database/database.sqlite` dibuat otomatis (dan memang di-ignore git, jadi
 isinya tidak pernah ikut ter-commit). Seeder mengisi 6 kategori, 93 baris menu
-asli GresSOY, dan dua akun:
+asli GresSOY, dan tiga akun:
 
 | Email                    | Password   | Role    |
 | ------------------------ | ---------- | ------- |
 | `manager@gressoy.test`   | `password` | manager |
-| `kasir@gressoy.test`     | `password` | kasir   |
+| `kasir1@gressoy.test`    | `password` | kasir   |
+| `kasir2@gressoy.test`    | `password` | kasir   |
+
+Dua akun kasir memang disengaja: laporan per-kasir mengatribusikan penjualan
+lewat akun yang menyelesaikan pembayaran, jadi kasus "dua orang bergantian
+shift" tidak bisa diuji dengan satu login saja.
 
 Data ini **terpisah dari data Supabase**. Kalau butuh data produksi di lokal,
 tarik manual sekali lalu impor — jangan menyambungkan aplikasi langsung ke sana.

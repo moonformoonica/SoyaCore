@@ -167,6 +167,97 @@ class OrderApiTest extends TestCase
             ->assertStatus(422)->assertJsonPath('error', 'validasi_gagal');
     }
 
+    public function test_status_pesanan_publik_ikut_berubah_saat_kasir_menandai_lunas(): void
+    {
+        $this->postJson('/api/order', $this->payload())->assertCreated();
+
+        $this->getJson('/api/order/%23A01')
+            ->assertOk()
+            ->assertExactJson(['status' => 'pending']);
+
+        Transaksi::first()->update(['status' => 'lunas']);
+
+        $this->getJson('/api/order/%23A01')
+            ->assertOk()
+            ->assertExactJson(['status' => 'lunas']);
+    }
+
+    public function test_status_pesanan_tidak_membocorkan_data_pelanggan(): void
+    {
+        $this->postJson('/api/order', $this->payload())->assertCreated();
+
+        $respon = $this->getJson('/api/order/%23A01')->assertOk();
+
+        // Kode pesanan gampang ditebak, jadi response-nya tidak boleh berisi
+        // apa pun selain status.
+        $this->assertSame(['status'], array_keys($respon->json()));
+
+        $mentah = $respon->getContent();
+        foreach (['Budi', '6281234567890', 'Original', '55000'] as $bocor) {
+            $this->assertStringNotContainsString($bocor, $mentah);
+        }
+    }
+
+    public function test_status_pesanan_menerima_kode_tanpa_pagar_dan_huruf_kecil(): void
+    {
+        $this->postJson('/api/order', $this->payload())->assertCreated();
+
+        foreach (['%23A01', 'A01', 'a01', '%23a01'] as $bentuk) {
+            $this->getJson("/api/order/{$bentuk}")
+                ->assertOk()
+                ->assertJsonPath('status', 'pending');
+        }
+    }
+
+    public function test_status_pesanan_memakai_pesanan_terbaru_saat_kode_terpakai_ulang(): void
+    {
+        // Penomoran di-reset tiap hari, jadi #A01 bisa ada lebih dari satu.
+        // Yang dimaksud SoyaScan selalu yang hari ini.
+        $this->postJson('/api/order', $this->payload())->assertCreated();
+        Transaksi::first()->update(['status' => 'lunas']);
+
+        $this->travel(1)->days();
+
+        $this->postJson('/api/order', $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('kode_pesanan', '#A01');
+
+        $this->getJson('/api/order/%23A01')
+            ->assertOk()
+            ->assertJsonPath('status', 'pending');
+
+        $this->travelBack();
+    }
+
+    public function test_status_pesanan_kode_tidak_dikenal_404(): void
+    {
+        $this->getJson('/api/order/%23A99')
+            ->assertNotFound()
+            ->assertJsonPath('error', 'pesanan_tidak_ditemukan');
+    }
+
+    public function test_status_pesanan_kasir_juga_bisa_dicek(): void
+    {
+        // Pesanan yang disusun kasir (#K001) memakai endpoint yang sama —
+        // pelanggan yang memesan di konter pun bisa memantau layarnya.
+        $transaksi = Transaksi::create([
+            'kode_pesanan' => '#K001',
+            'sumber' => 'kasir',
+            'total' => 17000,
+            'status' => 'pending',
+        ]);
+
+        $this->getJson('/api/order/%23K001')
+            ->assertOk()
+            ->assertJsonPath('status', 'pending');
+
+        $transaksi->update(['status' => 'batal']);
+
+        $this->getJson('/api/order/%23K001')
+            ->assertOk()
+            ->assertJsonPath('status', 'batal');
+    }
+
     public function test_menu_publik_terkelompok_per_kategori_hanya_yang_aktif(): void
     {
         $this->tahu->update(['is_active' => false]);

@@ -104,11 +104,16 @@ ngrok, maka URL-nya tetap sama terus.) Restart `npm run dev` setiap ganti
 **2. Endpoint yang sudah bisa dites NYATA sekarang** (lihat detail lengkap +
 bentuk response di `docs/kontrak-api-v1.md`):
 
-| Endpoint                      | Auth       | Fungsi                                                    |
-| ----------------------------- | ---------- | --------------------------------------------------------- |
-| `GET /api/menu`               | tanpa auth | Menu aktif per kategori                                   |
-| `POST /api/order`             | tanpa auth | Buat pesanan self-order                                   |
-| `GET /api/loyalty/{nomor_wa}` | tanpa auth | Cek saldo poin (⚠️ bentuk BARU: `{nomor_wa, nama, poin}`) |
+| Endpoint                          | Auth       | Fungsi                                                    |
+| --------------------------------- | ---------- | --------------------------------------------------------- |
+| `GET /api/menu`                   | tanpa auth | Menu aktif per kategori                                   |
+| `POST /api/order`                 | tanpa auth | Buat pesanan self-order                                   |
+| `GET /api/order/{kode_pesanan}`   | tanpa auth | Status pesanan untuk polling layar pembayaran (v1.4)      |
+| `GET /api/loyalty/{nomor_wa}`     | tanpa auth | Cek saldo poin (⚠️ bentuk BARU: `{nomor_wa, nama, poin}`) |
+
+> `GET /api/order/{kode_pesanan}` mengembalikan `{"status": "..."}` saja.
+> `#` harus di-encode jadi `%23` (atau kirim kodenya tanpa `#` — server
+> menerima keduanya). Detail lengkap di `docs/kontrak-api-v1.md` §4.
 
 **3. Verifikasi koneksi berhasil:** buka Network tab / console di browser,
 submit order dari SoyaScan → response harus berisi `kode_pesanan` format

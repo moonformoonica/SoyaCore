@@ -246,18 +246,32 @@
     });
     document.getElementById('rfmSearch').addEventListener('input', debounce(renderRfmTable, 250));
     document.getElementById('switchSearch').addEventListener('input', debounce(initSwitch, 400));
+    // Daftar akun kasir untuk dropdown export.
+    //
+    // Sumbernya `/api/users`, BUKAN `/api/laporan/kasir`. Yang kedua hanya
+    // memuat akun yang punya transaksi di rentangnya, jadi kasir yang baru
+    // dibuat — atau yang sedang libur sepanjang rentang itu — tidak pernah
+    // muncul sebagai pilihan, dan manager mengira akunnya gagal dibuat.
+    // Memilih kasir yang kebetulan nihil transaksi menghasilkan export kosong,
+    // dan itu jawaban yang benar.
     async function muatDaftarKasir() {
         const sel = document.getElementById('exportKasir');
         if (!sel) return;
         try {
-            const res = await fetch(`${API_BASE}/laporan/kasir`, fetchOptions());
+            const res = await fetch(`${API_BASE}/users`, fetchOptions());
             if (!res.ok) return;
-            ((await res.json()).data || []).forEach((r) => {
-                const opt = document.createElement('option');
-                opt.value = r.user_id;
-                opt.textContent = r.nama;
-                sel.appendChild(opt);
-            });
+
+            ((await res.json()).data || [])
+                .filter((u) => u.role === 'kasir')
+                .forEach((u) => {
+                    const opt = document.createElement('option');
+                    opt.value = u.id;
+                    // Kasir nonaktif tetap dipilih: laporan bulan lalu masih
+                    // berisi transaksinya, dan itu justru yang dicari saat
+                    // seseorang sudah berhenti kerja.
+                    opt.textContent = u.is_active ? u.nama : `${u.nama} (nonaktif)`;
+                    sel.appendChild(opt);
+                });
         } catch (e) {
         }
     }

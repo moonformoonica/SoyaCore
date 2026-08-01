@@ -14,6 +14,7 @@ use App\Http\Controllers\PengaturanLoyaltyController;
 use App\Http\Controllers\PengaturanTokoController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\TransaksiItemController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -22,6 +23,17 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/menu', [MenuController::class, 'katalog']);
 Route::post('/order', [OrderController::class, 'store']);
 Route::get('/loyalty/{nomorWa}', [LoyaltyController::class, 'show']);
+
+// Polling status pembayaran dari layar "Menunggu Pembayaran" SoyaScan.
+//
+// Throttle-nya longgar dengan sengaja: SoyaScan menembak tiap 4 detik = 15
+// request/menit per pelanggan, dan pelanggan yang memakai WiFi kedai keluar
+// dari satu IP publik yang sama. Batas 60/menit hanya memuat 4 pelanggan
+// sebelum layar orang kelima berhenti ter-update — kegagalan yang menyusahkan
+// di jam ramai justru saat endpoint ini paling dibutuhkan. 180/menit memuat
+// 12 pelanggan yang menunggu berbarengan, dan tetap menahan enumerasi ngawur.
+Route::get('/order/{kodePesanan}', [OrderController::class, 'status'])
+    ->middleware('throttle:180,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -118,6 +130,16 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('rfm', [DashboardController::class, 'rfm']);
             Route::get('switch', [DashboardController::class, 'switch']);
         });
+
+        // Akun kasir. Tanpa ini manager tidak punya jalan membuat akun kasir
+        // kedua, dan dua orang yang bergantian shift terpaksa berbagi satu
+        // login — yang membuat seluruh laporan per-kasir kehilangan artinya.
+        // Tidak ada DELETE: akun yang sudah dipakai bertransaksi dinonaktifkan,
+        // tidak dihapus. Alasannya di UserController.
+        Route::get('users', [UserController::class, 'index']);
+        Route::post('users', [UserController::class, 'store']);
+        Route::patch('users/{user}', [UserController::class, 'update']);
+        Route::post('users/{user}/password', [UserController::class, 'resetPassword']);
 
         // Perbandingan antar akun kasir + rekap pembatalan seluruh toko.
         // Manager-only: keduanya menyandingkan performa akun orang lain.

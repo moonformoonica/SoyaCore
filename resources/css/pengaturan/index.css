@@ -84,9 +84,56 @@
 .set-msg.success { background: #EAF6EC; color: #2F6B37; }
 .set-msg.error { background: #FEECEC; color: #C0392B; }
 
+/* ---------- AKUN KASIR ---------- */
+.ak-form { background: #FAFBFA; border: 1px solid #ECECEC; border-radius: 12px; padding: 22px; margin-bottom: 24px; }
+.ak-form-actions { display: flex; gap: 10px; align-items: center; margin-top: 22px; }
+.ak-opsional { color: #9CA3AF; font-weight: 400; }
+
+/* Tabel dibungkus supaya di layar sempit ia yang menggeser, bukan halamannya. */
+.ak-table-wrap { overflow-x: auto; }
+.ak-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+.ak-table th {
+  text-align: left; font-size: 12px; font-weight: 600; color: #6B7280;
+  text-transform: uppercase; letter-spacing: .04em;
+  padding: 0 14px 10px; border-bottom: 1px solid #ECECEC; white-space: nowrap;
+}
+.ak-table td { padding: 14px; border-bottom: 1px solid #F3F4F6; color: #212B36; vertical-align: middle; }
+.ak-table tbody tr:last-child td { border-bottom: none; }
+.ak-table .ak-aksi-head { text-align: right; }
+.ak-nama { font-weight: 600; }
+.ak-email { color: #6B7280; }
+.ak-state { text-align: center; color: #9CA3AF; padding: 26px 14px; }
+
+/* Baris akun nonaktif diredupkan supaya bedanya terbaca sekilas, tanpa
+   menyembunyikannya — riwayatnya masih dipakai laporan. */
+.ak-table tr.ak-nonaktif td { color: #9CA3AF; }
+.ak-table tr.ak-nonaktif .ak-nama { color: #6B7280; }
+
+.ak-badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.ak-badge.role-manager { background: #E8EEF9; color: #2C4E8A; }
+.ak-badge.role-kasir { background: #E6F4DD; color: #2F6B3F; }
+.ak-badge.status-aktif { background: #EAF6EC; color: #2F6B37; }
+.ak-badge.status-nonaktif { background: #F3F4F6; color: #6B7280; }
+.ak-badge.ak-diri { background: #FFF6E0; color: #8A6A16; margin-left: 6px; }
+
+.ak-aksi { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.ak-btn {
+  all: unset; box-sizing: border-box; cursor: pointer; font-size: 12px; font-weight: 600;
+  padding: 6px 12px; border-radius: 7px; border: 1px solid #D9D9D9; color: #374151;
+  transition: .15s; white-space: nowrap;
+}
+.ak-btn:hover { background: #F7F8FA; }
+.ak-btn.danger { border-color: #F3C6C0; color: #C0392B; }
+.ak-btn.danger:hover { background: #FEECEC; }
+.ak-btn.aktifkan { border-color: #BFE0C4; color: #2F6B37; }
+.ak-btn.aktifkan:hover { background: #EAF6EC; }
+.ak-btn:disabled { opacity: .45; cursor: not-allowed; }
+.ak-btn:disabled:hover { background: none; }
+
 @media (max-width: 820px) {
   .set-tabs { gap: 24px; }
   .set-grid { grid-template-columns: 1fr; }
   .qr-grid { grid-template-columns: 1fr; }
   .set-card .card-head { flex-direction: column; }
+  .ak-form { padding: 16px; }
 }
