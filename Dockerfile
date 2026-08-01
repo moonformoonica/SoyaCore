@@ -1,4 +1,4 @@
-# SoyaCore — image produksi untuk Render (M3).
+# SoyaCore, image produksi untuk Render (M3).
 # Render tidak punya runtime PHP native, jadi deploy-nya lewat Docker.
 FROM php:8.2-apache
 

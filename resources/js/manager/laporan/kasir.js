@@ -75,7 +75,7 @@
             body.innerHTML = '<tr><td colspan="' + KOLOM + '" class="lk-state">'
                 + 'Tidak ada transaksi di rentang ini.</td></tr>';
         } else {
-            // Baris TOTAL diambil dari `meta`, bukan dijumlah ulang di klien —
+            // Baris TOTAL diambil dari `meta`, bukan dijumlah ulang di klien,
             // supaya angkanya tidak bisa berbeda dari perhitungan backend.
             const totalRow = meta
                 ? { ...meta, rincian_metode_bayar: totalMetode(rows) }

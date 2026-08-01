@@ -85,8 +85,17 @@ class TransaksiFilterTest extends TestCase
             'items' => [['menu_id' => $this->reguler->id, 'qty' => 1]],
         ])->assertCreated();
 
-        $this->assertSame('kasir', Transaksi::where('kode_pesanan', 'like', '#K%')->first()->sumber);
-        $this->assertSame('self_order', Transaksi::where('kode_pesanan', 'like', '#A%')->first()->sumber);
+        // Asal pesanan dibaca dari kolom `sumber`, BUKAN dari huruf kodenya.
+        // Kasir dan SoyaScan sekarang berbagi satu seri kode mingguan, jadi
+        // `LIKE '#K%'` sudah tidak berarti apa-apa lagi.
+        $this->assertSame(1, Transaksi::where('sumber', 'kasir')->count());
+        $this->assertSame(1, Transaksi::where('sumber', 'self_order')->count());
+
+        // Keduanya memang memperoleh kode dari seri yang sama, berurutan.
+        $this->assertSame(
+            ['#A00', '#A01'],
+            Transaksi::orderBy('id')->pluck('kode_pesanan')->all(),
+        );
 
         // Label siap tampil ikut dikirim supaya frontend tidak memetakan sendiri.
         $respon = $this->getJson('/api/transaksi?sumber=self_order')->assertOk();
@@ -106,7 +115,7 @@ class TransaksiFilterTest extends TestCase
      * jatuh ke `'kasir'`.
      *
      * Kolomnya dibuang dulu supaya kondisi pra-migrasi benar-benar
-     * direproduksi, lalu `up()` migrasi itu dijalankan apa adanya — bukan
+     * direproduksi, lalu `up()` migrasi itu dijalankan apa adanya, bukan
      * menyalin ulang SQL backfill-nya ke dalam test, yang justru akan lulus
      * meski migrasinya salah.
      */
@@ -117,7 +126,7 @@ class TransaksiFilterTest extends TestCase
         Schema::table('transaksi', fn (Blueprint $table) => $table->dropColumn('sumber'));
 
         $dariSoyaScan = DB::table('transaksi')->insertGetId([
-            'user_id' => null, 'kode_pesanan' => '#A01', 'total' => 17000,
+            'user_id' => null, 'kode_pesanan' => '#A00', 'total' => 17000,
             'status' => 'lunas', 'created_at' => now(), 'updated_at' => now(),
         ]);
         DB::table('detail_transaksi')->insert([
@@ -127,7 +136,7 @@ class TransaksiFilterTest extends TestCase
         ]);
 
         $tanpaItem = DB::table('transaksi')->insertGetId([
-            'user_id' => $this->kasir->id, 'kode_pesanan' => '#K900', 'total' => 0,
+            'user_id' => $this->kasir->id, 'kode_pesanan' => '#Y00', 'total' => 0,
             'status' => 'pending', 'created_at' => now(), 'updated_at' => now(),
         ]);
 
@@ -151,7 +160,7 @@ class TransaksiFilterTest extends TestCase
         $this->getJson('/api/transaksi?tanggal_mulai=2026-08-01&tanggal_selesai=2026-08-05')
             ->assertOk()->assertJsonPath('meta.jumlah_transaksi', 3);
 
-        // Kedua ujung ikut terhitung — 01 dan 03 masuk, 05 tidak.
+        // Kedua ujung ikut terhitung, 01 dan 03 masuk, 05 tidak.
         $this->getJson('/api/transaksi?tanggal_mulai=2026-08-01&tanggal_selesai=2026-08-03')
             ->assertOk()->assertJsonPath('meta.jumlah_transaksi', 2);
 
@@ -241,7 +250,7 @@ class TransaksiFilterTest extends TestCase
             ->assertJsonPath('data.0.customer.nama', 'Citra');
 
         // cari lewat kode pesanan
-        $this->getJson('/api/transaksi?cari=%23K001')->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson('/api/transaksi?cari=%23A00')->assertOk()->assertJsonCount(1, 'data');
 
         // metode bayar
         $this->getJson('/api/transaksi?metode_bayar=qris')->assertOk()->assertJsonCount(1, 'data');
@@ -253,7 +262,7 @@ class TransaksiFilterTest extends TestCase
 
     /**
      * Riwayat transaksi pelanggan harus ketemu baik dari nomor LENGKAP (ejaan apa
-     * pun) maupun dari POTONGAN nomor — terutama 4 digit terakhir, yang itulah
+     * pun) maupun dari POTONGAN nomor, terutama 4 digit terakhir, yang itulah
      * yang biasanya disebut pelanggan di konter.
      *
      * Yang tersimpan selalu bentuk ternormalisasi `62…`, jadi tanpa
@@ -267,7 +276,7 @@ class TransaksiFilterTest extends TestCase
         $tersimpan = Customer::where('nama', 'Budi')->value('no_wa');
         $this->assertSame('6281234567890', $tersimpan);
 
-        // 1) Nomor LENGKAP, tiga ejaan berbeda — semuanya menunjuk Budi.
+        // 1) Nomor LENGKAP, tiga ejaan berbeda, semuanya menunjuk Budi.
         foreach (['081234567890', '0812-3456-7890', '+62 812 3456 7890', '6281234567890'] as $ketikan) {
             $this->getJson('/api/transaksi?cari='.urlencode($ketikan))
                 ->assertOk()
@@ -303,7 +312,7 @@ class TransaksiFilterTest extends TestCase
     {
         $this->transaksiLunas($this->reguler, 1, 'cash', ['nama' => 'Budi Santoso', 'no_wa' => '0812-3456-7890']);
 
-        // LIKE case-sensitive di PostgreSQL — tanpa LOWER() di kedua sisi, ini
+        // LIKE case-sensitive di PostgreSQL, tanpa LOWER() di kedua sisi, ini
         // lolos di SQLite tapi gagal di produksi.
         foreach (['budi', 'BUDI', 'Budi', 'sAnToSo'] as $ketikan) {
             $this->getJson('/api/transaksi?cari='.$ketikan)
@@ -396,7 +405,7 @@ class TransaksiFilterTest extends TestCase
      * REGRESSION T5. `app.timezone` masih UTC, jadi `whereDate('created_at')`
      * memotong hari pada 07.00 WIB. Transaksi pukul 06.00 WIB tanggal 5
      * tersimpan sebagai 23.00 UTC tanggal 4, dan sebelum perbaikan ia hilang
-     * dari filter tanggal 5 — persis saat kasir shift pagi membuka daftarnya.
+     * dari filter tanggal 5, persis saat kasir shift pagi membuka daftarnya.
      */
     public function test_transaksi_pagi_wib_tetap_masuk_tanggal_hari_itu(): void
     {
@@ -421,25 +430,31 @@ class TransaksiFilterTest extends TestCase
             ->assertOk()
             ->assertJsonPath('meta.jumlah_transaksi', 0);
 
-        // Keduanya benar-benar tersimpan pada tanggal UTC yang berbeda —
+        // Keduanya benar-benar tersimpan pada tanggal UTC yang berbeda,
         // itulah yang membuat test ini bermakna, bukan kebetulan lolos.
         $this->assertSame('2026-08-04', Transaksi::find($pagi)->created_at->utc()->toDateString());
         $this->assertSame('2026-08-05', Transaksi::find($malam)->created_at->utc()->toDateString());
     }
 
-    public function test_kode_pesanan_harian_mengikuti_hari_wib(): void
+    public function test_kode_pesanan_mingguan_mengikuti_batas_minggu_wib(): void
     {
-        // 06.00 WIB tanggal 5 dan 23.30 WIB tanggal 5 adalah hari yang SAMA,
-        // jadi nomornya berlanjut — bukan mulai ulang dari #K001.
+        // Rabu 06.00 WIB dan Rabu 23.30 WIB masih minggu yang sama, jadi
+        // nomornya berlanjut. Batas minggunya WIB, bukan zona server: dengan
+        // `app.timezone` = UTC, pesanan Senin dini hari akan terhitung sebagai
+        // minggu sebelumnya dan serinya salah mulai.
         $this->travelTo(Carbon::parse('2026-08-05 06:00', WaktuToko::ZONA));
-        $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#K001');
+        $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#A00');
 
         $this->travelTo(Carbon::parse('2026-08-05 23:30', WaktuToko::ZONA));
-        $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#K002');
+        $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#A01');
 
-        // Hari WIB berikutnya mulai ulang.
-        $this->travelTo(Carbon::parse('2026-08-06 06:00', WaktuToko::ZONA));
-        $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#K001');
+        // Minggu (hari) masih ikut minggu yang sama karena minggunya mulai Senin.
+        $this->travelTo(Carbon::parse('2026-08-09 20:00', WaktuToko::ZONA));
+        $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#A02');
+
+        // Senin berikutnya, seri mulai ulang.
+        $this->travelTo(Carbon::parse('2026-08-10 06:00', WaktuToko::ZONA));
+        $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#A00');
 
         $this->travelBack();
     }

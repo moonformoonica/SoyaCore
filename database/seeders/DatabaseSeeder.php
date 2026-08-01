@@ -87,14 +87,26 @@ class DatabaseSeeder extends Seeder
     {
         // Password default factory: 'password'
         User::factory()->create([
-            'nama' => 'Ghefira',
+            'nama' => 'Aden',
             'email' => 'manager@gressoy.test',
             'role' => 'manager',
         ]);
 
+        // DUA akun kasir, bukan satu. Kedai dijaga bergantian, dan seluruh
+        // laporan per-kasir (`laporan/kasir`, sheet `Rekap Kasir` di export)
+        // mengatribusikan penjualan lewat `transaksi.dibayar_oleh`. Kalau dua
+        // orang berbagi satu login, semua angkanya menumpuk di satu nama dan
+        // laporan itu tidak menjawab apa pun. Data seeder harus memungkinkan
+        // kasus dua kasir diuji tanpa menyiapkan akun manual dulu.
+        User::factory()->create([
+            'nama' => 'Andrian',
+            'email' => 'kasir1@gressoy.test',
+            'role' => 'kasir',
+        ]);
+
         User::factory()->create([
             'nama' => 'Evan',
-            'email' => 'kasir@gressoy.test',
+            'email' => 'kasir2@gressoy.test',
             'role' => 'kasir',
         ]);
 

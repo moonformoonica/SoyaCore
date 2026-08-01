@@ -12,7 +12,7 @@
     <div class="lap-header">
         <div>
             <h1>Laporan</h1>
-            <p>Periode <span id="periodeLabel">—</span> — dipakai untuk grafik revenue &amp; unduhan Excel</p>
+            <p>Periode <span id="periodeLabel">—</span>, dipakai untuk grafik revenue &amp; unduhan Excel</p>
         </div>
         <div class="lap-header-actions">
             <div class="lap-date-range">
@@ -86,7 +86,11 @@
             </div>
 
             <div class="table-scroll">
-                <table class="lap-table">
+                {{-- Penanda `--rfm` dipakai CSS untuk merata-kanankan kolom
+                     angka. Kedua tabel di halaman ini sama-sama `.lap-table`
+                     tapi jumlah dan urutan kolomnya beda, jadi aturan
+                     nth-child-nya tidak bisa disatukan. --}}
+                <table class="lap-table lap-table--rfm">
                     <thead>
                         <tr><th>Nama</th><th>Recency</th><th>Frequency</th><th>Monetary</th><th>RFM Score</th><th>Segmen</th></tr>
                     </thead>
@@ -112,7 +116,7 @@
             </div>
 
             <div class="table-scroll">
-                <table class="lap-table">
+                <table class="lap-table lap-table--switch">
                     <thead>
                         <tr>
                             <th>Nama</th><th>Rasa Favorit</th><th>Ukuran Saat Ini</th>

@@ -20,7 +20,7 @@ class CustomerCariTest extends TestCase
         $budi = Customer::create(['nama' => 'Budi Santoso', 'no_wa' => '6281234567890']);
         Loyalty::create(['customer_id' => $budi->id, 'poin' => 400]);
 
-        // Tanpa baris loyalty — customer lama yang belum pernah dapat poin.
+        // Tanpa baris loyalty, customer lama yang belum pernah dapat poin.
         Customer::create(['nama' => 'Budiman', 'no_wa' => '6289999999999']);
 
         Sanctum::actingAs(User::factory()->create(['role' => 'kasir']));
@@ -57,7 +57,7 @@ class CustomerCariTest extends TestCase
 
     /**
      * Saran nomor terdaftar: kasir baru mengetik sebagian, nomor yang cocok
-     * sudah muncul — tidak perlu hafal nomor lengkapnya.
+     * sudah muncul, tidak perlu hafal nomor lengkapnya.
      */
     public function test_nomor_sebagian_memunculkan_nomor_terdaftar(): void
     {
@@ -83,7 +83,7 @@ class CustomerCariTest extends TestCase
 
     /**
      * Kebiasaan nyata kasir: yang diingat pelanggan itu digit BELAKANG, bukan
-     * awalan. Ini dulu gagal — normalisasi() menempelkan "62" ke potongan yang
+     * awalan. Ini dulu gagal, normalisasi() menempelkan "62" ke potongan yang
      * diawali 0/8 (karena dirancang untuk nomor lengkap), sehingga "8122"
      * dicari sebagai "628122" dan tidak pernah ketemu di "6281245688122".
      */
@@ -91,7 +91,7 @@ class CustomerCariTest extends TestCase
     {
         Customer::create(['nama' => 'Kamila', 'no_wa' => '6281245688122']);
 
-        // 4 digit terakhir — diawali 8, kasus yang dilaporkan
+        // 4 digit terakhir, diawali 8, kasus yang dilaporkan
         $this->getJson('/api/customers/cari?no_wa=8122')
             ->assertOk()
             ->assertJsonCount(1, 'data')
@@ -165,7 +165,7 @@ class CustomerCariTest extends TestCase
     /**
      * Kontrak yang dipegang UI: satu kotak nomor harus menemukan pelanggan
      * terdaftar baik dari nomor LENGKAP (ejaan apa pun) maupun dari 4 DIGIT
-     * TERAKHIR — itu yang biasanya disebut pelanggan di konter.
+     * TERAKHIR: itu yang biasanya disebut pelanggan di konter.
      */
     public function test_nomor_penuh_dan_4_digit_terakhir_menemukan_pelanggan_yang_sama(): void
     {
@@ -225,7 +225,7 @@ class CustomerCariTest extends TestCase
     }
 
     /**
-     * "Bu%" dan "B_di" hanya cocok kalau wildcard-nya dieksekusi mentah —
+     * "Bu%" dan "B_di" hanya cocok kalau wildcard-nya dieksekusi mentah,
      * setelah di-escape keduanya jadi pencarian teks literal, 0 hasil.
      */
     public function test_wildcard_like_tidak_bocor_dari_input_nama(): void

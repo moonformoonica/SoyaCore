@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * M3 LoyalSeed: kolom pendukung redeem poin + guard idempotency earning.
- * kode_pesanan, metode_bayar, dan total sudah ada sejak M1/M2 — hanya
+ * kode_pesanan, metode_bayar, dan total sudah ada sejak M1/M2, hanya
  * menambah yang belum ada + index kode_pesanan (non-unique, kode boleh
  * berulang di hari berbeda).
  */
@@ -15,7 +15,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transaksi', function (Blueprint $table) {
-            // dicek sebelum poin ditambahkan — Tandai Lunas 2x tidak boleh
+            // dicek sebelum poin ditambahkan, Tandai Lunas 2x tidak boleh
             // menambah poin 2x
             $table->timestamp('loyalty_applied_at')->nullable();
             // salah satu kode katalog redeem, null = tidak redeem apa pun

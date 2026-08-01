@@ -238,7 +238,14 @@
             if (!nama || !noWa) {
                 document.getElementById('custFoundCard').style.display = 'none';
                 document.getElementById('custNewForm').style.display = 'block';
-                document.getElementById(nama ? 'custNoWa' : 'custNama').focus();
+
+                // Kolom yang kurang ditandai langsung di tempatnya. Pita error
+                // di puncak halaman berada jauh dari isiannya, dan di layar
+                // kasir yang lebar sering tidak terlihat sama sekali.
+                const kurang = document.getElementById(nama ? 'custNoWa' : 'custNama');
+                tandaiKurang(kurang);
+                kurang.focus();
+
                 throw new Error(!nama
                     ? 'Isi nama pelanggan dulu sebelum menambah item.'
                     : 'Lengkapi No. WhatsApp pelanggan dulu.');
@@ -266,6 +273,15 @@
         document.getElementById('custNama').disabled = true;
         document.getElementById('custNoWa').disabled = true;
         document.getElementById('custLockedNote').style.display = 'block';
+
+        // Transaksinya sudah jalan, jadi tidak ada lagi yang "wajib diisi".
+        tampilkanTandaWajib(false);
+    }
+
+    function tampilkanTandaWajib(tampil) {
+        document.querySelectorAll('.pes-wajib').forEach(function (el) {
+            el.style.display = tampil ? '' : 'none';
+        });
     }
 
     function unlockCustomerFields() {
@@ -278,7 +294,10 @@
         document.getElementById('custNama').value = '';
         document.getElementById('custNoWa').value = '';
         document.getElementById('custLockedNote').style.display = 'none';
+        document.getElementById('custNama').classList.remove('is-kurang');
+        document.getElementById('custNoWa').classList.remove('is-kurang');
         selectedCustomer = null;
+        tampilkanTandaWajib(true);
         bersihkanHasil();
         tampilkanFormKosong();
     }
@@ -286,6 +305,19 @@
     // ==================================================================
     // PELANGGAN: cari by no WA (ver1 ketemu / ver2 daftar baru)
     // ==================================================================
+    /**
+     * Tandai satu isian yang masih kosong, dan lepas tandanya begitu kasir
+     * mulai mengetik. Tanda yang menetap setelah diperbaiki membuat layar
+     * terlihat masih salah padahal sudah benar.
+     */
+    function tandaiKurang(el) {
+        el.classList.add('is-kurang');
+        el.addEventListener('input', function lepas() {
+            el.classList.remove('is-kurang');
+            el.removeEventListener('input', lepas);
+        });
+    }
+
     function tampilkanPelangganKetemu(c) {
         document.getElementById('custNewForm').style.display = 'none';
         document.getElementById('custFoundCard').style.display = 'flex';
@@ -301,9 +333,18 @@
         document.getElementById('custNama').value = '';
     }
 
+    /**
+     * Keadaan baku: belum ada pelanggan terpilih, jadi form isian yang tampil.
+     *
+     * Dulu fungsi ini menyembunyikan KEDUANYA, sehingga bagian Pelanggan
+     * kosong melompong sampai kasir menabrak error saat menambah item. Isian
+     * yang sudah diketik SENGAJA tidak dibersihkan di sini: fungsi ini juga
+     * dipanggil saat kotak cari dikosongkan, dan menghapus nama yang barusan
+     * diketik kasir di momen itu adalah kejutan yang tidak diminta.
+     */
     function tampilkanFormKosong() {
         document.getElementById('custFoundCard').style.display = 'none';
-        document.getElementById('custNewForm').style.display = 'none';
+        document.getElementById('custNewForm').style.display = 'block';
     }
 
     function bersihkanHasil() {
@@ -599,7 +640,7 @@
             }
 
             const json = await res.json();
-            showSuccess(`Pembayaran berhasil — ${json.data.kode_pesanan} (${rupiah(json.data.total)}).`);
+            showSuccess(`Pembayaran berhasil, ${json.data.kode_pesanan} (${rupiah(json.data.total)}).`);
             resetPesananBaru();
         } catch (err) {
             showError(err.message);
@@ -619,7 +660,7 @@
         try {
             await fetch(`${API_BASE}/transaksi/${currentTransaksi.id}/batal`, fetchOptions({ method: 'POST' }));
         } catch (err) {
-            // diabaikan — tetap reset UI di sisi client
+            // diabaikan, tetap reset UI di sisi client
         }
         resetPesananBaru();
     });
@@ -633,12 +674,12 @@
         unlockCustomerFields();
         renderCart();
         renderMenuGrid();
-        // Transaksi tadi sudah lunas/batal — segarkan antrean self-order.
+        // Transaksi tadi sudah lunas/batal, segarkan antrean self-order.
         loadPesananMasuk();
     }
 
     // ==================================================================
-    // REDEEM POIN (LoyalSeed) — POST /api/transaksi/{id}/redeem-poin
+    // REDEEM POIN (LoyalSeed), POST /api/transaksi/{id}/redeem-poin
     // Aturan backend: butuh transaksi pending + customer, dan hanya boleh
     // SATU redemption per transaksi.
     // ==================================================================
@@ -758,7 +799,7 @@
             pesananMasuk = (json.data || []).filter(isSelfOrder);
             renderPesananMasuk();
         } catch (err) {
-            // offline sesaat / token kedaluwarsa — biarkan daftar lama tampil
+            // offline sesaat / token kedaluwarsa, biarkan daftar lama tampil
         }
     }
 

@@ -5,7 +5,7 @@
 @import './manager/transaksi.css';
 @import './profil.css';
 @import './login.css';
-/* Jalurnya HARUS lewat manager/ — './menu/index.css' tidak ada dan membuat
+/* Jalurnya HARUS lewat manager/, './menu/index.css' tidak ada dan membuat
    `npm run build` gagal total. Impor './sidebar.css' yang dobel sudah dibuang. */
 @import './manager/menu/index.css';
 
@@ -22,7 +22,7 @@
 }
 
 /* Definisi `.search-box` yang dulu ada di sini SENGAJA DIHAPUS.
-   Kotak cari punya dua pemilik yang sah — header (header.css, 180px) dan baris
-   filter halaman Transaksi (.filter-bar .search-box) — dan salinan ketiga di
+   Kotak cari punya dua pemilik yang sah, header (header.css, 180px) dan baris
+   filter halaman Transaksi (.filter-bar .search-box), dan salinan ketiga di
    berkas global ini cuma jadi penimpa tak terduga begitu app.css ikut dimuat di
    layout utama. */

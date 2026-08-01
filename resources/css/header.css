@@ -167,6 +167,26 @@ body{
   display:block;
 }
 
+.user-profile .avatar img[hidden]{ display:none; }
+
+/* Inisial nama, dipakai selama akun belum mengunggah fotonya sendiri. */
+.user-profile .avatar-inisial{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#E6F4DD;
+  color:#2F6B3F;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  user-select:none;
+}
+
+.user-profile .avatar-inisial[hidden]{ display:none; }
+
 .user-profile .user-info{
   display:flex;
   flex-direction:column;

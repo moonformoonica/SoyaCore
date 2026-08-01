@@ -38,7 +38,7 @@ Route::view('/pengaturan', 'pengaturan.index')->name('pengaturan');
 
 Route::view('/dashboard', 'dashboard.index')->name('dashboard');
 
-// SoyaScan — halaman self-order pelanggan (publik, mobile). QR menu: /scan
+// SoyaScan, halaman self-order pelanggan (publik, mobile). QR menu: /scan
 Route::view('/scan', 'scan.index')->name('scan');
 
 Route::view('/pesanan', 'kasir/pesanan')->name('pesanan');

@@ -13,12 +13,42 @@ use Illuminate\Support\Facades\Storage;
 
 class PengaturanTokoController extends Controller
 {
-    /** Folder pada disk `public` — dilayani lewat `php artisan storage:link`. */
+    /** Folder pada disk `public`, dilayani lewat `php artisan storage:link`. */
     private const FOLDER_QRIS = 'qris';
 
     public function show(): JsonResponse
     {
         return response()->json(['data' => $this->payload(PengaturanToko::current())]);
+    }
+
+    /**
+     * Info toko yang boleh dilihat pelanggan, dipakai layar pembayaran
+     * SoyaScan. Publik tanpa auth.
+     *
+     * KENAPA PERLU ADA. `POST /api/order` menyertakan `qris_url` hanya pada
+     * saat pesanan dibuat, dan SoyaScan menyimpannya di localStorage. Akibatnya
+     * pesanan yang dibuat SEBELUM manager mengunggah QRIS akan menampilkan
+     * "Kode QRIS belum tersedia" selamanya, bahkan setelah QRIS-nya diunggah:
+     * pelanggan yang sedang duduk menunggu tidak punya jalan keluar selain
+     * memesan ulang. Dengan endpoint ini layar pembayaran bisa menanyakan
+     * QRIS yang berlaku sekarang, bukan mengandalkan salinan yang mungkin
+     * sudah basi.
+     *
+     * Isinya sengaja cuma yang memang sudah publik: QRIS statis merchant itu
+     * ditempel di konter dan ditunjukkan ke setiap pelanggan, dan nama toko
+     * tercetak di nota. Nomor telepon, alamat, dan jejak siapa yang terakhir
+     * mengubah pengaturan TIDAK ikut, itu urusan internal.
+     */
+    public function publik(): JsonResponse
+    {
+        $toko = PengaturanToko::current();
+
+        return response()->json([
+            'data' => [
+                'nama_toko' => $toko->nama_toko,
+                'qris_url' => $toko->qrisUrl(),
+            ],
+        ]);
     }
 
     public function update(UpdatePengaturanTokoRequest $request): JsonResponse
@@ -36,7 +66,7 @@ class PengaturanTokoController extends Controller
      * Unggah/ganti gambar QRIS statis merchant.
      *
      * Backend tidak memvalidasi, membaca, atau memproses pembayaran apa pun dari
-     * gambar ini — ia betul-betul hanya gambar yang ditampilkan ke pelanggan.
+     * gambar ini, ia betul-betul hanya gambar yang ditampilkan ke pelanggan.
      */
     public function uploadQris(UploadQrisRequest $request): JsonResponse
     {
@@ -70,7 +100,7 @@ class PengaturanTokoController extends Controller
 
     /**
      * QR untuk ditempel di meja. Mengembalikan BERKAS gambar, bukan JSON berisi
-     * base64 — supaya manager bisa langsung menyimpan atau mencetaknya dari
+     * base64, supaya manager bisa langsung menyimpan atau mencetaknya dari
      * browser tanpa alat bantu.
      */
     public function qrMenu(QrMenuRequest $request): Response

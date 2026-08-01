@@ -25,7 +25,7 @@ class RevenueUkuranSheet implements FromArray, WithTitle
     public function array(): array
     {
         $rows = [
-            ['Catatan: khusus minuman — dessert & cookies (Cup/Pack) tidak termasuk, jadi totalnya lebih kecil dari sheet Ringkasan.'],
+            ['Catatan: khusus minuman, dessert & cookies (Cup/Pack) tidak termasuk, jadi totalnya lebih kecil dari sheet Ringkasan.'],
             [],
             ['Ukuran', 'Jumlah Terjual', 'Total Revenue (Rp)', 'Jumlah Transaksi', 'Rata-rata Transaksi (Rp)'],
         ];

@@ -7,9 +7,9 @@ use App\Models\Customer;
 use App\Models\Loyalty;
 use App\Models\Menu;
 use App\Models\Transaksi;
+use App\Support\KodePesanan;
 use App\Support\NomorWa;
 use App\Support\OpsiMinuman;
-use App\Support\WaktuToko;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -50,7 +50,7 @@ class OrderService
                 // menerimanya di konter.
                 'user_id' => null,
                 'sumber' => 'self_order',
-                'kode_pesanan' => $this->generateKodePesananSelfOrder(),
+                'kode_pesanan' => KodePesanan::berikutnya(),
                 'total' => $total,
                 'metode_bayar' => $data['metode_bayar'] ?? null,
                 'status' => 'pending',
@@ -71,20 +71,6 @@ class OrderService
 
             return $transaksi;
         });
-    }
-
-    private function generateKodePesananSelfOrder(): string
-    {
-        if (DB::connection()->getDriverName() === 'pgsql') {
-            DB::select('SELECT pg_advisory_xact_lock(?)', [crc32('kode_pesanan_self_order')]);
-        }
-
-        // Penomoran harian mengikuti hari WIB, sama seperti seluruh laporan.
-        $urutan = Transaksi::where('kode_pesanan', 'like', '#A%')
-            ->where('created_at', '>=', WaktuToko::awalHari(WaktuToko::tanggalHariIni()))
-            ->count() + 1;
-
-        return '#A'.str_pad((string) $urutan, 2, '0', STR_PAD_LEFT);
     }
 
     /**

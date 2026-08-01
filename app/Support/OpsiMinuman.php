@@ -15,7 +15,7 @@ use App\Exceptions\ApiException;
  * Ketersediaan diturunkan dari {@see GolonganUkuran}, BUKAN dari daftar nama
  * menu: menu baru bertambah terus, ukurannya tidak.
  *
- * - `Hot` (cup)                 : sugar saja — es tidak relevan di minuman panas.
+ * - `Hot` (cup)                 : sugar saja, es tidak relevan di minuman panas.
  * - `Reguler`, `Large` (cup)    : keduanya, karena diracik per pesanan.
  * - `250ml`–`1000ml` (botol)    : tidak ada. Kemasan botol diproduksi batch,
  *                                 bukan per pesanan, jadi pilihan pelanggan
@@ -25,8 +25,8 @@ use App\Exceptions\ApiException;
 class OpsiMinuman
 {
     /**
-     * Pemanis bawaan Gres'Soy: Gula Kelapa, BUKAN gula pasir. Itu salah satu
-     * nilai jual produknya, jadi harus disebut ke pelanggan — tidak bisa
+     * Pemanis bawaan GresSOY: Gula Kelapa, BUKAN gula pasir. Itu salah satu
+     * nilai jual produknya, jadi harus disebut ke pelanggan, tidak bisa
      * diasumsikan sudah diketahui dari label "Less Sugar" saja.
      */
     public const JENIS_GULA = 'Gula Kelapa';
@@ -36,7 +36,7 @@ class OpsiMinuman
      * "Less Sugar".
      *
      * Alasannya: pemanis tiap menu tidak sama. Sebagian besar memakai Gula
-     * Kelapa, tapi Soya Tropical dimaniskan buah/madu — Honey Lemon dengan
+     * Kelapa, tapi Soya Tropical dimaniskan buah/madu, Honey Lemon dengan
      * Special Madu Lemon, Mango Monggo dengan Special Mangga Gandaria. Label
      * "Less Sugar" di Honey Lemon menjanjikan sesuatu yang tidak ada di
      * gelasnya, dan barista tidak tahu apa yang harus dikurangi.
@@ -107,7 +107,7 @@ class OpsiMinuman
         $bagian = array_values(array_filter(array_map('trim', explode('+', (string) $rasa))));
 
         // Tanpa pemisah '+' berarti `rasa` bukan daftar komposisi (mis. deskripsi
-        // dessert). Tidak ada pemanis yang bisa disimpulkan — jatuh ke bawaan.
+        // dessert). Tidak ada pemanis yang bisa disimpulkan, jatuh ke bawaan.
         if (count($bagian) < 2) {
             return self::JENIS_GULA;
         }
@@ -118,12 +118,12 @@ class OpsiMinuman
     }
 
     /**
-     * Keterangan pemanis untuk sebuah menu — dipakai frontend sebagai judul
+     * Keterangan pemanis untuk sebuah menu, dipakai frontend sebagai judul
      * kelompok pilihan di atas tombol Normal/Less/No/Extra.
      *
      * `khusus` menjawab satu pertanyaan yang dibutuhkan layar kasir: apakah
      * pemanis menu ini BUKAN gula kelapa bawaan. Dikirim sebagai boolean, bukan
-     * dibiarkan frontend membandingkan `jenis !== 'Gula Kelapa'` sendiri —
+     * dibiarkan frontend membandingkan `jenis !== 'Gula Kelapa'` sendiri,
      * perbandingan string seperti itu langsung salah begitu nama resminya
      * diubah, dan salahnya tidak kelihatan (judulnya cuma hilang/muncul di
      * tempat yang keliru, tanpa error).
@@ -132,8 +132,8 @@ class OpsiMinuman
      *
      * | Layar               | Judul pemanis                                  |
      * | ------------------- | ---------------------------------------------- |
-     * | SoyaScan (pelanggan) | SELALU — Gula Kelapa adalah nilai jual produk  |
-     * | Pemesanan kasir      | Hanya bila `khusus` — kasir sudah hafal bahwa
+     * | SoyaScan (pelanggan) | SELALU, Gula Kelapa adalah nilai jual produk  |
+     * | Pemesanan kasir      | Hanya bila `khusus`, kasir sudah hafal bahwa
      *                          bawaannya gula kelapa, jadi mengulangnya di tiap
      *                          item cuma memperlambat input                    |
      *
@@ -190,7 +190,7 @@ class OpsiMinuman
      * membuat barista membaca instruksi yang tidak bisa dia kerjakan.
      *
      * Dipanggil dari SoyaScan (`OrderService`) maupun kasir
-     * (`TransaksiItemController`) — kasir harus bisa mencatat hal yang sama
+     * (`TransaksiItemController`), kasir harus bisa mencatat hal yang sama
      * seperti pelanggan.
      *
      * @throws ApiException kode `opsi_tidak_tersedia`
@@ -200,7 +200,7 @@ class OpsiMinuman
         if ($sugar !== null && ! self::bisaPilihSugar($ukuran)) {
             throw new ApiException(
                 'opsi_tidak_tersedia',
-                "{$labelMenu} tidak bisa dipilih level sugar-nya — ".self::alasan($ukuran).'.',
+                "{$labelMenu} tidak bisa dipilih level sugar-nya, ".self::alasan($ukuran).'.',
                 422,
             );
         }
@@ -208,7 +208,7 @@ class OpsiMinuman
         if ($ice !== null && ! self::bisaPilihIce($ukuran)) {
             throw new ApiException(
                 'opsi_tidak_tersedia',
-                "{$labelMenu} tidak bisa dipilih level ice-nya — ".self::alasanIce($ukuran).'.',
+                "{$labelMenu} tidak bisa dipilih level ice-nya, ".self::alasanIce($ukuran).'.',
                 422,
             );
         }
@@ -236,7 +236,7 @@ class OpsiMinuman
      * `Extra Special Madu Lemon`.
      *
      * Di layar pemesanan tombolnya cukup pendek karena ada judul kelompoknya,
-     * tapi di nota tidak ada judul apa pun — "Less" sendirian tidak memberi tahu
+     * tapi di nota tidak ada judul apa pun, "Less" sendirian tidak memberi tahu
      * barista apa yang harus dikurangi.
      *
      * `$rasa` boleh null (mis. menunya sudah terhapus); yang keluar aksinya saja.

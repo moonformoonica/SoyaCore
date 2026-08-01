@@ -29,7 +29,7 @@
             <p>
                 Silakan masuk menggunakan akun Anda
                 untuk mengakses sistem Point of Sale
-                Gres'Soy.
+                GresSOY.
             </p>
             <div id="loginError" class="auth-error" style="display:none;"></div>
             <form id="loginForm" method="POST" action="#">

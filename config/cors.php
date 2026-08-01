@@ -6,7 +6,7 @@
  *
  * Catatan ngrok: request lewat tunnel tetap membawa Origin asli browser
  * Ghefira (mis. http://localhost:5173), jadi daftar di bawah tetap berlaku
- * sama — tidak perlu menambahkan domain ngrok ke sini.
+ * sama, tidak perlu menambahkan domain ngrok ke sini.
  */
 
 return [
@@ -33,7 +33,7 @@ return [
 
     'max_age' => 0,
 
-    // Endpoint publik self-order tidak memakai cookie session — biarkan false
+    // Endpoint publik self-order tidak memakai cookie session, biarkan false
     'supports_credentials' => false,
 
 ];

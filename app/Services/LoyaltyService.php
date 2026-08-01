@@ -54,7 +54,7 @@ class LoyaltyService
         if ($transaksi->kode_redeem !== null) {
             throw new ApiException(
                 'transaksi_sudah_redeem',
-                "Transaksi ini sudah redeem '{$transaksi->kode_redeem}' — hanya satu redemption per transaksi. Kalau salah pilih, batalkan transaksi dan buat baru.",
+                "Transaksi ini sudah redeem '{$transaksi->kode_redeem}', hanya satu redemption per transaksi. Kalau salah pilih, batalkan transaksi dan buat baru.",
                 409,
             );
         }
@@ -103,7 +103,7 @@ class LoyaltyService
                 if ($subtotal < $item['min_subtotal']) {
                     throw new ApiException(
                         'minimal_pembelian_kurang',
-                        "{$item['label']} butuh minimal pembelian Rp ".number_format($item['min_subtotal'], 0, ',', '.').' — subtotal saat ini Rp '.number_format($subtotal, 0, ',', '.').'.',
+                        "{$item['label']} butuh minimal pembelian Rp ".number_format($item['min_subtotal'], 0, ',', '.').', subtotal saat ini Rp '.number_format($subtotal, 0, ',', '.').'.',
                         422,
                     );
                 }
@@ -160,7 +160,7 @@ class LoyaltyService
     }
 
     /**
-     * Harga reguler menu reward menurut database — dipakai halaman pengaturan
+     * Harga reguler menu reward menurut database, dipakai halaman pengaturan
      * untuk menghitung Rp/poin efektif item gratis_menu. Diambil live dengan
      * pencarian yang sama seperti saat redeem, jadi angka yang dilihat manager
      * tidak pernah beda dengan yang benar-benar diberikan ke pelanggan.

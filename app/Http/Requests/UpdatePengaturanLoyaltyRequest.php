@@ -38,8 +38,8 @@ class UpdatePengaturanLoyaltyRequest extends FormRequest
         return [
             'rupiah_per_poin.required' => 'Rate poin wajib diisi.',
             'rupiah_per_poin.integer' => 'Rate poin harus berupa angka rupiah bulat, tanpa titik atau desimal.',
-            'rupiah_per_poin.min' => "Rate poin minimal Rp {$min} per poin — di bawah itu poin jadi terlalu murah.",
-            'rupiah_per_poin.max' => "Rate poin maksimal Rp {$max} per poin — di atas itu praktis tidak ada pelanggan yang bisa dapat poin.",
+            'rupiah_per_poin.min' => "Rate poin minimal Rp {$min} per poin, di bawah itu poin jadi terlalu murah.",
+            'rupiah_per_poin.max' => "Rate poin maksimal Rp {$max} per poin, di atas itu praktis tidak ada pelanggan yang bisa dapat poin.",
         ];
     }
 }

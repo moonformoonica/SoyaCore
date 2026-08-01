@@ -21,7 +21,7 @@ class SwitchSheet implements FromArray, WithTitle
     public function array(): array
     {
         $rows = [
-            ['Catatan: snapshot periode penuh '.self::PERIODE_LABEL.' — tidak difilter tanggal.'],
+            ['Catatan: snapshot periode penuh '.self::PERIODE_LABEL.', tidak difilter tanggal.'],
             [],
             ['Nama Pelanggan', 'Rasa Favorit', 'Ukuran Saat Ini', 'Beli Reguler (pcs)', 'Beli Large (pcs)', 'Beli Botol (pcs)', 'Total Transaksi', 'Qty per Kunjungan', 'Total Belanja (Rp)', 'Rekomendasi'],
         ];

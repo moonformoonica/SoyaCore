@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
  * transaksi manager. Kolom di sini membuat filter `?sumber=` menjadi satu
  * WHERE biasa.
  *
- * `detail_transaksi.sumber` TETAP tinggal — LoyaltyService memakainya saat
+ * `detail_transaksi.sumber` TETAP tinggal, LoyaltyService memakainya saat
  * membuat item reward supaya item gratis ikut menandai channel asalnya.
  */
 return new class extends Migration
@@ -27,7 +27,7 @@ return new class extends Migration
 
         // Backfill baris lama: turunkan dari item pertama transaksi itu.
         // Transaksi tanpa item (pesanan yang ditinggalkan kasir) jatuh ke
-        // 'kasir' — SoyaScan tidak pernah membuat transaksi kosong.
+        // 'kasir', SoyaScan tidak pernah membuat transaksi kosong.
         DB::statement(<<<'SQL'
             UPDATE transaksi
             SET sumber = COALESCE((

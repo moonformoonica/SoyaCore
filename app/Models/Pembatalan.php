@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Dokumen pembatalan/koreksi satu pesanan. Bukan refund — tidak ada kas keluar.
+ * Dokumen pembatalan/koreksi satu pesanan. Bukan refund, tidak ada kas keluar.
  * Lihat docs/pembatalan-pesanan.md.
  */
 class Pembatalan extends Model

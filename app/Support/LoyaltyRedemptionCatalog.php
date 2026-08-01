@@ -9,10 +9,10 @@ use App\Models\KatalogRedeem;
  *
  * Katalog terbentuk dari DUA lapis:
  *
- * 1. defaults() — struktur item: label, tipe, persen, dan mapping menu gratis.
+ * 1. defaults(), struktur item: label, tipe, persen, dan mapping menu gratis.
  *    Ini bagian yang menentukan PERILAKU redeem, jadi tetap di kode dan tidak
  *    bisa diketik bebas lewat API.
- * 2. Tabel `katalog_redeem` — override `poin`, `is_active`, `maks_potongan`,
+ * 2. Tabel `katalog_redeem`, override `poin`, `is_active`, `maks_potongan`,
  *    dan `min_subtotal` yang disetel manager lewat
  *    PATCH /api/pengaturan/loyalty/katalog/{kode}.
  *
@@ -24,14 +24,14 @@ use App\Models\KatalogRedeem;
  * omzet. Tesnya satu baris: `nilai_reward ÷ poin ≤ 50`.
  * - voucher diskon : poin = persen × 10, maks_potongan = poin × 50
  * - gratis minuman : poin = harga_reguler ÷ 50, dibulatkan ke atas per 50 poin
- *   (arah pembulatan yang menurunkan Rp/poin — aman buat toko)
+ *   (arah pembulatan yang menurunkan Rp/poin, aman buat toko)
  *
  * Dua pagar yang gampang tertukar:
  * - `maks_potongan` melindungi TOKO dari pesanan besar yang menguras margin.
  * - `min_subtotal` melindungi PELANGGAN dari membuang poin di pesanan kecil.
  *
  * Catatan yang tetap berlaku sejak M3:
- * - Harga TIDAK di-hardcode di sini — selalu diambil live dari menu.harga
+ * - Harga TIDAK di-hardcode di sini, selalu diambil live dari menu.harga
  *   saat redeem terjadi (konsisten prinsip snapshot harga).
  * - 'ukuran' berisi semua ejaan yang diterima (toleran "Reguler"/"Regular",
  *   matching dilakukan case-insensitive); urutannya adalah urutan
@@ -40,7 +40,7 @@ use App\Models\KatalogRedeem;
 class LoyaltyRedemptionCatalog
 {
     /**
-     * Definisi bawaan — sumber kebenaran struktur item. `poin` di sini
+     * Definisi bawaan, sumber kebenaran struktur item. `poin` di sini
      * adalah nilai awal yang boleh ditimpa manager, bukan nilai final.
      *
      * @return array<string, array<string, mixed>>
@@ -130,7 +130,7 @@ class LoyaltyRedemptionCatalog
      * - `diubah_pada`  : kapan override terakhir disimpan (null = masih bawaan)
      *
      * `maks_potongan` selalu ada sebagai key supaya pemakainya tidak perlu
-     * menebak — bernilai null untuk item gratis_menu, yang memang tidak
+     * menebak, bernilai null untuk item gratis_menu, yang memang tidak
      * mengenal plafon potongan.
      *
      * @return array<string, array<string, mixed>>
@@ -160,7 +160,7 @@ class LoyaltyRedemptionCatalog
     }
 
     /**
-     * Item efektif berdasarkan kode. Item nonaktif TETAP dikembalikan —
+     * Item efektif berdasarkan kode. Item nonaktif TETAP dikembalikan,
      * pemanggil yang memutuskan cara menolaknya, supaya "kode tidak dikenal"
      * dan "reward sedang dimatikan" bisa jadi pesan error berbeda.
      *
@@ -172,7 +172,7 @@ class LoyaltyRedemptionCatalog
     }
 
     /**
-     * Daftar kode yang sah — dipakai validasi request pengaturan.
+     * Daftar kode yang sah, dipakai validasi request pengaturan.
      *
      * @return list<string>
      */

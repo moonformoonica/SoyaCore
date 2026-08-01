@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
  * lunas. Pada terminal yang dipakai satu akun, penimpaan itu tidak berakibat
  * apa-apa. Celahnya muncul tepat pada skenario pergantian akun: Kasir 1
  * membuat pesanan pukul 13.55 lalu logout, Kasir 2 login, pelanggan membayar
- * pukul 14.05 — transaksi tercatat seolah Kasir 1 tidak pernah menyentuhnya,
+ * pukul 14.05, transaksi tercatat seolah Kasir 1 tidak pernah menyentuhnya,
  * tanpa error apa pun yang muncul.
  *
  * - `user_id`      = akun kasir PEMBUAT pesanan, tidak pernah ditimpa lagi.
@@ -33,7 +33,7 @@ return new class extends Migration
         // Baris lunas yang sudah ada: `user_id`-nya memang berisi akun
         // penyelesai (itu yang ditulis `bayar()` versi lama), jadi menyalinnya
         // ke kolom baru membuat laporan kasir langsung benar untuk data yang
-        // sudah ada. Yang tidak bisa dipulihkan hanyalah siapa pembuatnya —
+        // sudah ada. Yang tidak bisa dipulihkan hanyalah siapa pembuatnya,
         // informasi itu memang sudah tertimpa sebelum migrasi ini ada.
         DB::table('transaksi')
             ->where('status', 'lunas')

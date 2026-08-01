@@ -16,7 +16,7 @@ class LaporanQuery
     /**
      * Label untuk baris yang nilai pengelompokannya kosong (`NULL` atau string
      * kosong). Tanpa label, frontend menerima key kosong dan chart-nya
-     * merendernya sebagai batang tak bernama — inilah bucket "other" yang
+     * merendernya sebagai batang tak bernama, inilah bucket "other" yang
      * diminta hilang.
      *
      * Datanya TIDAK dihapus dari database: menyembunyikannya adalah keputusan
@@ -27,8 +27,8 @@ class LaporanQuery
 
     /**
      * Filter kasir opsional. Diterapkan di {@see self::base()} supaya SATU
-     * sekali pasang otomatis berlaku ke seluruh agregasi — ringkasan, time
-     * series, revenue per ukuran, produk terlaris — tanpa tiap method perlu
+     * sekali pasang otomatis berlaku ke seluruh agregasi, ringkasan, time
+     * series, revenue per ukuran, produk terlaris, tanpa tiap method perlu
      * tahu ada filter ini.
      */
     private ?int $kasirUserId = null;
@@ -121,8 +121,8 @@ class LaporanQuery
     {
         $rows = $this->base($start, $end)
             // Dessert & cookies (`Cup`/`Pack`) sengaja di luar cakupan endpoint
-            // ini. Baris ber-`ukuran` NULL adalah hal ketiga — ukurannya
-            // memang tidak terekam — dan harus tetap ikut supaya totalnya bisa
+            // ini. Baris ber-`ukuran` NULL adalah hal ketiga, ukurannya
+            // memang tidak terekam, dan harus tetap ikut supaya totalnya bisa
             // direkonsiliasi. `NOT IN` sendirian membuangnya diam-diam, karena
             // `NULL NOT IN (...)` bernilai NULL, bukan true.
             ->where(fn (Builder $q) => $q
@@ -269,7 +269,7 @@ class LaporanQuery
     }
 
     /**
-     * `periode` (key mentah) TIDAK dihapus — ia yang dipakai sorting dan
+     * `periode` (key mentah) TIDAK dihapus, ia yang dipakai sorting dan
      * sebagai key stabil di frontend. `periode_label` dan `hari` ditambahkan di
      * sebelahnya sebagai teks siap tampil.
      *
@@ -320,7 +320,7 @@ class LaporanQuery
         // array kosong, bukan deretan bucket bernilai 0. Yang dibutuhkan grafik
         // adalah hari kosong DI ANTARA hari yang ada isinya; membangun grafik
         // rata nol untuk rentang tanpa data sama sekali cuma menyembunyikan
-        // fakta itu — dan `data_tersedia: false` sudah menyampaikannya.
+        // fakta itu, dan `data_tersedia: false` sudah menyampaikannya.
         if ($buckets === []) {
             return [];
         }

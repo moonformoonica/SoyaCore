@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Normalisasi nomor WhatsApp — kunci matching customer/loyalty.
+ * Normalisasi nomor WhatsApp, kunci matching customer/loyalty.
  * Konsisten dengan catatan risiko roadmap: nomor WA sebagai kunci utama.
  */
 class NomorWa
@@ -38,7 +38,7 @@ class NomorWa
     /**
      * Digit mentah yang diketik user, tanpa penambahan prefix apa pun.
      *
-     * Dipakai untuk mengukur "sudah berapa banyak yang diketik" — panjang
+     * Dipakai untuk mengukur "sudah berapa banyak yang diketik", panjang
      * hasil normalisasi() tidak bisa dipakai untuk itu karena menambahkan
      * awalan "62", sehingga satu ketikan "8" terbaca jadi 3 karakter.
      */
@@ -53,7 +53,7 @@ class NomorWa
      *
      * normalisasi() dirancang untuk nomor LENGKAP: input berawalan 0 atau 8
      * SELALU ditempeli "62" karena diasumsikan itu awal nomor. Asumsi itu
-     * runtuh untuk pencarian sebagian — kasir yang mengetik 4 digit terakhir
+     * runtuh untuk pencarian sebagian, kasir yang mengetik 4 digit terakhir
      * "8122" bukan sedang menulis awal nomor, tapi ekornya, dan "628122"
      * tidak ada di dalam "6281245688122".
      *

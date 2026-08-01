@@ -3,18 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LaporanRequest;
-use App\Models\LaporanRfm;
 use App\Models\LaporanSwitch;
 use App\Models\LaporanTransaksi;
 use App\Services\LaporanQuery;
+use App\Services\RfmQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    private const PERIODE_LABEL = '1 Jun 2026 – 30 Jul 2026';
+    private const PERIODE_LABEL = '1 Jun 2026 - 30 Jul 2026';
 
-    public function __construct(private readonly LaporanQuery $query) {}
+    public function __construct(
+        private readonly LaporanQuery $query,
+        private readonly RfmQuery $rfm,
+    ) {}
 
     public function meta(): JsonResponse
     {
@@ -26,7 +29,10 @@ class DashboardController extends Controller
             'total_baris' => LaporanTransaksi::count(),
             'ukuran' => LaporanTransaksi::query()->whereNotNull('ukuran')->distinct()->orderBy('ukuran')->pluck('ukuran'),
             'platform' => LaporanTransaksi::query()->whereNotNull('platform')->distinct()->orderBy('platform')->pluck('platform'),
-            'segmen' => LaporanRfm::query()->distinct()->orderBy('segmen')->pluck('segmen'),
+            // Daftar tetap dari RfmQuery, bukan `distinct` dari tabel snapshot.
+            // Segmen yang kebetulan sedang kosong tetap harus muncul di
+            // dropdown filter, kalau tidak manager mengira pilihannya hilang.
+            'segmen' => RfmQuery::SEGMEN,
         ]);
     }
 
@@ -54,7 +60,7 @@ class DashboardController extends Controller
         return $this->envelope(
             $request->grain(), $start, $end, $ada,
             $this->query->revenueUkuran($start, $end, $request->sembunyikanTidakDiketahui()),
-            'Khusus minuman — dessert & cookies (Cup/Pack) tidak termasuk.',
+            'Khusus minuman, dessert & cookies (Cup/Pack) tidak termasuk.',
         );
     }
 
@@ -86,24 +92,30 @@ class DashboardController extends Controller
         return $this->envelope($request->grain(), $start, $end, $ada, $this->query->loyalty($start, $end, $request->limitOr(10)));
     }
 
+    /**
+     * DIHITUNG dari `laporan_transaksi`, tidak lagi dibaca dari snapshot
+     * `laporan_rfm`. Tabel snapshot itu tidak pernah berubah setelah CSV
+     * di-impor, jadi pelanggan yang baru belanja hari ini tidak pernah muncul
+     * dan recency pelanggan lama tidak pernah bertambah. Rinciannya di
+     * {@see RfmQuery}.
+     */
     public function rfm(Request $request): JsonResponse
     {
         $segmen = $request->query('segmen');
 
-        $data = LaporanRfm::query()
-            ->when($segmen, fn ($q) => $q->where('segmen', $segmen))
-            ->orderByDesc('rfm_total')
-            ->orderBy('nama_pelanggan')
-            ->get();
+        $semua = $this->rfm->semua();
 
-        $ringkasanSegmen = LaporanRfm::query()
-            ->selectRaw('segmen, count(*) as jumlah')
-            ->groupBy('segmen')
-            ->orderByDesc('jumlah')
-            ->pluck('jumlah', 'segmen');
+        // Ringkasan segmen dihitung dari SELURUH pelanggan, bukan dari hasil
+        // yang sudah tersaring. Kalau ikut tersaring, donut chart-nya berubah
+        // jadi satu potong penuh begitu manager memilih satu segmen.
+        $ringkasanSegmen = $this->rfm->ringkasanSegmen($semua);
+
+        $data = $segmen === null || $segmen === ''
+            ? $semua
+            : array_values(array_filter($semua, fn ($b) => $b['segmen'] === $segmen));
 
         return response()->json([
-            'periode_label' => self::PERIODE_LABEL,
+            'periode_label' => $this->rfm->periode() ?? self::PERIODE_LABEL,
             'ringkasan_segmen' => $ringkasanSegmen,
             'data' => $data,
         ]);

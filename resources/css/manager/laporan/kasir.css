@@ -1,5 +1,15 @@
 .lk-table th, .lk-table td { white-space: nowrap; }
-.lk-table td.lk-nama { font-weight: 600; }
+
+/* Kolom 1 (nama kasir) rata kiri, sisanya angka dan dirata-kanankan supaya
+   digitnya berbaris. Tabel ini menyandingkan kinerja antar kasir, jadi
+   membandingkan kolom secara vertikal justru pekerjaan utamanya. */
+.lk-table th:not(:first-child),
+.lk-table td:not(:first-child) { text-align: right; }
+.lk-table th:first-child,
+.lk-table td:first-child { text-align: left; }
+.lk-table td { font-variant-numeric: tabular-nums; }
+
+.lk-table td.lk-nama { font-weight: 600; text-align: left; }
 .lk-table tr.lk-total td {
     font-weight: 700;
     padding-top: 14px;
@@ -8,7 +18,10 @@
     border-bottom: none;
 }
 
-.lk-state { text-align: center; padding: 30px; color: #9CA3AF; font-size: 14px; }
+/* Ditulis `.lk-table .lk-state` supaya menang dari `.lk-table td:first-child`
+   di atas, yang memaksa rata kiri. Baris ini sel colspan dan memang harus di
+   tengah. */
+.lk-table .lk-state { text-align: center; padding: 30px; color: #9CA3AF; font-size: 14px; }
 
 .lk-scroll {
     width: 100%;

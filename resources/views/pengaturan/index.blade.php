@@ -8,7 +8,7 @@
 
   <div class="set-header">
     <h2>Pengaturan</h2>
-    <p>Kelola profil kamu dan pengaturan akun toko Gres'Soy</p>
+    <p>Kelola profil kamu dan pengaturan akun toko GresSOY</p>
   </div>
 
   <div class="set-shell">
@@ -22,6 +22,14 @@
       <button data-panel="toko">
         <i class="fa-solid fa-store"></i>
         <span class="label">Info Toko</span>
+        <span class="tab-underline"></span>
+      </button>
+      {{-- Manager-only. Disembunyikan lewat JS berdasarkan role, sama seperti
+           kartu QRIS, server tetap menolak kasir dengan 403, ini cuma supaya
+           kasir tidak melihat tab yang pasti gagal dibukanya. --}}
+      <button data-panel="akun" id="tabAkun" hidden>
+        <i class="fa-solid fa-users"></i>
+        <span class="label">Akun Kasir</span>
         <span class="tab-underline"></span>
       </button>
     </div>
@@ -125,7 +133,7 @@
         <div class="set-grid">
           <div class="form-group">
             <label>Nama Toko</label>
-            <input type="text" id="tkNama" placeholder="Gres'Soy">
+            <input type="text" id="tkNama" placeholder="GresSOY">
           </div>
           <div class="form-group">
             <label>Nomor Telepon Toko</label>
@@ -190,10 +198,92 @@
               <button type="button" class="btn-save" id="qrMenuUnduhBtn">Unduh</button>
               <button type="button" class="qr-btn-cetak" id="qrMenuCetakBtn">Cetak</button>
             </div>
-            <p class="qr-hint">Cetak dan tempel di meja — pelanggan scan untuk memesan sendiri.</p>
+            <p class="qr-hint">Cetak dan tempel di meja, pelanggan scan untuk memesan sendiri.</p>
           </div>
 
         </div>
+      </div>
+    </div>
+
+    {{-- ============ AKUN KASIR (manager only) ============ --}}
+    <div class="set-panel" data-panel="akun">
+      <div class="set-card">
+        <div class="card-head">
+          <div>
+            <h3>Akun Kasir</h3>
+            <p>Tiap kasir wajib punya akun sendiri, laporan per-kasir menghitung penjualan dari akun yang menandai lunas</p>
+          </div>
+          <button class="btn-pill" id="akBtnTambah">
+            <i class="fa-solid fa-plus"></i>
+            <span>Tambah Akun</span>
+          </button>
+        </div>
+        <div class="card-divider"></div>
+
+        <div id="akMsg" class="set-msg" style="display:none;"></div>
+
+        {{-- Form tambah akun, tersembunyi sampai tombol di atas ditekan --}}
+        <div class="ak-form" id="akForm" hidden>
+          <div class="set-grid">
+            <div class="form-group">
+              <label>Nama Lengkap</label>
+              <input type="text" id="akNama" placeholder="mis. Rani">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="akEmail" placeholder="kasir2@gressoy.test" autocomplete="off">
+            </div>
+          </div>
+          <div class="set-grid" style="margin-top:20px;">
+            <div class="form-group">
+              <label>Nomor Telepon <span class="ak-opsional">(opsional)</span></label>
+              <input type="text" id="akTelepon" placeholder="+62">
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="akRole">
+                <option value="kasir">Kasir</option>
+                <option value="manager">Manager</option>
+              </select>
+            </div>
+          </div>
+          <div class="set-grid single" style="margin-top:20px;">
+            <div class="form-group">
+              <label>Password Awal</label>
+              <input type="password" id="akPassword" placeholder="Minimal 8 karakter" autocomplete="new-password">
+            </div>
+          </div>
+          <div class="ak-form-actions">
+            <button class="btn-save" id="akSimpanBtn">Simpan Akun</button>
+            <button type="button" class="qr-btn-cetak" id="akBatalBtn">Batal</button>
+          </div>
+        </div>
+
+        <div class="ak-table-wrap">
+          <table class="ak-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th class="ak-aksi-head">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="akBody">
+              <tr><td colspan="5" class="ak-state">Memuat akun…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="qr-hint">
+          <strong>Hapus</strong> hanya bisa untuk akun yang belum pernah dipakai bertransaksi,
+          misalnya akun salah ketik atau akun percobaan. Akun yang sudah pernah menutup
+          pembayaran atau memproses pembatalan tombolnya mati, karena laporan bulan-bulan
+          sebelumnya masih merujuk ke sana dan angkanya akan kehilangan nama.
+          Untuk kasir yang berhenti kerja pakai <strong>Nonaktifkan</strong>: tidak bisa
+          login lagi, riwayat penjualannya tetap utuh.
+        </p>
       </div>
     </div>
 

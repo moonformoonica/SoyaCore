@@ -24,7 +24,7 @@ class StorePembatalanRequest extends FormRequest
             // Tidak dikirim / kosong = pembatalan PENUH.
             'items' => ['nullable', 'array'],
             // `distinct` supaya satu item tidak dikirim dua kali dalam satu
-            // request — kalau dibiarkan, qty-nya harus dijumlahkan dulu dan
+            // request, kalau dibiarkan, qty-nya harus dijumlahkan dulu dan
             // pesan error "melebihi sisa" jadi membingungkan.
             'items.*.detail_transaksi_id' => ['required', 'integer', 'distinct'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
@@ -38,7 +38,7 @@ class StorePembatalanRequest extends FormRequest
     {
         return [
             'alasan.required' => 'Alasan pembatalan wajib diisi.',
-            'alasan.min' => 'Alasan pembatalan terlalu pendek — tulis alasan yang bisa dipahami saat dibaca ulang nanti.',
+            'alasan.min' => 'Alasan pembatalan terlalu pendek, tulis alasan yang bisa dipahami saat dibaca ulang nanti.',
             'items.*.detail_transaksi_id.distinct' => 'Satu item hanya boleh disebut sekali dalam satu pembatalan.',
             'items.*.qty.min' => 'Qty pembatalan minimal 1.',
         ];

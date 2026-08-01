@@ -8,7 +8,7 @@ PORT="${PORT:-10000}"
 sed -i "s/^Listen 80$/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 
-# Cache config & view HARUS di runtime, setelah env var dari Render tersedia —
+# Cache config & view HARUS di runtime, setelah env var dari Render tersedia,
 # kalau di-cache saat build, nilainya keburu kosong dan app gagal konek DB.
 php artisan config:cache
 php artisan view:cache
@@ -24,6 +24,6 @@ php artisan migrate --force
 
 # Seeder TIDAK dijalankan di sini. Data menu & laporan diisi sekali dari laptop
 # (`php artisan db:seed` / `--class=LaporanSeeder`) karena Supabase memang
-# database eksternal — kalau di-seed tiap boot, datanya ditulis ulang terus.
+# database eksternal, kalau di-seed tiap boot, datanya ditulis ulang terus.
 
 exec apache2-foreground

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * QRIS statis milik merchant, untuk ditampilkan di halaman pembayaran SoyaScan.
  *
- * Menyimpan PATH pada disk `public`, bukan berkasnya — supaya baris pengaturan
+ * Menyimpan PATH pada disk `public`, bukan berkasnya, supaya baris pengaturan
  * tetap ringan dan berkasnya bisa dilayani langsung oleh web server lewat
  * `php artisan storage:link`.
  *

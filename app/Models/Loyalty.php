@@ -12,7 +12,7 @@ class Loyalty extends Model
     /**
      * Bonus sekali seumur pelanggan saat baris customer pertama kali dibuat.
      * Gunanya membuat reward pertama (diskon_10, 100 poin) tinggal satu
-     * kunjungan lagi — pelanggan baru yang melihat saldo 0 dan reward termurah
+     * kunjungan lagi, pelanggan baru yang melihat saldo 0 dan reward termurah
      * di 100 poin cenderung berhenti mengumpulkan. Biayanya Rp 2.500 sekali,
      * bukan kebocoran berulang seperti menurunkan harga voucher.
      */
@@ -20,7 +20,7 @@ class Loyalty extends Model
 
     /**
      * Poin hangus kalau pelanggan tidak bertransaksi selama ini. Dihitung dari
-     * transaksi TERAKHIR, bukan tanggal perolehan tiap poin — pelanggan yang
+     * transaksi TERAKHIR, bukan tanggal perolehan tiap poin, pelanggan yang
      * masih aktif tidak pernah kehilangan poin.
      */
     public const BULAN_KEDALUWARSA = 12;
@@ -53,7 +53,7 @@ class Loyalty extends Model
     }
 
     /**
-     * Saldo yang boleh dipakai — dibaca tanpa menyentuh database, untuk
+     * Saldo yang boleh dipakai, dibaca tanpa menyentuh database, untuk
      * endpoint list yang cuma menampilkan.
      */
     public function poinBerlaku(): int
@@ -77,7 +77,7 @@ class Loyalty extends Model
 
     /**
      * Membuka baris loyalty untuk sebuah customer. Bonus pendaftaran hanya
-     * diberikan kalau baris customer-nya memang baru dibuat di request ini —
+     * diberikan kalau baris customer-nya memang baru dibuat di request ini,
      * pelanggan lama yang belum punya baris loyalty tetap mulai dari 0.
      */
     public static function bukaUntuk(Customer $customer): self

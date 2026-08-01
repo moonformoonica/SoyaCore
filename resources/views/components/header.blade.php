@@ -56,8 +56,14 @@
     <div class="user-menu" id="userMenu">
 
       <button type="button" class="user-profile" id="userMenuToggle" aria-haspopup="true" aria-expanded="false">
+        {{-- Tanpa foto bawaan. Sebelumnya di sini ada `images/profil.jpg`,
+             foto satu orang yang muncul di SEMUA akun, jadi Andrian, Evan, dan
+             Aden sama-sama tampil sebagai orang itu sampai mereka mengunggah
+             fotonya sendiri. Penggantinya inisial nama, dan `#userAvatar`
+             tetap ada supaya JS pengaturan bisa mengisinya begitu ada foto. --}}
         <span class="avatar">
-          <img id="userAvatar" src="{{ asset('images/profil.jpg') }}" data-default="{{ asset('images/profil.jpg') }}" alt="Foto profil">
+          <span class="avatar-inisial" id="userAvatarInisial">&nbsp;</span>
+          <img id="userAvatar" data-default="" alt="Foto profil" hidden>
         </span>
         <span class="user-info">
           <span class="name-row">

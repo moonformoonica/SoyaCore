@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\Schema;
  * mustahil tanpa dua kolom ini.
  *
  * Kenapa dua, bukan satu:
- * - `kasir_user_id` untuk pengelompokan yang benar — dua kasir bisa bernama sama.
+ * - `kasir_user_id` untuk pengelompokan yang benar, dua kasir bisa bernama sama.
  * - `kasir_nama` sebagai snapshot, supaya laporan lama tidak berubah isinya
  *   kalau kasir mengganti nama atau akunnya dihapus. Pola denormalisasi yang
  *   sama sudah dipakai kolom `nama_pelanggan` di tabel ini.
  *
- * Nullable karena baris impor CSV Juni–Juli 2026 memang tidak merekam kasir —
+ * Nullable karena baris impor CSV Juni–Juli 2026 memang tidak merekam kasir,
  * itu diterima, bukan cacat. Tapi ada invarian yang dijaga dan diuji:
  * SETIAP baris berawalan `TRX-` (hasil proyeksi SoyaCore) WAJIB punya
  * `kasir_user_id`. Proyeksi hanya terjadi di `bayar()`, dan di sana selalu ada
- * user terautentikasi — baris `TRX-` ber-kasir kosong berarti ada yang bocor.
+ * user terautentikasi, baris `TRX-` ber-kasir kosong berarti ada yang bocor.
  */
 return new class extends Migration
 {

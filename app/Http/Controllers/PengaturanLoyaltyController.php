@@ -67,7 +67,7 @@ class PengaturanLoyaltyController extends Controller
         if (array_key_exists('maks_potongan', $data) && $item['tipe'] !== 'diskon') {
             throw new ApiException(
                 'maks_potongan_tidak_berlaku',
-                "{$item['label']} bertipe {$item['tipe']} — plafon potongan hanya berlaku untuk reward voucher diskon.",
+                "{$item['label']} bertipe {$item['tipe']}, plafon potongan hanya berlaku untuk reward voucher diskon.",
                 422,
             );
         }
@@ -146,7 +146,7 @@ class PengaturanLoyaltyController extends Controller
      * 50 berarti reward kemurahan (pelanggan dapat lebih banyak daripada
      * rupiah yang dia kumpulkan untuk membelinya). Nilai reward diambil dari
      * plafon potongan untuk voucher diskon, dan dari harga menu live untuk
-     * reward gratis minuman — bukan angka hardcode, supaya naiknya harga menu
+     * reward gratis minuman, bukan angka hardcode, supaya naiknya harga menu
      * langsung terlihat di sini.
      *
      * @param  array<string, mixed>  $item

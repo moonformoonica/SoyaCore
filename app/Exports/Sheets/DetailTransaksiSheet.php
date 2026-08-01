@@ -67,7 +67,7 @@ class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, With
             $row->tanggal->format('Y-m-d'),
             $row->platform,
             // Sel kosong terbaca sebagai data hilang, sedangkan ini memang
-            // transaksi dari sebelum SoyaCore dipakai — jadi diberi tanda.
+            // transaksi dari sebelum SoyaCore dipakai, jadi diberi tanda.
             $row->kasir_nama ?? self::KASIR_TIDAK_ADA,
             $row->nama_pelanggan,
             $row->no_wa,

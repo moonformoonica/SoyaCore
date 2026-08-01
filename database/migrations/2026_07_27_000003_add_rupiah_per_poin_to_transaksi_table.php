@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Snapshot rate poin di transaksi — mengikuti prinsip snapshot yang sudah
+ * Snapshot rate poin di transaksi, mengikuti prinsip snapshot yang sudah
  * dipakai harga_satuan di detail_transaksi.
  *
  * Alasannya: begitu rate bisa diubah manager, `point_earned` sebuah transaksi
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
  * dipakai saat Tandai Lunas.
  *
  * Nullable karena transaksi yang sudah lunas sebelum migration ini tidak punya
- * rekaman rate — dibaca sebagai "rate lama (Rp 1.000)".
+ * rekaman rate, dibaca sebagai "rate lama (Rp 1.000)".
  */
 return new class extends Migration
 {

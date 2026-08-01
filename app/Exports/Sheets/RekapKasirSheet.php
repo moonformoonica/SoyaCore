@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
 /**
- * Rincian tiap kasir per tanggal — inti permintaan "file Excel harus memuat
+ * Rincian tiap kasir per tanggal, inti permintaan "file Excel harus memuat
  * rincian tiap kasir".
  *
  * Diletakkan tepat setelah `Ringkasan` di {@see LaporanExport}

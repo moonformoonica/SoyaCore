@@ -12,7 +12,7 @@ use Tests\TestCase;
 /**
  * Halaman Pengaturan: tab "Profil Saya" + tab "Info Toko".
  *
- * Tab "Pengaturan Struk" sengaja di luar lingkup — printer & auto-cetak
+ * Tab "Pengaturan Struk" sengaja di luar lingkup, printer & auto-cetak
  * adalah preferensi perangkat kasir, bukan data yang perlu disimpan server.
  */
 class PengaturanProfilTokoTest extends TestCase
@@ -218,7 +218,7 @@ class PengaturanProfilTokoTest extends TestCase
 
     /**
      * Kalau password diganti karena akunnya diduga bocor, sesi penyusup
-     * harus ikut mati — tapi tab yang sedang dipakai jangan ter-logout.
+     * harus ikut mati, tapi tab yang sedang dipakai jangan ter-logout.
      */
     public function test_ganti_password_mencabut_token_lain_tapi_token_sendiri_tetap_hidup(): void
     {
@@ -262,7 +262,7 @@ class PengaturanProfilTokoTest extends TestCase
 
         $this->getJson('/api/pengaturan/toko')
             ->assertOk()
-            ->assertJsonPath('data.nama_toko', "Gres'Soy")
+            ->assertJsonPath('data.nama_toko', "GresSOY")
             ->assertJsonPath('data.jam_buka', '08:00')
             ->assertJsonPath('data.jam_tutup', '20:00')
             ->assertJsonPath('data.no_telepon', null)
@@ -279,14 +279,14 @@ class PengaturanProfilTokoTest extends TestCase
         Sanctum::actingAs($manager);
 
         $this->patchJson('/api/pengaturan/toko', [
-            'nama_toko' => "Gres'Soy Gresik",
+            'nama_toko' => "GresSOY Gresik",
             'no_telepon' => '+62 31 1234567',
             'alamat' => 'Jl. Usman Sadar No. 12, Gresik',
             'jam_buka' => '07:30',
             'jam_tutup' => '21:00',
         ])
             ->assertOk()
-            ->assertJsonPath('data.nama_toko', "Gres'Soy Gresik")
+            ->assertJsonPath('data.nama_toko', "GresSOY Gresik")
             ->assertJsonPath('data.no_telepon', '+62 31 1234567')
             ->assertJsonPath('data.alamat', 'Jl. Usman Sadar No. 12, Gresik')
             ->assertJsonPath('data.jam_buka', '07:30')
@@ -297,7 +297,7 @@ class PengaturanProfilTokoTest extends TestCase
         Sanctum::actingAs(User::factory()->create(['role' => 'kasir']));
         $this->getJson('/api/pengaturan/toko')
             ->assertOk()
-            ->assertJsonPath('data.nama_toko', "Gres'Soy Gresik")
+            ->assertJsonPath('data.nama_toko', "GresSOY Gresik")
             ->assertJsonPath('data.jam_buka', '07:30');
     }
 
@@ -305,14 +305,14 @@ class PengaturanProfilTokoTest extends TestCase
     {
         Sanctum::actingAs($this->manager());
 
-        // simpan alamat saja — nama_toko harus jatuh ke bawaan, bukan kosong
+        // simpan alamat saja, nama_toko harus jatuh ke bawaan, bukan kosong
         $this->patchJson('/api/pengaturan/toko', ['alamat' => 'Jl. Mawar 1'])
             ->assertOk()
             ->assertJsonPath('data.alamat', 'Jl. Mawar 1')
-            ->assertJsonPath('data.nama_toko', "Gres'Soy")
+            ->assertJsonPath('data.nama_toko', "GresSOY")
             ->assertJsonPath('data.jam_buka', '08:00');
 
-        // lalu ubah jam saja — alamat tidak boleh hilang
+        // lalu ubah jam saja, alamat tidak boleh hilang
         $this->patchJson('/api/pengaturan/toko', ['jam_tutup' => '22:00'])
             ->assertOk()
             ->assertJsonPath('data.alamat', 'Jl. Mawar 1')
@@ -356,7 +356,7 @@ class PengaturanProfilTokoTest extends TestCase
             ->assertJsonPath('error', 'tidak_berwenang');
 
         $this->assertDatabaseCount('pengaturan_toko', 0);
-        $this->assertSame("Gres'Soy", PengaturanToko::current()->nama_toko);
+        $this->assertSame("GresSOY", PengaturanToko::current()->nama_toko);
     }
 
     public function test_semua_endpoint_pengaturan_butuh_login(): void

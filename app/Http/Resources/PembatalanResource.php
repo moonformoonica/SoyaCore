@@ -20,7 +20,7 @@ class PembatalanResource extends JsonResource
             'nilai_dibatalkan' => $this->nilai_dibatalkan,
             'poin_ditarik' => $this->poin_ditarik,
             'poin_dikembalikan' => $this->poin_dikembalikan,
-            // Akun yang memproses pembatalan — bukan pembuat penjualan aslinya.
+            // Akun yang memproses pembatalan, bukan pembuat penjualan aslinya.
             'diproses_oleh' => $this->whenLoaded('user', fn () => $this->user === null ? null : [
                 'id' => $this->user->id,
                 'nama' => $this->user->nama,

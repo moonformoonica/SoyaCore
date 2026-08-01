@@ -51,7 +51,7 @@ class UpdateProfilRequest extends FormRequest
                 if (! $this->hasAny(['nama', 'email', 'no_telepon'])) {
                     $validator->errors()->add(
                         'nama',
-                        'Tidak ada yang diubah — kirim minimal salah satu dari `nama`, `email`, atau `no_telepon`.',
+                        'Tidak ada yang diubah, kirim minimal salah satu dari `nama`, `email`, atau `no_telepon`.',
                     );
                 }
             },

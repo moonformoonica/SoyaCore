@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2f9e44">
-    <title>SoyaScan — Pesan Menu GresSOY</title>
+    <title>SoyaScan, Pesan Menu GresSOY</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -219,7 +219,13 @@
             <p>Selamat! Kamu dapat <strong id="donePoin">+0 poin</strong><br>dari transaksi ini</p>
         </div>
 
-        <button type="button" class="done-btn" id="doneClose">Pilih Menu Lain</button>
+        {{-- Aksi utama ditempel di bawah layar. Isi halaman ini (kode pesanan,
+             kartu QRIS, rincian, poin) hampir selalu lebih tinggi dari layar HP,
+             jadi kalau tombolnya ikut mengalir, pelanggan harus scroll sampai
+             mentok dulu baru bisa memesan lagi. --}}
+        <div class="done-actions">
+            <button type="button" class="done-btn" id="doneClose">Pilih Menu Lain</button>
+        </div>
 
     </div>
 </div>

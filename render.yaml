@@ -41,8 +41,8 @@ services:
         value: pgsql
       - key: DB_HOST
         sync: false
-      # 6543 = transaction pooler Supabase. Jangan pakai 5432 (session pooler)
-      # — koneksi app yang pendek-pendek cocoknya lewat transaction pooler.
+      # 6543 = transaction pooler Supabase. Jangan pakai 5432 (session pooler):
+      # koneksi app yang pendek-pendek cocoknya lewat transaction pooler.
       - key: DB_PORT
         value: '6543'
       - key: DB_DATABASE

@@ -5,7 +5,7 @@ namespace App\Support;
 /**
  * Pola `LIKE` untuk pencarian sebagian.
  *
- * Dua jebakan yang ditutup di sini, dan keduanya tidak memicu error apa pun —
+ * Dua jebakan yang ditutup di sini, dan keduanya tidak memicu error apa pun,
  * hanya hasil pencarian yang diam-diam salah:
  *
  * 1. **Case-sensitivity.** `LIKE` di SQLite case-insensitive untuk ASCII, tapi di
@@ -34,7 +34,7 @@ class PolaCari
     }
 
     /**
-     * Escape wildcard saja, tanpa mengubah huruf — untuk kolom yang isinya bukan
+     * Escape wildcard saja, tanpa mengubah huruf, untuk kolom yang isinya bukan
      * teks bebas (mis. `no_wa` yang cuma digit, jadi LOWER() tidak ada gunanya).
      */
     public static function escape(string $nilai): string

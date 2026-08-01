@@ -37,7 +37,7 @@ class TransaksiController extends Controller
         $base = $this->daftar->bangun($request);
 
         // Ringkasan dihitung dari query yang sama SEBELUM paginate()
-        // menempelkan limit/offset — angkanya harus mencakup seluruh hasil
+        // menempelkan limit/offset, angkanya harus mencakup seluruh hasil
         // filter, bukan halaman yang sedang dibuka.
         $ringkasan = $this->daftar->ringkasan($base);
 
@@ -102,7 +102,7 @@ class TransaksiController extends Controller
         if (! $transaksi->detailTransaksi()->exists()) {
             throw new ApiException(
                 'items_kosong',
-                'Transaksi belum punya item — tambahkan item dulu sebelum pembayaran.',
+                'Transaksi belum punya item, tambahkan item dulu sebelum pembayaran.',
                 422,
             );
         }
@@ -121,7 +121,7 @@ class TransaksiController extends Controller
 
             $this->loyaltyService->earnPoinFor($transaksi);
 
-            // Sinkron, di dalam transaksi database yang sama — bukan queued
+            // Sinkron, di dalam transaksi database yang sama, bukan queued
             // job. Laporan harus bisa di-export real-time; proyeksi yang antre
             // membuat transaksi baru tidak muncul di file Excel yang
             // di-download semenit kemudian, tanpa ada yang menyadarinya.
@@ -142,7 +142,7 @@ class TransaksiController extends Controller
         $this->pembatalanService->batalkan(
             $transaksi,
             $request->user(),
-            // Alasan boleh kosong di alias ini — diisi teks tetap supaya
+            // Alasan boleh kosong di alias ini, diisi teks tetap supaya
             // kolomnya tetap jujur soal dari mana pembatalannya datang.
             self::ALASAN_ENDPOINT_LAMA,
         );

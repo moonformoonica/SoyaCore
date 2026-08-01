@@ -17,17 +17,48 @@
         } catch (e) {
             userNameEl.textContent = 'Pengguna';
         }
+        // Inisial nama dipakai selama akun belum punya foto. Tidak ada lagi
+        // foto bawaan: satu foto yang sama di semua akun lebih menyesatkan
+        // daripada tidak ada foto sama sekali.
+        function inisialDari(nama) {
+            return String(nama || '')
+                .trim()
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((k) => k[0] || '')
+                .join('')
+                .toUpperCase();
+        }
+
+        function tampilkanAvatar(nama, foto) {
+            const img = document.getElementById('userAvatar');
+            const inisial = document.getElementById('userAvatarInisial');
+            if (!img || !inisial) return;
+
+            if (foto) {
+                img.src = foto;
+                img.hidden = false;
+                inisial.hidden = true;
+            } else {
+                img.removeAttribute('src');
+                img.hidden = true;
+                inisial.hidden = false;
+                inisial.textContent = inisialDari(nama) || '?';
+            }
+        }
+
         (function muatFotoHeader() {
             try {
                 const raw = localStorage.getItem('auth_user');
-                const id = raw ? JSON.parse(raw).id : null;
-                const foto = id ? localStorage.getItem('profil_foto_' + id) : null;
-                const avatar = document.getElementById('userAvatar');
-                if (avatar && foto) avatar.src = foto;
-            } catch (e) { /* pakai default */ }
+                const user = raw ? JSON.parse(raw) : null;
+                const foto = user?.id ? localStorage.getItem('profil_foto_' + user.id) : null;
+                tampilkanAvatar(user?.nama, foto);
+            } catch (e) {
+                tampilkanAvatar(null, null);
+            }
         })();
 
-        // Data di localStorage cuma potret saat login — kalau nama/role di
+        // Data di localStorage cuma potret saat login, kalau nama/role di
         // database berubah setelahnya, header ikut basi. Segarkan dari
         // GET /api/me supaya nggak perlu logout dulu.
         (async function segarkanProfil() {
@@ -46,6 +77,12 @@
                 localStorage.setItem('auth_user', JSON.stringify(user));
                 userNameEl.textContent = user.nama || 'Pengguna';
                 userRoleEl.textContent = user.role || '';
+
+                // Inisialnya ikut disegarkan; kalau tidak, akun yang baru
+                // ganti nama tetap memperlihatkan inisial lama.
+                let foto = null;
+                try { foto = localStorage.getItem('profil_foto_' + user.id); } catch (e) {}
+                tampilkanAvatar(user.nama, foto);
             } catch (e) {
             }
         })();
@@ -53,7 +90,7 @@
         // ---- Quick navigate search ----
         // Daftar halaman dirender server (butuh route() dan pengecekan role),
         // lalu dititipkan lewat <script type="application/json"> di blade.
-        // Itu ELEMEN DATA, bukan kode — jadi berkas ini tetap JavaScript murni
+        // Itu ELEMEN DATA, bukan kode, jadi berkas ini tetap JavaScript murni
         // dan tidak perlu diproses Blade.
         const dataHalaman = document.getElementById('quickNavData');
         const searchablePages = dataHalaman ? JSON.parse(dataHalaman.textContent) : [];
@@ -169,7 +206,7 @@
         function simpanDibaca() {
             try {
                 localStorage.setItem(KUNCI_DIBACA, JSON.stringify([...sudahDibaca]));
-            } catch (e) { /* kuota penuh — notifikasi tetap jalan, cuma tidak persist */ }
+            } catch (e) { /* kuota penuh, notifikasi tetap jalan, cuma tidak persist */ }
         }
 
         let pesananNotif = [];
@@ -207,7 +244,7 @@
                     </span>
                     <span class="notif-text">
                         <span class="notif-title">Pesanan SoyaScan ${t.kode_pesanan || ''}</span>
-                        <span class="notif-desc">${nama} — ${rupiahNotif(t.total)}</span>
+                        <span class="notif-desc">${nama}, ${rupiahNotif(t.total)}</span>
                         <span class="notif-time">${waktuRelatif(t.created_at)}</span>
                     </span>
                     ${baru ? '<span class="notif-dot"></span>' : ''}

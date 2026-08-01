@@ -72,9 +72,28 @@
 .pes-search input { border: none; outline: none; flex: 1; font-family: inherit; font-size: 13px; }
 .pes-search svg { width: 16px; height: 16px; color: #ABABAB; flex-shrink: 0; }
 
+/* Grid menu punya area gulir sendiri, tidak lagi memanjangkan halaman.
+   Katalog GresSOY 93 baris menu, jadi "Semua Kategori" menghasilkan kolom yang
+   sangat panjang: kasir harus scroll jauh ke bawah dan keranjang di kanan ikut
+   hilang dari layar padahal itu yang paling sering dilihat saat melayani.
+   `max-height` dipatok relatif tinggi layar supaya tetap enak di laptop kecil
+   maupun monitor besar. */
 .pes-menu-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    max-height: calc(100vh - 320px);
+    min-height: 260px;
+    overflow-y: auto;
+    /* Ruang supaya kartu di kolom kanan tidak tertimpa scrollbar, dan bayangan
+       kartu di baris terakhir tidak terpotong. */
+    padding: 2px 10px 6px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #C4C8CE transparent;
+    overscroll-behavior: contain;
 }
+.pes-menu-grid::-webkit-scrollbar { width: 8px; }
+.pes-menu-grid::-webkit-scrollbar-track { background: transparent; }
+.pes-menu-grid::-webkit-scrollbar-thumb { background: #C4C8CE; border-radius: 999px; }
+.pes-menu-grid::-webkit-scrollbar-thumb:hover { background: #A9ADB4; }
 .pes-menu-card {
     background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
     display: flex; flex-direction: column; height: 100%;
@@ -134,7 +153,7 @@
 }
 .pes-cust-add-btn:disabled { background: #ABABAB; cursor: not-allowed; }
 
-/* Hasil pencarian pelanggan (nama / no WA) — bisa lebih dari satu */
+/* Hasil pencarian pelanggan (nama / no WA), bisa lebih dari satu */
 .pes-cust-results { margin-bottom: 8px; }
 .pes-cust-results:empty { display: none; }
 .pes-cust-result {
@@ -231,6 +250,29 @@
 
 .pes-cust-new { margin-bottom: 0; }
 
+/* Judul kecil di atas isian nama dan nomor. Form ini kini tampil sejak awal,
+   jadi ia perlu menjelaskan dirinya sendiri: tanpa judul, dua kotak kosong di
+   bawah kotak cari terbaca seperti bagian dari pencarian. */
+.pes-cust-new-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; color: #6B7280;
+    margin: 12px 0 7px;
+}
+.pes-wajib {
+    font-weight: 600; font-size: 10px; letter-spacing: .02em;
+    color: #B3261E; background: #FDECEA;
+    padding: 2px 7px; border-radius: 999px;
+}
+
+/* Kolom yang ditolak saat menambah item. Warna saja tidak cukup sebagai satu-
+   satunya penanda, jadi pesan errornya tetap ada di pita atas. */
+.pes-input.is-kurang {
+    border-color: #E5877E;
+    background: #FEF6F5;
+    box-shadow: 0 0 0 3px rgba(179, 38, 30, .10);
+}
+.pes-input.is-kurang::placeholder { color: #C08A85; }
+
 .pes-cart-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; max-height: 260px; overflow-y: auto; }
 .pes-cart-empty { text-align: center; padding: 20px; color: #ABABAB; font-size: 12px; }
 .pes-cart-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -283,6 +325,15 @@
 @media (max-width: 1000px) {
     .pes-layout { grid-template-columns: 1fr; }
     .pes-right { position: static; max-height: none; }
+
+    /* Di bawah lebar ini keranjang turun ke bawah grid, bukan lagi di samping,
+       jadi alasan menahan tinggi grid hilang. Dua area gulir bertumpuk di layar
+       sempit justru menyusahkan: jari sering menggulir yang salah. */
+    .pes-menu-grid {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 2px;
+    }
 }
 
 @media (max-width: 700px) {

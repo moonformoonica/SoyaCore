@@ -61,8 +61,45 @@
     background: #2F6B3F; color: #fff; text-align: left; padding: 10px 12px;
     font-weight: 500; white-space: nowrap; position: sticky; top: 0;
 }
-.lap-table tbody td { padding: 9px 12px; border-bottom: 1px solid #F2F2F2; white-space: nowrap; }
+/* Rata kiri, mengikuti header-nya. Sebelumnya sel di sini ter-center karena
+   `tbody td { text-align:center }` dari manager/transaksi.css bocor app-wide,
+   jadi header rata kiri sementara isinya di tengah. Aturan itu sudah dibatasi
+   ke `.table-card`, dan sekarang keduanya sejajar. */
+.lap-table tbody td {
+    text-align: left; padding: 9px 12px;
+    border-bottom: 1px solid #F2F2F2; white-space: nowrap;
+}
 .lap-table tbody tr:hover { background: #FAFAFA; }
+
+/* KOLOM ANGKA RATA KANAN, kolom teks rata kiri.
+   Angka yang rata kiri di bawah header lebar bikin digitnya tidak sejajar:
+   "7" dan "16" mulai di titik yang sama sehingga satuan, puluhan, dan ratusan
+   tidak berbaris, dan mata harus membaca satu per satu untuk membandingkan.
+   Header ikut dirata-kanankan supaya menempel pada kolomnya sendiri, bukan
+   menggantung di atas kolom sebelah. */
+.lap-table--rfm th:nth-child(2), .lap-table--rfm td:nth-child(2),
+.lap-table--rfm th:nth-child(3), .lap-table--rfm td:nth-child(3),
+.lap-table--rfm th:nth-child(4), .lap-table--rfm td:nth-child(4),
+.lap-table--rfm th:nth-child(5), .lap-table--rfm td:nth-child(5) {
+    text-align: right;
+}
+
+.lap-table--switch th:nth-child(n+4):nth-child(-n+9),
+.lap-table--switch td:nth-child(n+4):nth-child(-n+9) {
+    text-align: right;
+}
+
+/* Kolom terakhir Switch berisi kalimat saran yang panjang. Dibiarkan rata kiri
+   dan boleh membungkus, karena satu baris sangat panjang memaksa manager
+   menggeser tabel jauh ke kanan cuma untuk membaca satu kolom. */
+.lap-table--switch td:last-child {
+    text-align: left;
+    white-space: normal;
+    min-width: 260px;
+}
+
+/* Angka memakai lebar digit seragam supaya kolomnya benar-benar berbaris. */
+.lap-table td { font-variant-numeric: tabular-nums; }
 
 .segmen-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .segmen-loyal { background: #E3F5E8; color: #2F6B3F; }

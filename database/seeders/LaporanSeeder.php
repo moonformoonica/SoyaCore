@@ -6,7 +6,7 @@ use App\Services\LaporanImporter;
 use Illuminate\Database\Seeder;
 
 /**
- * Seeder layer reporting — TERPISAH dari seeder POS live (DatabaseSeeder).
+ * Seeder layer reporting, TERPISAH dari seeder POS live (DatabaseSeeder).
  * Logika impornya ada di LaporanImporter supaya dipakai bersama dengan
  * perintah `php artisan laporan:import`.
  *

@@ -12,7 +12,7 @@ Dashboard dan export Excel **tidak membaca file CSV**. Keduanya membaca tabel
 CSV baru  ──►  php artisan laporan:import  ──►  tabel laporan_*  ──►  dashboard + Excel
 ```
 
-Begitu impor selesai, dashboard dan Excel otomatis memakai data baru — tidak ada
+Begitu impor selesai, dashboard dan Excel otomatis memakai data baru, tidak ada
 langkah tambahan, tidak perlu deploy ulang, tidak perlu ubah kode frontend.
 
 ## Langkah update
@@ -48,7 +48,7 @@ langkah tambahan, tidak perlu deploy ulang, tidak perlu ubah kode frontend.
 
 3. **Refresh dashboard.** Selesai.
 
-Perintahnya **idempotent** — tiap tabel di-truncate lalu diisi ulang, jadi aman
+Perintahnya **idempotent**, tiap tabel di-truncate lalu diisi ulang, jadi aman
 dijalankan berkali-kali dan tidak akan menghasilkan data dobel.
 
 Untuk file CSV di lokasi lain: `php artisan laporan:import --dir=/path/ke/folder`.
@@ -76,7 +76,7 @@ kolomnya memang sengaja berubah.
 > Ini disengaja. Versi sebelumnya memetakan kolom secara **posisional**, dan itu
 > berbahaya: waktu `Data_RFM_Pelanggan.csv` menyisipkan 3 kolom baru di tengah,
 > pemetaan posisional akan memasukkan `Monetary` ke `r_score` dan `F_Score` ke
-> `segmen` — dashboard tampil "normal" padahal datanya salah total, tanpa error
+> `segmen`, dashboard tampil "normal" padahal datanya salah total, tanpa error
 > sama sekali. Sekarang kasus itu berhenti di langkah impor.
 
 Kalau nama kolom di CSV memang sengaja diganti, sesuaikan konstanta `SPEC` di
@@ -107,7 +107,7 @@ adanya, jadi setelah langkah 1–3 field barunya otomatis muncul di API.
 
 ## Test terkait
 
-`tests/Feature/LaporanImportTest.php` mengunci perilaku impor — termasuk kasus
+`tests/Feature/LaporanImportTest.php` mengunci perilaku impor, termasuk kasus
 kolom disisipkan di tengah, urutan kolom diacak, dan header hilang. Jalankan
 setelah mengubah importer:
 

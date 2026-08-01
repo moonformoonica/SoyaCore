@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * Nullable tanpa default: user yang sudah ada tidak punya nomor dan tidak
  * boleh dipaksa mengisi saat login berikutnya.
  *
- * Sengaja TIDAK dinormalisasi seperti customer.no_wa — nomor ini cuma untuk
+ * Sengaja TIDAK dinormalisasi seperti customer.no_wa, nomor ini cuma untuk
  * ditampilkan di profil, bukan kunci pencarian, jadi format ketikan manager
  * ("+62 812 3456 789") dibiarkan apa adanya.
  */

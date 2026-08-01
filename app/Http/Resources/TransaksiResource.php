@@ -19,7 +19,7 @@ class TransaksiResource extends JsonResource
             'status' => $this->status,
             'sumber' => $this->sumber,
             // Label siap tampil ikut dikirim supaya halaman transaksi tidak
-            // memetakan sendiri 'self_order' menjadi "SoyaScan" — pemetaan yang
+            // memetakan sendiri 'self_order' menjadi "SoyaScan", pemetaan yang
             // tersebar di beberapa halaman pasti berbeda ejaannya.
             'sumber_label' => $this->labelSumber(),
             'customer' => $this->whenLoaded('customer', fn () => $this->customer === null ? null : [
@@ -29,7 +29,7 @@ class TransaksiResource extends JsonResource
             ]),
             // Kasir yang MENYUSUN pesanan. Null untuk pesanan SoyaScan.
             'kasir_pembuat' => $this->whenLoaded('user', fn () => $this->ringkasUser($this->user)),
-            // Kasir yang MENYELESAIKAN pembayaran — ke akun inilah penjualan
+            // Kasir yang MENYELESAIKAN pembayaran, ke akun inilah penjualan
             // dihitung. Null selama transaksi masih pending.
             'kasir_penyelesai' => $this->whenLoaded('dibayarOleh', fn () => $this->ringkasUser($this->dibayarOleh)),
             // Key lama, dipertahankan supaya frontend yang sudah jalan tidak

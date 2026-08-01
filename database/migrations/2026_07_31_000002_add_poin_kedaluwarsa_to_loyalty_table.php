@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
  * masih aktif tidak pernah kehilangan poin.
  *
  * Null punya arti: belum berlaku kedaluwarsa. Baris yang sudah ada saat
- * migrasi ini jalan sengaja dibiarkan null — poin yang dikumpulkan pelanggan
+ * migrasi ini jalan sengaja dibiarkan null, poin yang dikumpulkan pelanggan
  * sebelum aturan ini ada tidak dihanguskan surut.
  */
 return new class extends Migration

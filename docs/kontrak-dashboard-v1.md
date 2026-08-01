@@ -1,6 +1,6 @@
-# Kontrak API Dashboard & Laporan SoyaCore — v1
+# Kontrak API Dashboard & Laporan SoyaCore, v1
 
-> **Status: v1 — 16 Juli 2026.** Kontrak integrasi untuk frontend dashboard
+> **Status: v1, 16 Juli 2026.** Kontrak integrasi untuk frontend dashboard
 > manager (Ghefira). Semua endpoint bersifat **read-only reporting**, dihitung
 > dari layer data historis terpisah (`laporan_*`), tidak menyentuh POS live.
 
@@ -27,7 +27,7 @@ Prinsipnya: kasir boleh memantau **performa harian**, tapi tidak boleh melihat
 data **per-pelanggan** (loyalty, RFM, switch) maupun meng-export laporan.
 
 > **Catatan buat frontend.** Jangan arahkan kasir ke halaman yang isinya
-> endpoint manager-only — hasilnya cuma layar kosong dengan error 403.
+> endpoint manager-only, hasilnya cuma layar kosong dengan error 403.
 > Role ada di `GET /api/me` (field `user.role`), pakai itu untuk menyembunyikan
 > menu/tab-nya. Kalau kasir mengetik URL-nya langsung, redirect ke halaman
 > Pesanan.
@@ -66,8 +66,8 @@ membatasi/memberi hint pada date-picker.
 
 ## Kontrak Envelope & Empty-State (endpoint 1–6)
 
-Setiap endpoint yang bisa difilter tanggal **selalu** balas `200` — termasuk
-window tanpa data (mis. Agustus 2026) — dengan envelope konsisten:
+Setiap endpoint yang bisa difilter tanggal **selalu** balas `200`, termasuk
+window tanpa data (mis. Agustus 2026), dengan envelope konsisten:
 
 ```json
 {
@@ -158,19 +158,19 @@ penuh, hasil ini **identik** dengan tabel referensi `laporan_revenue_ukuran`.
 
 > **KHUSUS MINUMAN.** Dessert & cookies (ukuran `Cup` dan `Pack`) tidak dihitung
 > di endpoint ini. Jadi jumlah `total_revenue` di sini **lebih kecil** dari
-> `data.total_revenue` di `/ringkasan` — Rp 21.192.000 vs Rp 26.257.000 untuk
+> `data.total_revenue` di `/ringkasan`, Rp 21.192.000 vs Rp 26.257.000 untuk
 > periode penuh; selisih Rp 5.065.000 adalah revenue dessert & cookies. Ini
 > disengaja, bukan salah hitung. Endpoint lain (`/ringkasan`,
 > `/produk-terlaris`, `/platform`) tetap menghitung semua item.
 >
-> Field `catatan` dikirim khusus di endpoint ini — tampilkan apa adanya di
+> Field `catatan` dikirim khusus di endpoint ini, tampilkan apa adanya di
 > dekat chart supaya user paham cakupannya.
 
 ```json
 {
   "periode": { "grain": "harian", "start": "2026-06-01", "end": "2026-07-30" },
   "data_tersedia": true,
-  "catatan": "Khusus minuman — dessert & cookies (Cup/Pack) tidak termasuk.",
+  "catatan": "Khusus minuman, dessert & cookies (Cup/Pack) tidak termasuk.",
   "data": [
     { "ukuran": "Reguler", "jumlah_terjual": 360, "total_revenue": 8047000, "jumlah_transaksi": 323, "rata_rata_transaksi": 24913 },
     { "ukuran": "Large", "jumlah_terjual": 193, "total_revenue": 5182000, "jumlah_transaksi": 173, "rata_rata_transaksi": 29954 }
@@ -203,7 +203,7 @@ Produk terlaris dalam window. Params tambahan: `limit` (default `10`, 1–100),
 
 ## 5. GET /api/dashboard/platform
 
-Group by `platform` dalam window (kolom mentah — campur metode bayar & channel
+Group by `platform` dalam window (kolom mentah, campur metode bayar & channel
 delivery), urut `revenue` desc.
 
 ```json
@@ -247,7 +247,7 @@ Poin loyalty dalam window. `data.top_pelanggan` urut poin desc; params `limit`
 
 ## 7. GET /api/dashboard/rfm
 
-**Statis periode-penuh** — TANPA param tanggal. Filter opsional `?segmen=<nama>`.
+**Statis periode-penuh**, TANPA param tanggal. Filter opsional `?segmen=<nama>`.
 `ringkasan_segmen` dihitung dari seluruh snapshot (bukan hasil filter).
 
 ```json
@@ -282,7 +282,7 @@ Tiga field baru di objek data:
 
 | Field | Arti |
 |---|---|
-| `total_pcs_dibeli` | Jumlah pcs. Beda dari `frequency` yang menghitung **kunjungan** — 1 kunjungan bisa banyak pcs. |
+| `total_pcs_dibeli` | Jumlah pcs. Beda dari `frequency` yang menghitung **kunjungan**, 1 kunjungan bisa banyak pcs. |
 | `total_poin_loyalty` | Akumulasi poin LoyalSeed (1 poin per Rp 1.000; item non-minuman tidak dapat poin). |
 | `frequency_skor` | Frekuensi terbobot = `0,6 × frequency + 0,4 × total_pcs_dibeli`. Desimal. Dasar `f_score`, supaya pembeli borongan tidak kalah dari yang sering datang tapi beli sedikit. |
 
@@ -290,7 +290,7 @@ Tiga field baru di objek data:
 
 ## 8. GET /api/dashboard/switch
 
-**Statis periode-penuh** — TANPA param tanggal. Filter opsional substring
+**Statis periode-penuh**, TANPA param tanggal. Filter opsional substring
 `?rekomendasi=<teks>` (mis. `?rekomendasi=Large`).
 
 ```json
@@ -301,7 +301,7 @@ Tiga field baru di objek data:
       "id": 1, "nama_pelanggan": "Sharen", "rasa_favorit": "Choco Maniac",
       "ukuran_saat_ini": "Reguler", "beli_reguler": 7, "beli_large": 10,
       "beli_botol": 0, "total_transaksi": 17, "qty_per_kunjungan": 1.0,
-      "total_belanja": 512000, "rekomendasi": "Switch ke Large — frekuensi tinggi, mulai dari Large"
+      "total_belanja": 512000, "rekomendasi": "Switch ke Large, frekuensi tinggi, mulai dari Large"
     }
   ]
 }
@@ -333,7 +333,7 @@ Kolom uang berupa integer rupiah. Window kosong tetap menghasilkan `.xlsx` valid
 (sebagian besar kosong, hanya header).
 
 Sheet **Revenue per Ukuran** dan **RFM Pelanggan** diawali satu baris catatan
-cakupan, jadi **header tabel ada di baris 2 dan data mulai baris 3** — bukan
+cakupan, jadi **header tabel ada di baris 2 dan data mulai baris 3**, bukan
 header di baris 1 seperti sheet lain. Penting kalau file ini dibaca ulang
 otomatis (mis. `pandas.read_excel(..., skiprows=1)`).
 

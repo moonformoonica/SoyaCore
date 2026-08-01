@@ -44,7 +44,7 @@ class MenuController extends Controller
                         'golongan_ukuran' => GolonganUkuran::dari($m->ukuran),
                         'bisa_pilih_sugar' => OpsiMinuman::bisaPilihSugar($m->ukuran),
                         'bisa_pilih_ice' => OpsiMinuman::bisaPilihIce($m->ukuran),
-                        // Pemanis menu ini — dipakai frontend sebagai judul
+                        // Pemanis menu ini, dipakai frontend sebagai judul
                         // kelompok pilihan di atas tombol Normal/Less/No/Extra.
                         // Beda per menu: Gula Kelapa untuk sebagian besar,
                         // Special Madu Lemon untuk Honey Lemon, dst.
@@ -56,7 +56,7 @@ class MenuController extends Controller
                 // tombol/dropdown-nya dari satu sumber, tidak menyalin label
                 // yang lalu lepas sinkron dengan validasi backend.
                 // Label opsi hanya berisi aksinya (Normal/Less/No/Extra).
-                // Nama pemanisnya ada di `menu[].pemanis` karena beda per menu —
+                // Nama pemanisnya ada di `menu[].pemanis` karena beda per menu,
                 // lihat catatan di OpsiMinuman::SUGAR.
                 'opsi_sugar' => OpsiMinuman::daftarSugar(),
                 'opsi_ice' => OpsiMinuman::daftarIce(),
@@ -82,7 +82,7 @@ class MenuController extends Controller
 
         // Dipakai halaman Edit Menu untuk memisahkan kolom cup dan botol.
         // Difilter di PHP karena golongan diturunkan dari GolonganUkuran, bukan
-        // dari kolom database — kalau ditulis sebagai WHERE, aturannya jadi ada
+        // dari kolom database, kalau ditulis sebagai WHERE, aturannya jadi ada
         // di dua tempat.
         if ($request->filled('golongan')) {
             $golongan = (string) $request->query('golongan');
@@ -114,7 +114,7 @@ class MenuController extends Controller
     public function destroy(Menu $menu): JsonResponse
     {
         // Menu yang sudah pernah dipakai transaksi tidak dihapus permanen
-        // (menghindari FK constraint & menjaga histori) — dinonaktifkan saja.
+        // (menghindari FK constraint & menjaga histori), dinonaktifkan saja.
         if ($menu->detailTransaksi()->exists()) {
             $menu->update(['is_active' => false]);
 
@@ -133,7 +133,7 @@ class MenuController extends Controller
      * 250ml → 500ml → 1000ml), bukan alfabetis.
      *
      * `orderBy('ukuran')` di SQL menghasilkan `1000ml, 250ml, 500ml, Hot,
-     * Large, Reguler` — urutan yang tidak berarti apa pun buat manager yang
+     * Large, Reguler`, urutan yang tidak berarti apa pun buat manager yang
      * sedang membandingkan harga antar ukuran. Diurutkan di PHP karena
      * urutannya didefinisikan di {@see GolonganUkuran}, dan menyalinnya ke
      * ekspresi CASE per query berarti menjaga urutan yang sama di beberapa

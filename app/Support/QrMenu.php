@@ -53,7 +53,7 @@ class QrMenu
         if (! function_exists('imagecreatetruecolor')) {
             throw new ApiException(
                 'format_png_tidak_didukung',
-                'Server ini belum punya ekstensi GD, jadi QR PNG tidak bisa dibuat. Pakai format=svg — hasilnya justru lebih tajam saat dicetak.',
+                'Server ini belum punya ekstensi GD, jadi QR PNG tidak bisa dibuat. Pakai format=svg, hasilnya justru lebih tajam saat dicetak.',
                 503,
             );
         }

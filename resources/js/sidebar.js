@@ -1,7 +1,7 @@
 /**
  * Perilaku sidebar: tombol ciut/lebar + penyaringan menu per role.
  *
- * Sebelumnya kode ini ada DUA versi — satu di berkas ini (tidak pernah dimuat)
+ * Sebelumnya kode ini ada DUA versi, satu di berkas ini (tidak pernah dimuat)
  * dan satu lagi ditulis inline di layouts/app.blade.php. Keduanya memakai kunci
  * localStorage yang berbeda (`sidebarCollapsed` vs `sidebar_collapsed`), jadi
  * versi berkas ini tidak akan pernah mengenali preferensi yang sudah tersimpan.
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!toggleBtn || !sidebar) return;
 
-    // Kunci yang dipertahankan adalah `sidebar_collapsed` — itu yang dipakai
+    // Kunci yang dipertahankan adalah `sidebar_collapsed`, itu yang dipakai
     // versi inline yang selama ini benar-benar jalan, jadi preferensi pengguna
     // yang sudah tersimpan tidak ikut hilang saat penggabungan ini.
     const KUNCI = 'sidebar_collapsed';
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     } catch (e) {
-        // localStorage rusak — biarkan seluruh menu tampil apa adanya
+        // localStorage rusak, biarkan seluruh menu tampil apa adanya
     }
 
 });

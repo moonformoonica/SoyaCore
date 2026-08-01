@@ -20,11 +20,11 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 /**
- * Blok C — pembedaan data per akun kasir.
+ * Blok C, pembedaan data per akun kasir.
  *
  * Inti permintaan pembimbing: saat pergantian shift (yang artinya sekadar
  * berganti akun login), kontribusi tiap kasir harus tetap terbaca. Tidak ada
- * mekanisme shift di sini — tidak ada buka/tutup shift, modal awal, maupun
+ * mekanisme shift di sini, tidak ada buka/tutup shift, modal awal, maupun
  * hitung kas fisik.
  */
 class LaporanKasirTest extends TestCase
@@ -77,7 +77,7 @@ class LaporanKasirTest extends TestCase
     }
 
     /**
-     * REGRESSION T6 — inti perbaikannya.
+     * REGRESSION T6: inti perbaikannya.
      *
      * Sebelum ini `bayar()` menimpa `user_id` dengan akun yang menandai lunas,
      * jadi Kasir 1 lenyap tanpa jejak justru pada skenario yang ingin
@@ -270,7 +270,7 @@ class LaporanKasirTest extends TestCase
 
         $sebelum = Transaksi::with('detailTransaksi')->find($id);
 
-        // Body-nya cuma metode bayar — tidak ada customer, tidak ada item.
+        // Body-nya cuma metode bayar, tidak ada customer, tidak ada item.
         Sanctum::actingAs($this->kasir2);
         $this->postJson("/api/transaksi/{$id}/bayar", ['metode_bayar' => 'cash'])->assertOk();
 
@@ -344,7 +344,7 @@ class LaporanKasirTest extends TestCase
     {
         $this->tandaiLunas($this->kasir1, $this->buatPesanan($this->kasir1, $this->reguler));
 
-        // Terbaca DETIK ITU JUGA — bukti proyeksinya sinkron, bukan queued job.
+        // Terbaca DETIK ITU JUGA, bukti proyeksinya sinkron, bukan queued job.
         $baris = LaporanTransaksi::first();
         $this->assertSame($this->kasir1->id, $baris->kasir_user_id);
         $this->assertSame('Kasir Satu', $baris->kasir_nama);
@@ -403,7 +403,7 @@ class LaporanKasirTest extends TestCase
         ], $label);
 
         // Total per tanggal dan total keseluruhan cocok dengan penjumlahan
-        // barisnya — manager membaca file ini tanpa membuat pivot sendiri.
+        // barisnya, manager membaca file ini tanpa membuat pivot sendiri.
         $omzet = fn (array $b) => (int) $b[4];
         $this->assertSame(50000, $omzet($baris[2]));                       // TOTAL 05
         $this->assertSame($omzet($baris[0]) + $omzet($baris[1]), $omzet($baris[2]));

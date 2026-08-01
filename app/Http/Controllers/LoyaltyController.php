@@ -26,7 +26,7 @@ class LoyaltyController extends Controller
         $loyalty = $customer->loyalty;
 
         // Saldo yang sudah lewat masa berlakunya dinolkan di sini juga, bukan
-        // cuma disembunyikan — pelanggan dan pembukuan harus melihat angka yang
+        // cuma disembunyikan, pelanggan dan pembukuan harus melihat angka yang
         // sama dengan yang berlaku saat redeem.
         $loyalty?->hanguskanBilaKedaluwarsa();
 

@@ -18,12 +18,12 @@ use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
- * Blok B — pesanan baru masuk ke dashboard lewat proyeksi ke
+ * Blok B, pesanan baru masuk ke dashboard lewat proyeksi ke
  * `laporan_transaksi`, bucket "other" yang berlabel, dan label hari Indonesia
  * di tren penjualan.
  *
  * Sebelum ini dashboard hanya membaca `laporan_transaksi` yang diisi CSV
- * historis, sementara tabel POS live tidak pernah dibaca sama sekali — jadi
+ * historis, sementara tabel POS live tidak pernah dibaca sama sekali, jadi
  * pesanan baru memang tidak akan pernah muncul.
  */
 class LaporanProyeksiTest extends TestCase
@@ -134,7 +134,7 @@ class LaporanProyeksiTest extends TestCase
 
         $reward = LaporanTransaksi::where('total', 0)->first();
         $this->assertNotNull($reward, 'Item reward harus ikut diproyeksikan.');
-        $this->assertSame(1, $reward->qty, 'Qty terjual harus jujur — minuman gratis tetap mengonsumsi stok.');
+        $this->assertSame(1, $reward->qty, 'Qty terjual harus jujur, minuman gratis tetap mengonsumsi stok.');
 
         // Total qty ikut menghitung reward, total revenue tidak.
         Sanctum::actingAs($this->manager());
@@ -158,7 +158,7 @@ class LaporanProyeksiTest extends TestCase
         $poinTransaksi = (int) Transaksi::first()->point_earned;
 
         // Yang dijaga: penjumlahan poin di laporan tetap sama dengan poin yang
-        // benar-benar diberikan — tidak hilang di pembulatan pembagian.
+        // benar-benar diberikan, tidak hilang di pembulatan pembagian.
         $this->assertSame($poinTransaksi, $total);
         $this->assertSame(2, LaporanTransaksi::count());
     }
@@ -213,7 +213,7 @@ class LaporanProyeksiTest extends TestCase
 
         Sanctum::actingAs($this->manager());
 
-        // Default: bucket kosong tetap ada, TAPI berlabel — bukan key kosong
+        // Default: bucket kosong tetap ada, TAPI berlabel, bukan key kosong
         // yang dirender chart sebagai batang tak bernama.
         $respon = $this->getJson('/api/dashboard/platform')->assertOk();
         $platform = array_column($respon->json('data'), 'platform');
@@ -252,7 +252,7 @@ class LaporanProyeksiTest extends TestCase
 
         $data = $this->getJson('/api/dashboard/time-series?grain=harian')->assertOk()->json('data');
 
-        // `periode` mentah TIDAK dihapus — dipakai sorting & key stabil.
+        // `periode` mentah TIDAK dihapus, dipakai sorting & key stabil.
         $this->assertSame('2026-07-27', $data[0]['periode']);
         $this->assertSame('Sen, 27 Jul', $data[0]['periode_label']);
         $this->assertSame('Senin', $data[0]['hari']);
@@ -282,7 +282,7 @@ class LaporanProyeksiTest extends TestCase
         $data = $this->getJson('/api/dashboard/time-series?grain=harian&start=2026-07-27&end=2026-07-30')
             ->assertOk()->json('data');
 
-        // 27, 28, 29, 30 — 28 & 29 tidak punya transaksi tapi tetap keluar,
+        // 27, 28, 29, 30, 28 & 29 tidak punya transaksi tapi tetap keluar,
         // supaya grafik tidak menyambung dua titik berjauhan dan membaca
         // naik-turun yang tidak pernah terjadi.
         $this->assertCount(4, $data);

@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class UpdateKatalogRedeemRequest extends FormRequest
 {
     /**
-     * Field yang boleh dikirim — body kosong ditolak, tapi mengirim hanya satu
+     * Field yang boleh dikirim, body kosong ditolak, tapi mengirim hanya satu
      * di antaranya sudah sah.
      *
      * @var list<string>
@@ -47,7 +47,7 @@ class UpdateKatalogRedeemRequest extends FormRequest
 
         return [
             'poin.integer' => 'Poin reward harus berupa angka bulat.',
-            'poin.min' => 'Poin reward minimal '.KatalogRedeem::POIN_MIN.' — reward tidak boleh gratis tanpa poin.',
+            'poin.min' => 'Poin reward minimal '.KatalogRedeem::POIN_MIN.', reward tidak boleh gratis tanpa poin.',
             'poin.max' => "Poin reward maksimal {$max}.",
             'maks_potongan.integer' => 'Plafon potongan harus berupa angka bulat rupiah.',
             'maks_potongan.min' => 'Plafon potongan tidak boleh negatif.',
@@ -69,7 +69,7 @@ class UpdateKatalogRedeemRequest extends FormRequest
 
                 $validator->errors()->add(
                     'poin',
-                    'Tidak ada yang diubah — kirim minimal salah satu dari `'
+                    'Tidak ada yang diubah, kirim minimal salah satu dari `'
                         .implode('`, `', self::FIELD_BISA_DIUBAH).'`.',
                 );
             },

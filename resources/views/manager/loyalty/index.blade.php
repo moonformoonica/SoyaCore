@@ -14,7 +14,12 @@
 
     <div class="page-head">
         <h1>Loyalty</h1>
-        <p>Kelola poin dan hadiah untuk pelanggan setia {{ $brandName ?? "Gre's Soy" }}.</p>
+        {{-- Cadangannya diambil dari konstanta model, bukan teks yang diketik
+             ulang di sini. Ejaan yang disalin ke banyak berkas pasti lambat
+             laun berbeda: nilai lama di baris ini sempat tertinggal sebagai
+             "Gre's Soy" saat merek lain sudah jadi GresSOY. --}}
+        <p>Kelola poin dan hadiah untuk pelanggan setia
+            {{ $brandName ?? \App\Models\PengaturanToko::DEFAULT_NAMA_TOKO }}.</p>
     </div>
 
     <div class="stats" id="lm-stats" data-role="manager">

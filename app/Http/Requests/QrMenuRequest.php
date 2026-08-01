@@ -40,7 +40,7 @@ class QrMenuRequest extends FormRequest
     /**
      * Default SVG: QR ini akan dicetak, dan SVG tetap tajam di ukuran apa pun.
      *
-     * TIDAK dinamai `format()` — nama itu sudah dipakai
+     * TIDAK dinamai `format()`, nama itu sudah dipakai
      * `Illuminate\Http\Request::format($default = 'html')` untuk content
      * negotiation, dan menimpanya dengan signature berbeda adalah fatal error
      * saat class-nya di-load.

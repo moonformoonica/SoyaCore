@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
  * Nullable, dan itu bukan kelalaian: item lama tidak punya pilihan ini,
  * kemasan botol diproduksi batch (tidak bisa diracik per pesanan), dan dessert
  * bukan minuman. Aturan ukuran mana boleh memilih apa ada di
- * {@see OpsiMinuman} — bukan di sini, dan bukan di FormRequest.
+ * {@see OpsiMinuman}, bukan di sini, dan bukan di FormRequest.
  */
 return new class extends Migration
 {

@@ -4,7 +4,7 @@
 >
 > Tidak ada alur kas keluar, tidak ada metode pengembalian dana, tidak ada
 > integrasi payment gateway. Nilainya dicatat sebagai **`nilai_dibatalkan`**,
-> yang artinya _"penjualan sebesar ini tidak jadi"_ — bukan _"uang sebesar ini
+> yang artinya _"penjualan sebesar ini tidak jadi"_, bukan _"uang sebesar ini
 > dikembalikan"_.
 
 Nilainya tetap **wajib** dicatat karena omzet dashboard dan laporan kasir harus
@@ -18,7 +18,7 @@ pesan error.
 ## 1. Prinsip
 
 - **Transaksi asli tidak pernah dihapus atau diubah isinya.** Ia hanya berubah
-  status, dan pembatalannya dicatat sebagai dokumen tersendiri — supaya selalu
+  status, dan pembatalannya dicatat sebagai dokumen tersendiri, supaya selalu
   bisa ditelusuri siapa membatalkan apa, kapan, dan kenapa.
 - **Alasan wajib diisi** (minimal 3 karakter). Ini satu-satunya pagar terhadap
   penyalahgunaan; tanpa alasan, pembatalan jadi cara menghapus penjualan tanpa
@@ -31,11 +31,11 @@ pesan error.
 
 | Status           | Kapan                                                    |
 | ---------------- | -------------------------------------------------------- |
-| `batal`          | Pembatalan **penuh** — dari `pending` maupun dari `lunas` |
+| `batal`          | Pembatalan **penuh**, dari `pending` maupun dari `lunas` |
 | `batal_sebagian` | Pembatalan **sebagian** transaksi yang sudah `lunas`      |
 
 Pembatalan sebagian yang ternyata menghabiskan seluruh sisa item berakhir sebagai
-`batal`, bukan `batal_sebagian` — transaksi tanpa satu pun item tersisa bukan
+`batal`, bukan `batal_sebagian`, transaksi tanpa satu pun item tersisa bukan
 "sebagian".
 
 Kolom `transaksi.status` bertipe `string` tanpa enum/check constraint, jadi nilai
@@ -52,7 +52,7 @@ DELETE /api/transaksi/{id}/items/{item}    hapus item
 
 Keduanya sudah menghitung ulang total dengan benar. Kalau pembatalan sebagian
 diizinkan pada transaksi `pending`, `transaksi.total` akan tidak lagi sama dengan
-yang harus dibayar pelanggan — dan kasir menagih angka yang salah. Karena itu
+yang harus dibayar pelanggan, dan kasir menagih angka yang salah. Karena itu
 kasus tersebut ditolak `422` `pembatalan_sebagian_butuh_lunas` dengan pesan yang
 mengarahkan ke endpoint item.
 
@@ -66,7 +66,7 @@ dipakai saat pelanggan membatalkan pesanannya sebelum bayar.
 ### Qty kumulatif dijaga
 
 Total qty yang dibatalkan untuk satu `detail_transaksi` tidak boleh melebihi qty
-aslinya, **dihitung lintas semua pembatalan sebelumnya** — bukan hanya request
+aslinya, **dihitung lintas semua pembatalan sebelumnya**, bukan hanya request
 ini. Tiga kali membatalkan 1 dari qty 2 tetap ditolak pada percobaan ketiga.
 
 Ditolak `422` `qty_pembatalan_melebihi`.
@@ -87,7 +87,7 @@ Contoh: 2 gelas Rp 20.000 dengan diskon 20% → nilai bersih Rp 32.000. Membatal
 item itu, yang dipakai adalah **nilai sisanya secara persis**, bukan hasil rumus
 proporsional. Tanpa ini, residu pembulatan tertinggal sebagai omzet beberapa
 rupiah yang tidak akan pernah bisa dihilangkan. Contoh: 3 item bernilai bersih
-Rp 54.000 tidak habis dibagi 3 secara bulat — dengan aturan ini penjumlahan
+Rp 54.000 tidak habis dibagi 3 secara bulat, dengan aturan ini penjumlahan
 seluruh pembatalannya tetap pas Rp 54.000.
 
 ---
@@ -110,7 +110,7 @@ Aturan finalnya sederhana dan otomatis benar untuk kedua kasus:
 
 `LoyaltyService::redeemPoin()` **langsung memotong saldo poin pelanggan saat
 redeem**, dan redeem hanya boleh pada transaksi `pending`. Sementara itu `batal()`
-versi lama hanya mengubah status — **poin yang sudah terpotong tidak pernah
+versi lama hanya mengubah status, **poin yang sudah terpotong tidak pernah
 dikembalikan.**
 
 Artinya sebelum perbaikan ini: pelanggan menukar 350 poin untuk gratis Original,
@@ -128,7 +128,7 @@ membelanjakan poinnya, kekurangannya ditanggung toko. Menagih poin negatif memic
 komplain yang lebih mahal daripada selisihnya.
 
 Yang **dicatat** di `poin_ditarik` adalah poin yang benar-benar ditarik dari
-saldo, bukan yang seharusnya — supaya laporan tidak mengklaim menarik poin yang
+saldo, bukan yang seharusnya, supaya laporan tidak mengklaim menarik poin yang
 tidak pernah kembali.
 
 ### Poin redeem: dikembalikan utuh, tapi hanya kalau redemption-nya gugur
@@ -139,7 +139,7 @@ Yang menggugurkan redemption:
 - pembatalan **sebagian yang menyertakan item reward** (`is_reward`).
 
 Pembatalan sebagian yang **tidak** menyentuh item reward **tidak** mengembalikan
-poin — rewardnya memang tetap diterima pelanggan.
+poin, rewardnya memang tetap diterima pelanggan.
 
 Saat poin redeem dikembalikan, `kode_redeem`, `poin_ditukar`, dan `maks_potongan`
 pada transaksi ikut **dikosongkan**. Kalau tidak, diskon dari reward yang sudah
@@ -159,7 +159,7 @@ menempel.
   nilainya. Omzet dashboard ikut turun di detik itu juga.
 - Poin di laporan memakai `point_earned` dikurangi poin yang sudah ditarik, supaya
   total poin di dashboard tidak terus menghitung poin yang sudah dicabut.
-- Di laporan kasir, pembatalan muncul di **dua tempat dengan makna berbeda** —
+- Di laporan kasir, pembatalan muncul di **dua tempat dengan makna berbeda**,
   lihat [`laporan-kasir.md`](laporan-kasir.md) §5.
 
 Seluruh operasi berjalan dalam satu `DB::transaction` dengan `lockForUpdate()` pada
@@ -191,7 +191,7 @@ diisi dan pencatatan akun pemroses.
 
 `items` kosong atau tidak dikirim = pembatalan **penuh**.
 
-Satu `detail_transaksi_id` hanya boleh disebut sekali per request (`distinct`) —
+Satu `detail_transaksi_id` hanya boleh disebut sekali per request (`distinct`),
 kalau dibiarkan ganda, qty-nya harus dijumlahkan dulu dan pesan error "melebihi
 sisa" jadi membingungkan.
 
@@ -225,7 +225,7 @@ sisa" jadi membingungkan.
 ```
 
 `saldo_poin_pelanggan` ikut dikirim karena kasir perlu menyebutkannya ke pelanggan
-saat itu juga — kalau tidak ada di response, dia harus membuka halaman lain
+saat itu juga, kalau tidak ada di response, dia harus membuka halaman lain
 sementara pelanggannya masih berdiri di depan konter. Isinya `null` untuk
 transaksi walk-in tanpa customer.
 
@@ -236,7 +236,7 @@ penuh** supaya frontend yang sudah jalan tidak rusak, tapi sekarang ikut melewat
 alur baru: mengembalikan poin redeem, mencatat dokumen pembatalan, dan
 menyinkronkan proyeksi laporan.
 
-Alasan tidak perlu dikirim pada alias ini — diisi teks tetap
+Alasan tidak perlu dikirim pada alias ini, diisi teks tetap
 `"Dibatalkan lewat endpoint lama"` supaya kolomnya tetap jujur soal dari mana
 pembatalannya datang.
 

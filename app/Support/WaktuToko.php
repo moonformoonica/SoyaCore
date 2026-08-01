@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
  *
  * Kenapa harus terpusat: `config('app.timezone')` masih `'UTC'` sementara toko
  * beroperasi di WIB (UTC+7). Akibatnya `whereDate('created_at', ...)` memotong
- * hari pada pukul 07:00 WIB — transaksi pukul 06:00 pagi tercatat sebagai
+ * hari pada pukul 07:00 WIB, transaksi pukul 06:00 pagi tercatat sebagai
  * penjualan tanggal SEBELUMNYA. Selama aturan zona ditulis ulang di tiap
  * query, satu tempat yang lupa sudah cukup membuat angka dashboard tidak
  * pernah cocok dengan daftar transaksi, dan bedanya tidak memicu error apa pun.
@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  *
  * Kolom `laporan_transaksi.tanggal` sengaja bertipe `date` dan sudah berisi
  * tanggal WIB hasil proyeksi, jadi query di atasnya cukup membandingkan string
- * tanggal — bukan tugas class ini.
+ * tanggal, bukan tugas class ini.
  */
 class WaktuToko
 {
@@ -76,9 +76,25 @@ class WaktuToko
     }
 
     /**
+     * Awal minggu berjalan menurut WIB, dipakai penomoran kode pesanan.
+     *
+     * Mingguan dimulai SENIN. Carbon mengikuti setelan locale untuk hari
+     * pertama, jadi harinya ditulis eksplisit di sini: kalau ikut bawaan, kode
+     * pesanan bisa berganti seri di hari Minggu pada satu mesin dan Senin di
+     * mesin lain, dan nomor yang sudah disebutkan ke pelanggan jadi tidak
+     * cocok lagi.
+     */
+    public static function awalMingguIni(): Carbon
+    {
+        return self::sekarang()
+            ->startOfWeek(Carbon::MONDAY)
+            ->setTimezone(config('app.timezone'));
+    }
+
+    /**
      * Rentang inklusif sebuah preset, dalam format `Y-m-d` menurut WIB.
      *
-     * `7_hari`/`30_hari` menghitung hari ini sebagai salah satu harinya —
+     * `7_hari`/`30_hari` menghitung hari ini sebagai salah satu harinya,
      * "7 hari terakhir" yang berisi 8 tanggal membuat total laporan tidak bisa
      * dicocokkan dengan apa pun.
      *

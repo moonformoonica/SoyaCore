@@ -17,7 +17,7 @@ use Tests\TestCase;
  * poin.
  *
  * Yang dijaga di sini bukan "endpointnya jalan", tapi bahwa satu transaksi
- * besar tidak bisa lagi menghapus profit setahun seorang pelanggan — cacat
+ * besar tidak bisa lagi menghapus profit setahun seorang pelanggan, cacat
  * yang membuat perubahan ini dibuat: diskon 50% pada pesanan Rp 475.000
  * dulu memberi potongan Rp 237.500.
  */
@@ -29,10 +29,10 @@ class LoyaltyPlafonTest extends TestCase
 
     private Loyalty $loyalty;
 
-    /** Rp 95.000 — dipakai menyusun pesanan besar. */
+    /** Rp 95.000, dipakai menyusun pesanan besar. */
     private Menu $botol;
 
-    /** Rp 20.000 — dipakai menyusun subtotal bulat kecil/menengah. */
+    /** Rp 20.000, dipakai menyusun subtotal bulat kecil/menengah. */
     private Menu $gelas;
 
     protected function setUp(): void
@@ -43,7 +43,7 @@ class LoyaltyPlafonTest extends TestCase
         $coffee = Kategori::create(['nama' => 'Soya Coffee']);
         $tropical = Kategori::create(['nama' => 'Soya Tropical']);
 
-        // Menu reward — harga di sini yang dipakai menghitung Rp/poin efektif
+        // Menu reward, harga di sini yang dipakai menghitung Rp/poin efektif
         Menu::create(['kategori_id' => $signature->id, 'nama' => 'Original', 'ukuran' => 'Reguler', 'harga' => 17000]);
         Menu::create(['kategori_id' => $coffee->id, 'nama' => 'Coffee Kopi', 'ukuran' => 'Reguler', 'harga' => 21000]);
         Menu::create(['kategori_id' => $tropical->id, 'nama' => 'Honey Lemon', 'ukuran' => 'Reguler', 'harga' => 20000]);
@@ -121,7 +121,7 @@ class LoyaltyPlafonTest extends TestCase
         $respon = $this->redeem($id, 'diskon_20')->assertOk();
 
         // 20% dari 100.000 = 20.000, dipotong plafon jadi 10.000. Begitu
-        // plafon mengikat, diskonnya bukan persen lagi — persen dinolkan
+        // plafon mengikat, diskonnya bukan persen lagi, persen dinolkan
         // supaya penambahan item berikutnya tidak menghitung ulang 20%.
         $this->assertSame(10000, $respon->json('data.diskon_nilai'));
         $this->assertSame(0, $respon->json('data.diskon_persen'));
@@ -146,7 +146,7 @@ class LoyaltyPlafonTest extends TestCase
     /**
      * Celah paling halus: diskon disimpan sebagai persen karena saat redeem
      * masih di bawah plafon, lalu kasir menambah item. recalculateTotals()
-     * menurunkan ulang persennya — tanpa plafon yang ikut tersimpan di
+     * menurunkan ulang persennya, tanpa plafon yang ikut tersimpan di
      * transaksi, potongannya ikut membengkak.
      */
     public function test_plafon_tetap_berlaku_saat_item_ditambah_setelah_redeem(): void
@@ -359,7 +359,7 @@ class LoyaltyPlafonTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.maks_potongan', 3000)
             ->assertJsonPath('data.poin', 200) // poin tidak ikut ter-reset
-            // Rp 3.000 / 200 poin = 15 — jauh di bawah Rp 50, reward jadi pelit
+            // Rp 3.000 / 200 poin = 15, jauh di bawah Rp 50, reward jadi pelit
             ->assertJsonPath('data.rupiah_per_poin_efektif', 15);
 
         $this->actingAsKasir();
@@ -423,7 +423,7 @@ class LoyaltyPlafonTest extends TestCase
 
     /**
      * Cek silang seluruh katalog. Rp/poin di luar rentang ini berarti ada
-     * reward yang mendominasi (kemurahan) atau mati (kemahalan) — dua-duanya
+     * reward yang mendominasi (kemurahan) atau mati (kemahalan), dua-duanya
      * bikin katalog jadi pajangan.
      */
     public function test_seluruh_katalog_berada_di_rentang_rupiah_per_poin_yang_sehat(): void

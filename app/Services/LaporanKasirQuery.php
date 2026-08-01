@@ -13,10 +13,10 @@ use Illuminate\Database\Eloquent\Collection;
  * ATURAN ATRIBUSI, dipakai konsisten di seluruh class ini:
  *
  * 1. Penjualan dihitung ke akun kasir yang MENYELESAIKAN pembayaran
- *    (`dibayar_oleh`) — di titik itulah transaksi benar-benar terjadi.
+ *    (`dibayar_oleh`), di titik itulah transaksi benar-benar terjadi.
  *    `user_id` tetap merekam siapa yang menyusun pesanannya, jadi tidak ada
  *    informasi yang hilang saat pesanan berpindah tangan.
- * 2. Rentang dipotong berdasarkan `waktu_lunas`, BUKAN `created_at` —
+ * 2. Rentang dipotong berdasarkan `waktu_lunas`, BUKAN `created_at`,
  *    transaksi yang dibuat kemarin malam dan dibayar pagi ini masuk ke hari
  *    ini. Batas harinya WIB, lewat {@see WaktuToko}.
  * 3. Transaksi `pending` tidak masuk laporan kasir mana pun. Ia belum jadi
@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Collection;
  *
  * DUA ANGKA PEMBATALAN YANG BEDA MAKNANYA, dan ini gampang tertukar:
  * - `nilai_dibatalkan` + `jumlah_pembatalan` = pembatalan yang DIPROSES akun
- *   ini (pembatalan.user_id). Ini angka akuntabilitas — pembatalan berlebih
+ *   ini (pembatalan.user_id). Ini angka akuntabilitas, pembatalan berlebih
  *   dari satu akun adalah pola yang perlu terlihat.
  * - Pengurang `total_omzet` = pembatalan atas PENJUALAN akun ini, siapa pun
  *   yang memprosesnya. Kalau pengurangnya ikut mengejar akun pemroses, omzet
@@ -38,7 +38,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class LaporanKasirQuery
 {
-    /** Label untuk baris tanpa akun kasir — lihat catatan di {@see self::baris()}. */
+    /** Label untuk baris tanpa akun kasir (lihat catatan di {@see self::baris()}). */
     public const LABEL_TANPA_AKUN = '— (tanpa akun)';
 
     /**
@@ -56,7 +56,7 @@ class LaporanKasirQuery
         }
 
         // Akun yang tidak menutup transaksi apa pun tapi memproses pembatalan
-        // tetap harus muncul — kalau tidak, satu-satunya jejak akun yang cuma
+        // tetap harus muncul, kalau tidak, satu-satunya jejak akun yang cuma
         // membatalkan justru hilang dari laporan.
         foreach ($pembatalan->groupBy(fn (Pembatalan $p) => (int) $p->user_id) as $kunci => $grup) {
             $baris[(int) $kunci] ??= $this->barisKosong((int) $kunci, $grup->first()->user?->nama);
@@ -98,7 +98,7 @@ class LaporanKasirQuery
 
     /**
      * Pembatalan yang DIPROSES dalam rentang ini (berdasarkan waktu dokumen
-     * pembatalannya, bukan tanggal penjualan aslinya) — itu pertanyaan yang
+     * pembatalannya, bukan tanggal penjualan aslinya), itu pertanyaan yang
      * dijawab kolom akuntabilitas: "akun ini membatalkan berapa kali periode
      * ini".
      *
@@ -120,8 +120,8 @@ class LaporanKasirQuery
 
     /**
      * `user_id` 0 pada kunci grup berarti `dibayar_oleh` null. Seharusnya tidak
-     * pernah terjadi untuk transaksi baru — `bayar()` selalu punya user
-     * terautentikasi — tapi barisnya tetap ditampilkan berlabel jelas, bukan
+     * pernah terjadi untuk transaksi baru, `bayar()` selalu punya user
+     * terautentikasi, tapi barisnya tetap ditampilkan berlabel jelas, bukan
      * dibuang: total yang tidak bisa direkonsiliasi lebih berbahaya daripada
      * satu baris berlabel jujur.
      *
@@ -154,7 +154,7 @@ class LaporanKasirQuery
             // Inilah angka yang menunjukkan serah terima pesanan saat
             // pergantian; tanpa itu laporan Kasir 2 terlihat seolah semua
             // pesanan dia yang buat. Pesanan SoyaScan (`user_id` null) tidak
-            // dihitung — memang tidak ada kasir lain yang membuatnya.
+            // dihitung, memang tidak ada kasir lain yang membuatnya.
             if ($t->user_id !== null && (int) $t->user_id !== $userId) {
                 $dibuatKasirLain++;
             }

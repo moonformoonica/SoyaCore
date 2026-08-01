@@ -277,7 +277,14 @@ body{
 
 }
 
-table{
+/* DIBATASI KE `.table-card`, JANGAN DIKEMBALIKAN JADI SELECTOR TELANJANG.
+   Berkas ini ikut ter-import `app.css`, yang dimuat di SETIAP halaman. Waktu
+   aturan di bawah masih ditulis sebagai `table`, `thead`, dan `tbody td` polos,
+   ia mewarnai hijau dan meng-center-kan isi seluruh tabel di aplikasi, termasuk
+   tabel Akun Kasir di halaman Pengaturan yang tidak ada hubungannya dengan
+   halaman Transaksi. Tabel yang memang memakai gaya ini semuanya berada di
+   dalam `.table-card`: Transaksi, Loyalty, dan Laporan Kasir. */
+.table-card table{
 
     width:100%;
 
@@ -285,14 +292,14 @@ table{
 
 }
 
-thead{
+.table-card thead{
 
     background:#7FB77E;
-    
+
 
 }
 
-thead th{
+.table-card thead th{
 
     color:#2F6B3F;
 
@@ -306,7 +313,7 @@ thead th{
 
 }
 
-tbody td{
+.table-card tbody td{
 
     padding:7px 18px;
 
@@ -608,6 +615,10 @@ tbody td{
 }
 
 .detail-item-table td{
+    /* Sejajar dengan header-nya yang juga rata kiri. Tabel ini berada di dalam
+       modal, di luar `.table-card`, jadi ia tidak lagi ikut aturan rata tengah
+       halaman Transaksi. */
+    text-align:left;
     padding:10px;
     font-size:13px;
     border-bottom:1px solid #F0F0F0;
@@ -873,7 +884,7 @@ tbody td{
 /* Susunan baris filter: kotak cari & dropdown menumpuk dari KIRI, rentang
    tanggal sendirian di KANAN.
    `justify-content:space-between` bawaan diganti `flex-start` karena sejak
-   pembungkus `.filter-right` dibongkar isinya jadi tiga kelompok — dengan
+   pembungkus `.filter-right` dibongkar isinya jadi tiga kelompok, dengan
    space-between ketiganya akan terserak merata, bukan mengumpul di kiri. */
 .filter-bar{
     flex-wrap:wrap;

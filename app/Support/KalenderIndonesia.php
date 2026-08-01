@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
  * Sengaja di-hardcode, TIDAK memakai `Carbon::locale('id')` maupun
  * `strftime()`: locale Indonesia sering tidak terpasang di container produksi,
  * dan kalau tidak ada, hasilnya diam-diam kembali ke bahasa Inggris. Kegagalan
- * seperti itu tidak melempar error — ia hanya muncul sebagai "Mon, 28 Jul" di
+ * seperti itu tidak melempar error, ia hanya muncul sebagai "Mon, 28 Jul" di
  * dashboard manager, biasanya setelah deploy.
  */
 class KalenderIndonesia

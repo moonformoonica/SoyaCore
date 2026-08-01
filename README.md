@@ -1,4 +1,4 @@
-# SoyaCore — POS & Loyalty Gres'Soy
+# SoyaCore, POS & Loyalty GresSOY
 
 Backend Laravel 12 untuk kasir (POS), self-order SoyaScan, program loyalty
 LoyalSeed, dan dashboard/laporan manager.
@@ -10,7 +10,7 @@ composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
-php artisan storage:link      # WAJIB — lihat catatan di bawah
+php artisan storage:link      # WAJIB, lihat catatan di bawah
 ```
 
 ### `php artisan storage:link` wajib dijalankan
@@ -18,7 +18,7 @@ php artisan storage:link      # WAJIB — lihat catatan di bawah
 Gambar QRIS merchant disimpan di disk `public`
 (`storage/app/public/qris`) dan dilayani lewat symlink
 `public/storage`. Tanpa `storage:link`, `qris_url` yang dikirim API akan
-mengembalikan **404** dan halaman pembayaran SoyaScan menampilkan gambar rusak —
+mengembalikan **404** dan halaman pembayaran SoyaScan menampilkan gambar rusak,
 tanpa error apa pun di sisi backend. Jalankan sekali per environment, termasuk
 setelah deploy ke server baru.
 
@@ -29,7 +29,7 @@ setelah deploy ke server baru.
 Membangun ulang proyeksi seluruh transaksi POS yang sudah jadi penjualan ke tabel
 `laporan_transaksi` (sumber data dashboard & export Excel).
 
-Dipakai kalau proyeksi pernah gagal — misalnya deploy tepat di tengah transaksi —
+Dipakai kalau proyeksi pernah gagal, misalnya deploy tepat di tengah transaksi,
 atau kalau rumus proyeksinya berubah. **Idempoten**: aman dijalankan berkali-kali,
 hasilnya selalu sama.
 
@@ -45,13 +45,13 @@ Impor ulang data CSV historis (Juni–Juli 2026). Lihat
 
 | Env                | Default              | Keterangan                                                                 |
 | ------------------ | -------------------- | -------------------------------------------------------------------------- |
-| `SOYASCAN_URL`     | ikut `APP_URL`       | URL publik SoyaScan yang di-encode ke QR menu meja. Pastikan benar **sebelum** QR dicetak — QR yang sudah ditempel tidak bisa ditarik lagi. |
+| `SOYASCAN_URL`     | ikut `APP_URL`       | URL publik SoyaScan yang di-encode ke QR menu meja. Pastikan benar **sebelum** QR dicetak, QR yang sudah ditempel tidak bisa ditarik lagi. |
 
 > **Catatan zona waktu.** `config('app.timezone')` sengaja dibiarkan `UTC`.
 > Seluruh konversi waktu→tanggal (filter transaksi, tanggal laporan, penomoran
 > `kode_pesanan` harian) memakai helper `App\Support\WaktuToko` yang memaksa
 > **WIB**, jadi tanggal penjualan tidak pernah ikut zona server. Jangan memakai
-> `whereDate()` pada kolom datetime — pakai helper itu.
+> `whereDate()` pada kolom datetime, pakai helper itu.
 
 ## Dokumentasi
 

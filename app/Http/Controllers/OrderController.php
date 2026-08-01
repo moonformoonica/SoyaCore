@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ApiException;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\PengaturanToko;
+use App\Models\Transaksi;
 use App\Services\OrderService;
+use App\Support\KodePesanan;
 use App\Support\OpsiMinuman;
 use Illuminate\Http\JsonResponse;
 
@@ -46,5 +49,47 @@ class OrderController extends Controller
         }
 
         return response()->json($payload, 201);
+    }
+
+    /**
+     * Status sebuah pesanan. Dipanggil berulang oleh layar "Menunggu
+     * Pembayaran" di SoyaScan (tiap 4 detik) supaya layar pelanggan berubah
+     * sendiri begitu kasir menandai lunas.
+     *
+     * SENGAJA HANYA MENGEMBALIKAN `status`, tidak lebih. Kode pesanan pendek
+     * dan berurutan (`#A01`, `#A02`, `#K001`), jadi siapa pun bisa menebaknya
+     * dari luar tanpa pernah memesan. Karena endpoint ini publik tanpa auth,
+     * nama pelanggan, nomor WA, dan rincian item TIDAK boleh ikut di sini.
+     * Kalau suatu saat SoyaScan butuh rincian pesanan setelah lunas, itu harus
+     * lewat jalur lain yang mengikat pelanggan ke pesanannya (mis. token
+     * sekali pakai yang dikembalikan `POST /api/order`), bukan dengan menambah
+     * field di sini.
+     *
+     * Nilai `status` yang mungkin muncul: `pending`, `lunas`, `batal`,
+     * `batal_sebagian`.
+     */
+    public function status(string $kodePesanan): JsonResponse
+    {
+        $kode = KodePesanan::normalisasi($kodePesanan);
+
+        // Penomoran di-reset tiap hari (lihat OrderService dan
+        // TransaksiService), jadi `#A01` hari ini dan `#A01` kemarin
+        // dua-duanya ada di tabel. Yang dimaksud pemanggil selalu yang
+        // terbaru. Tanpa pengurutan ini, `first()` mengembalikan status
+        // pesanan kemarin dan layar pelanggan langsung salah.
+        $transaksi = Transaksi::query()
+            ->where('kode_pesanan', $kode)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($transaksi === null) {
+            throw new ApiException(
+                'pesanan_tidak_ditemukan',
+                "Pesanan {$kode} tidak ditemukan.",
+                404,
+            );
+        }
+
+        return response()->json(['status' => $transaksi->status]);
     }
 }

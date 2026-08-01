@@ -273,7 +273,7 @@ async function muatStatistikKasir() {
     async function muatTabel() {
         const token = localStorage.getItem('auth_token');
         if (!token) {
-            tbody.innerHTML = '<tr><td colspan="10" class="trx-state">Sesi berakhir — silakan login ulang.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="trx-state">Sesi berakhir, silakan login ulang.</td></tr>';
             return;
         }
 
@@ -365,7 +365,7 @@ async function muatStatistikKasir() {
             const res = await fetch('/api/laporan/kasir', {
                 headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
             });
-            if (!res.ok) return; // kasir dapat 403 — dropdown-nya memang manager-only
+            if (!res.ok) return; // kasir dapat 403, dropdown-nya memang manager-only
 
             ((await res.json()).data || []).forEach(function (r) {
                 const li = document.createElement('li');
@@ -417,7 +417,7 @@ async function muatStatistikKasir() {
 })();
 
 // =========================
-// Modal Detail Transaksi — dipakai kasir & manager (GET /api/transaksi/{id})
+// Modal Detail Transaksi, dipakai kasir & manager (GET /api/transaksi/{id})
 // =========================
 (function () {
     const backdrop = document.getElementById('detailModalBackdrop');

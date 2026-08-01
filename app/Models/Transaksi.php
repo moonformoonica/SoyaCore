@@ -13,7 +13,7 @@ class Transaksi extends Model
 
     /**
      * Label siap tampil per channel, supaya frontend tidak memetakan sendiri
-     * `self_order` menjadi "SoyaScan" — pemetaan yang tersebar di beberapa
+     * `self_order` menjadi "SoyaScan", pemetaan yang tersebar di beberapa
      * halaman pasti berbeda-beda ejaannya.
      */
     public const LABEL_SUMBER = [
@@ -55,7 +55,7 @@ class Transaksi extends Model
     }
 
     /**
-     * Kasir PEMBUAT pesanan. Null untuk pesanan SoyaScan — memang tidak ada
+     * Kasir PEMBUAT pesanan. Null untuk pesanan SoyaScan, memang tidak ada
      * kasir yang menyusunnya.
      */
     public function user(): BelongsTo
@@ -65,7 +65,7 @@ class Transaksi extends Model
 
     /**
      * Kasir yang MENYELESAIKAN pembayaran. Null selama transaksi masih pending.
-     * Ke akun inilah penjualan dihitung — di titik itulah transaksi benar-benar
+     * Ke akun inilah penjualan dihitung, di titik itulah transaksi benar-benar
      * terjadi.
      */
     public function dibayarOleh(): BelongsTo

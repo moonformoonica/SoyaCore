@@ -31,7 +31,7 @@ class UpdatePengaturanTokoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nama_toko.required' => 'Nama toko tidak boleh kosong — dipakai di header nota dan laporan.',
+            'nama_toko.required' => 'Nama toko tidak boleh kosong, dipakai di header nota dan laporan.',
             'no_telepon.max' => 'Nomor telepon toko terlalu panjang (maksimal 30 karakter).',
             'alamat.max' => 'Alamat terlalu panjang (maksimal 500 karakter).',
             'jam_buka.date_format' => 'Jam buka harus format 24 jam HH:MM, contoh 08:00.',
@@ -46,7 +46,7 @@ class UpdatePengaturanTokoRequest extends FormRequest
                 if (! $this->hasAny(['nama_toko', 'no_telepon', 'alamat', 'jam_buka', 'jam_tutup'])) {
                     $validator->errors()->add(
                         'nama_toko',
-                        'Tidak ada yang diubah — kirim minimal satu field info toko.',
+                        'Tidak ada yang diubah, kirim minimal satu field info toko.',
                     );
                 }
             },

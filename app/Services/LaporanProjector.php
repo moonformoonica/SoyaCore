@@ -9,7 +9,7 @@ use App\Support\WaktuToko;
 /**
  * Menyalin transaksi POS live ke layer laporan (`laporan_transaksi`).
  *
- * MASALAH YANG DISELESAIKAN. Dashboard membaca `laporan_transaksi` — tabel yang
+ * MASALAH YANG DISELESAIKAN. Dashboard membaca `laporan_transaksi`, tabel yang
  * sampai sekarang hanya diisi CSV historis. Tabel POS live (`transaksi` +
  * `detail_transaksi`) tidak pernah dibaca dashboard sama sekali, jadi pesanan
  * baru memang tidak akan pernah muncul di sana. Ini bukan bug polling atau
@@ -22,7 +22,7 @@ use App\Support\WaktuToko;
  *
  * KENAPA SINKRON, BUKAN QUEUED JOB. Laporan harus bisa di-export real-time.
  * Kalau proyeksinya antre di queue, transaksi yang baru dibayar tidak muncul di
- * file Excel yang di-download satu menit kemudian — dan tidak ada yang sadar
+ * file Excel yang di-download satu menit kemudian, dan tidak ada yang sadar
  * datanya tertinggal, karena tidak ada error yang muncul. Beban satu
  * `updateOrCreate` per item tidak sepadan dengan risiko itu.
  *
@@ -31,7 +31,7 @@ use App\Support\WaktuToko;
  *   karena data lama memang tidak merekam kasir.
  * - Baris hasil proyeksi (`kode` berawalan `TRX-`): kasir WAJIB terisi.
  *
- * Baris CSV tidak pernah disentuh class ini — prefix `kode` yang berbeda
+ * Baris CSV tidak pernah disentuh class ini, prefix `kode` yang berbeda
  * membuat keduanya hidup berdampingan di satu tabel.
  */
 class LaporanProjector
@@ -71,7 +71,7 @@ class LaporanProjector
     }
 
     /**
-     * Membuang seluruh proyeksi satu transaksi — dipakai saat transaksi
+     * Membuang seluruh proyeksi satu transaksi, dipakai saat transaksi
      * dibatalkan penuh, supaya omzet dashboard ikut terkoreksi.
      */
     public function hapus(Transaksi $transaksi): void
@@ -112,7 +112,7 @@ class LaporanProjector
 
             $qty = (int) $detail->qty - $rekap['qty'];
             if ($qty <= 0) {
-                continue; // item habis dibatalkan — tidak ada penjualan yang tersisa
+                continue; // item habis dibatalkan, tidak ada penjualan yang tersisa
             }
 
             // Nilai bersih SETELAH diskon, dikurangi bagian yang dibatalkan.
@@ -146,7 +146,7 @@ class LaporanProjector
 
     /**
      * Poin earn dibagi rata ke seluruh item, sisa pembagiannya ditaruh di item
-     * terakhir — supaya `SUM(poin_loyalty)` di laporan tetap sama dengan poin
+     * terakhir, supaya `SUM(poin_loyalty)` di laporan tetap sama dengan poin
      * yang benar-benar diberikan ke pelanggan.
      *
      * @param  array<string, array<string, mixed>>  $baris
@@ -185,7 +185,7 @@ class LaporanProjector
 
     /**
      * Qty dan nilai yang sudah dibatalkan per `detail_transaksi`, dijumlahkan
-     * LINTAS semua pembatalan transaksi ini — bukan hanya yang terakhir.
+     * LINTAS semua pembatalan transaksi ini, bukan hanya yang terakhir.
      *
      * @return array<int, array{qty: int, nilai: int}>
      */

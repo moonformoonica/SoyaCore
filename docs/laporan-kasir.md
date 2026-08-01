@@ -1,6 +1,6 @@
 # Laporan & Atribusi per Akun Kasir
 
-Dokumen ini menjelaskan bagaimana SoyaCore membedakan data antar akun kasir —
+Dokumen ini menjelaskan bagaimana SoyaCore membedakan data antar akun kasir,
 termasuk apa yang **tidak** dibangun, supaya tidak ada yang mengira ada fitur
 yang terlewat dikerjakan.
 
@@ -25,7 +25,7 @@ Karena itu **tidak ada**:
 "Pergantian shift" di SoyaCore artinya sekadar berganti akun yang login.
 
 > **Konsekuensi yang perlu diketahui:** tanpa hitung kas fisik, sistem tidak bisa
-> mendeteksi selisih laci. Itu memang di luar permintaan — dicatat di sini supaya
+> mendeteksi selisih laci. Itu memang di luar permintaan, dicatat di sini supaya
 > jelas bahwa ini keputusan, bukan kelalaian.
 
 ---
@@ -39,13 +39,13 @@ dibedakan: pesanan yang menyeberangi pergantian akun.
 
 | Kolom          | Arti                                         | Diisi saat                                    |
 | -------------- | -------------------------------------------- | --------------------------------------------- |
-| `user_id`      | Akun kasir **pembuat** pesanan               | `store()` — dan **tidak pernah ditimpa lagi** |
+| `user_id`      | Akun kasir **pembuat** pesanan               | `store()`, dan **tidak pernah ditimpa lagi** |
 | `dibayar_oleh` | Akun kasir yang **menyelesaikan pembayaran** | `bayar()`                                     |
 
 Keduanya nullable dengan alasan yang berbeda:
 
-- `dibayar_oleh` null selama transaksi masih `pending` — belum dibayar siapa pun.
-- `user_id` null untuk pesanan SoyaScan — memang tidak ada kasir yang menyusunnya.
+- `dibayar_oleh` null selama transaksi masih `pending`, belum dibayar siapa pun.
+- `user_id` null untuk pesanan SoyaScan, memang tidak ada kasir yang menyusunnya.
   `dibayar_oleh` tetap terisi saat kasir menerimanya di konter.
 
 Di API keduanya diekspos sebagai `kasir_pembuat` dan `kasir_penyelesai`. Key
@@ -71,7 +71,7 @@ isinya penyelesai bila ada, jatuh ke pembuat bila belum dibayar.
 
 ```
 13.55  Kasir 1 login, membuat pesanan #K012 (2x Original = Rp 40.000)
-14.00  Kasir 1 logout — pelanggan masih menunggu minumannya
+14.00  Kasir 1 logout, pelanggan masih menunggu minumannya
 14.02  Kasir 2 login
 14.05  Pelanggan membayar. Kasir 2 membuka #K012 lalu Tandai Lunas.
 ```
@@ -110,10 +110,10 @@ pending.
 
 ---
 
-## 4. `GET /api/laporan/kasir` — perbandingan antar kasir
+## 4. `GET /api/laporan/kasir`, perbandingan antar kasir
 
 Manager saja. Query param: `tanggal_mulai`, `tanggal_selesai`, `preset`
-(`hari_ini` | `kemarin` | `7_hari` | `30_hari` | `bulan_ini`) — aturannya sama
+(`hari_ini` | `kemarin` | `7_hari` | `30_hari` | `bulan_ini`), aturannya sama
 persis dengan filter daftar transaksi.
 
 Satu baris per akun kasir, diurutkan omzet menurun:
@@ -129,7 +129,7 @@ Satu baris per akun kasir, diurutkan omzet menurun:
 | `total_diskon`                       | Diskon yang **pernah diberikan** (lihat catatan di bawah)       |
 | `total_poin_diberikan`               | Poin earn, dikurangi yang ditarik lewat pembatalan              |
 | `total_poin_ditukar`                 | Poin yang ditukar reward di transaksinya                        |
-| `jumlah_pembatalan`, `nilai_dibatalkan` | Pembatalan yang **ia proses** — lihat §5                      |
+| `jumlah_pembatalan`, `nilai_dibatalkan` | Pembatalan yang **ia proses**, lihat §5                      |
 | `jumlah_transaksi_dibuat_kasir_lain` | Serah terima pesanan saat pergantian akun                       |
 
 Plus blok `meta` berisi total seluruh kasir, supaya angkanya bisa direkonsiliasi
@@ -137,14 +137,14 @@ dengan dashboard tanpa manager menjumlahkan barisnya sendiri.
 
 **Dua kolom yang paling gampang terlewat tapi justru paling berguna:**
 
-- **`jumlah_transaksi_dibuat_kasir_lain`** — tanpa ini, laporan Kasir 2 terlihat
+- **`jumlah_transaksi_dibuat_kasir_lain`**: tanpa ini, laporan Kasir 2 terlihat
   seolah semua pesanan dia yang buat.
-- **`jumlah_pembatalan`** — pembatalan berlebih dari satu akun adalah pola yang
+- **`jumlah_pembatalan`**: pembatalan berlebih dari satu akun adalah pola yang
   perlu terlihat, dan inilah gunanya alasan pembatalan diwajibkan.
 
 **Catatan `total_diskon`:** dicatat sebesar yang benar-benar diberikan saat
 transaksi terjadi, **tidak** dikurangi pembatalan. Potongannya memang pernah
-diberikan, dan angka ini dipakai mengevaluasi kebijakan diskon — bukan menghitung
+diberikan, dan angka ini dipakai mengevaluasi kebijakan diskon, bukan menghitung
 uang masuk.
 
 ---
@@ -158,7 +158,7 @@ Ini gampang tertukar, jadi ditulis eksplisit:
 | `jumlah_pembatalan` + `nilai_dibatalkan`  | "Akun ini membatalkan berapa kali periode ini?"  | Yang **memproses**  |
 | Pengurang `total_omzet`                   | "Berapa penjualan akun ini yang akhirnya gugur?" | Yang **menjual**    |
 
-Pada kasus normal — kasir yang sama menjual dan membatalkan — kedua angka itu
+Pada kasus normal, kasir yang sama menjual dan membatalkan, kedua angka itu
 sama besar, jadi bedanya hanya terasa saat pembatalan menyeberangi akun.
 
 Kenapa pengurang omzet tidak ikut mengejar akun pemroses: kalau Kasir 2
@@ -168,14 +168,14 @@ direkonsiliasi dengan dashboard. Angka yang tidak bisa direkonsiliasi lebih
 berbahaya daripada pembagian yang sedikit lebih rumit dijelaskan.
 
 Pembatalan dipotong berdasarkan **tanggal dokumen pembatalannya**, bukan tanggal
-penjualan aslinya — karena yang ditanya adalah "siapa membatalkan apa periode
+penjualan aslinya, karena yang ditanya adalah "siapa membatalkan apa periode
 ini".
 
 ---
 
 ## 6. Export Excel per kasir
 
-`GET /api/laporan/export?kasir_user_id=` — manager saja. Tanpa param itu, semua
+`GET /api/laporan/export?kasir_user_id=`, manager saja. Tanpa param itu, semua
 kasir ikut seperti sebelumnya.
 
 Tiga kebutuhan yang diminta, dan apa yang menjaminnya:
@@ -206,7 +206,7 @@ detail. Satu baris per kombinasi **tanggal × kasir**, diurutkan tanggal lalu na
 | Jumlah Pembatalan            | Pembatalan yang diproses akun itu pada tanggal itu                |
 | Nilai Dibatalkan (Rp)        | Nilai penjualan yang gugur                                        |
 
-Ada baris **TOTAL** di akhir tiap tanggal, dan satu **TOTAL KESELURUHAN** —
+Ada baris **TOTAL** di akhir tiap tanggal, dan satu **TOTAL KESELURUHAN**,
 manager membaca file ini tanpa membuat pivot sendiri.
 
 > **Cash + QRIS tidak selalu sama dengan Total Omzet.** Baris impor CSV historis
@@ -224,20 +224,20 @@ Baris historis **tetap dimasukkan** di sheet `Rekap Kasir`, bukan dibuang. Kalau
 dibuang, total sheet ini tidak akan pernah cocok dengan `Ringkasan`, dan manager
 yang menjumlahkan sendiri akan mengira ada data hilang.
 
-Di sheet `Detail Transaksi`, kolom Kasir untuk baris historis diisi `'—'` —
+Di sheet `Detail Transaksi`, kolom Kasir untuk baris historis diisi `'—'`,
 sel kosong terbaca sebagai data hilang, sedangkan ini memang transaksi dari
 sebelum SoyaCore dipakai.
 
 **Invarian yang diuji:** tidak ada satu pun baris berawalan `TRX-` dengan
 `kasir_user_id` kosong. Proyeksi hanya terjadi di `bayar()`, dan di sana selalu
-ada user terautentikasi — baris `TRX-` tanpa kasir berarti ada yang bocor.
+ada user terautentikasi, baris `TRX-` tanpa kasir berarti ada yang bocor.
 
 ### Sheet yang dikeluarkan saat difilter kasir
 
 `RFM Pelanggan` dan `Rekomendasi Switch` adalah analisis **segmen pelanggan** dari
 data historis dan tidak punya dimensi kasir sama sekali. Kalau tetap disertakan
 pada export yang difilter satu kasir, isinya akan menampilkan seluruh pelanggan
-toko — angka yang tidak tersaring di dalam file yang judulnya menyebut satu nama
+toko, angka yang tidak tersaring di dalam file yang judulnya menyebut satu nama
 kasir. Karena itu keduanya **dikeluarkan** saat `kasir_user_id` dikirim.
 
 Nama kasir juga masuk ke nama file:
@@ -253,7 +253,7 @@ Seluruh angka di dokumen ini memakai aturan tunggal:
 > WIB.** Transaksi pukul 23.30 tanggal 5 masuk ke tanggal 5, bukan tanggal 6.
 
 `config('app.timezone')` di repo ini masih `'UTC'`, jadi `whereDate()` memotong
-hari pada **07.00 WIB** — transaksi pagi akan jatuh ke tanggal sebelumnya. Karena
+hari pada **07.00 WIB**, transaksi pagi akan jatuh ke tanggal sebelumnya. Karena
 itu semua konversi waktu→tanggal lewat satu helper, `App\Support\WaktuToko`, dan
 tidak ada satu pun query yang memakai `whereDate()` pada kolom datetime lagi.
 

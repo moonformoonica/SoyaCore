@@ -1,13 +1,17 @@
 /* ============================================================
-   SoyaScan — self-order pelanggan (mobile).
+   SoyaScan, self-order pelanggan (mobile).
    ============================================================ */
 (function () {
     'use strict';
 
     const API_BASE = '/api';
 
+    // `encodeURIComponent` WAJIB di sini. Kode pesanan diawali `#`, dan di URL
+    // tanda itu memulai fragment yang tidak pernah dikirim ke server: menyisipkan
+    // `#A02` mentah membuat request jatuh ke `/api/order/` tanpa parameter, lalu
+    // 404-nya ditelan `if (!res.ok) return` dan layar pelanggan diam selamanya.
     function statusEndpoint(kode) {
-        return `${API_BASE}/order/${kode}`;
+        return `${API_BASE}/order/${encodeURIComponent(kode)}`;
     }
     function isPaidStatus(json) {
         const status = (json.data ? json.data.status : json.status) || '';
@@ -427,7 +431,7 @@
         $('doneCheck').classList.add('is-success');
         $('doneTitle').textContent = 'Pesanan Berhasil! 🎉';
         $('doneSub').textContent = 'Pesananmu sudah masuk ke kasir';
-        // Sudah dibayar — QRIS-nya tidak relevan lagi.
+        // Sudah dibayar, QRIS-nya tidak relevan lagi.
         $('doneQris').hidden = true;
     }
 
@@ -455,7 +459,24 @@
         }).join('');
     }
 
-    function tampilkanQris(metode, qrisUrl) {
+    // QRIS toko yang berlaku SEKARANG, bukan salinan yang ikut tersimpan saat
+    // pesanan dibuat. `qris_url` di response POST /api/order cuma potret pada
+    // detik itu, jadi pesanan yang dibuat sebelum manager mengunggah QRIS akan
+    // menempel di "Kode QRIS belum tersedia" selamanya, termasuk setelah layar
+    // ini dibuka ulang. Gagal ambil dibiarkan diam: pesan cadangan "bayar di
+    // kasir" sudah menjadi jalan keluar yang benar.
+    async function ambilQrisToko() {
+        try {
+            const res = await fetch(`${API_BASE}/toko`, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) return null;
+
+            return (await res.json()).data?.qris_url ?? null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function tampilkanQris(metode, qrisUrl) {
         const wrap = $('doneQris');
         const img = $('doneQrisImg');
         const note = $('doneQrisNote');
@@ -468,6 +489,18 @@
         }
 
         wrap.hidden = false;
+
+        if (!qrisUrl) {
+            // Teks sementara supaya kartunya tidak sempat menampilkan "belum
+            // tersedia" padahal QRIS-nya masih dalam perjalanan.
+            note.textContent = 'Memuat kode QRIS…';
+            note.hidden = false;
+            img.hidden = true;
+            unduh.hidden = true;
+            hint.hidden = true;
+
+            qrisUrl = await ambilQrisToko();
+        }
 
         if (qrisUrl) {
             img.src = qrisUrl;

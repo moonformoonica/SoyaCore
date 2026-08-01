@@ -1,7 +1,7 @@
-# Breakdown Pekerjaan Frontend — Revisi Pembimbing (kontrak v1.3)
+# Breakdown Pekerjaan Frontend, Revisi Pembimbing (kontrak v1.3)
 
 > **Untuk: Ghefira** (SoyaScan + dashboard/halaman manager)
-> **Backend: sudah selesai & dites** — 249 feature test lulus, branch
+> **Backend: sudah selesai & dites**: 249 feature test lulus, branch
 > `revisi-pembimbing-backend`.
 >
 > Dokumen ini menerjemahkan revisi backend menjadi daftar kerja frontend.
@@ -11,7 +11,7 @@
 **Catatan pembagian tugas.** Dokumen repo menyebut Ghefira memegang SoyaScan
 (`local-preview-setup.md` §"Untuk Ghefira") **dan** halaman manager
 (`kontrak-dashboard-v1.md`). Bagian **§4 (Kasir)** saya pisahkan karena
-kepemilikannya belum tertulis di mana pun — tolong dipastikan dulu siapa yang
+kepemilikannya belum tertulis di mana pun, tolong dipastikan dulu siapa yang
 mengerjakannya.
 
 ---
@@ -35,7 +35,7 @@ mengerjakannya.
 
 ---
 
-## 1. ⚠️ P0 — SoyaScan: `nomor_meja` dihapus (BREAKING)
+## 1. ⚠️ P0, SoyaScan: `nomor_meja` dihapus (BREAKING)
 
 Ini **bukan fitur baru, ini perbaikan wajib**. Backend sudah menghapus
 `nomor_meja` sepenuhnya, termasuk kolomnya di database. Checkout SoyaScan yang
@@ -48,13 +48,13 @@ yang sudah tidak berarti.
 | ----- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
 | ~318  | `if (!nama \|\| !nomorWa \|\| !nomorMeja) return showCartError('Nama, nomor WhatsApp, dan nomor meja wajib diisi.')` | Hapus `nomorMeja` dari kondisi **dan** dari pesan errornya |
 | ~332  | `nomor_meja: nomorMeja,` di body `POST /api/order`                      | Hapus baris ini                                            |
-| ~344  | `$('doneMeja').textContent = json.nomor_meja ?? nomorMeja;`             | Hapus — `json.nomor_meja` sekarang `undefined`              |
-| ~383  | Prefill `?meja=5` dari QR                                               | Hapus — QR menu yang digenerate backend tidak lagi berisi `?meja` |
+| ~344  | `$('doneMeja').textContent = json.nomor_meja ?? nomorMeja;`             | Hapus, `json.nomor_meja` sekarang `undefined`              |
+| ~383  | Prefill `?meja=5` dari QR                                               | Hapus, QR menu yang digenerate backend tidak lagi berisi `?meja` |
 
-**File: `resources/views/scan/index.blade.php`** — hapus input nomor meja
+**File: `resources/views/scan/index.blade.php`**, hapus input nomor meja
 (`fMeja`) dan elemen `doneMeja` di layar sukses.
 
-**Juga: `routes/web.php`** masih berkomentar `// QR meja: /scan?meja=5` — tolong
+**Juga: `routes/web.php`** masih berkomentar `// QR meja: /scan?meja=5`, tolong
 diperbarui jadi `/scan` saja.
 
 > Backend tetap menerima request yang masih mengirim `nomor_meja` (nilainya
@@ -63,7 +63,7 @@ diperbarui jadi `/scan` saja.
 
 ---
 
-## 2. P1 — SoyaScan
+## 2. P1, SoyaScan
 
 ### 2.1 Pilihan sugar & ice setelah pilih menu
 
@@ -98,7 +98,7 @@ membawa flag-nya sendiri:
                "keterangan": "Dimaniskan dengan Gula Kelapa, bukan gula pasir." } }
 ```
 
-#### ⚠️ Label sugar hanya berisi aksinya — nama pemanisnya per menu
+#### ⚠️ Label sugar hanya berisi aksinya, nama pemanisnya per menu
 
 Perhatikan `opsi_sugar` di atas: labelnya `"Less"`, **bukan** `"Less Sugar"`. Itu
 disengaja, karena pemanis tiap menu tidak sama:
@@ -109,7 +109,7 @@ disengaja, karena pemanis tiap menu tidak sama:
 | Honey Lemon                 | `Special Madu Lemon`      |
 | Mango Monggo                | `Special Mangga Gandaria` |
 
-Gres'Soy memakai **Gula Kelapa**, bukan gula pasir — itu nilai jual produknya, jadi
+GresSOY memakai **Gula Kelapa**, bukan gula pasir, itu nilai jual produknya, jadi
 harus terlihat pelanggan. Tapi Soya Tropical dimaniskan buah/madu, jadi label
 "Less Sugar" di Honey Lemon menjanjikan sesuatu yang tidak ada di gelasnya, dan
 barista tidak tahu apa yang harus dikurangi.
@@ -133,7 +133,7 @@ Normal Less No Extra          Normal Less No Extra
 `pemanis` diturunkan backend dari komponen terakhir kolom `rasa`, jadi menu baru
 dengan pemanis lain otomatis benar tanpa perubahan kode di kedua sisi.
 
-#### Aturan tampil: SoyaScan vs layar kasir — BEDA
+#### Aturan tampil: SoyaScan vs layar kasir, BEDA
 
 Ini keputusan pemilik produk, dan dua layarnya sengaja tidak sama:
 
@@ -143,7 +143,7 @@ Ini keputusan pemilik produk, dan dua layarnya sengaja tidak sama:
 | **Pemesanan kasir**      | ✅ tampil     | ✅ tampil    | ⚠️ **hanya bila `pemanis.khusus`** |
 
 Kenapa berbeda: pelanggan perlu tahu minumannya dimaniskan **Gula Kelapa**, bukan
-gula pasir — itu nilai jual produknya. Kasir sudah hafal itu, jadi mengulanginya di
+gula pasir, itu nilai jual produknya. Kasir sudah hafal itu, jadi mengulanginya di
 setiap item hanya memperlambat input saat ada antrean. Tapi kasir **wajib** melihat
 judulnya untuk Honey Lemon & Mango Monggo, karena kalau tidak dia tidak tahu kedua
 menu itu diracik madu/mangga, bukan gula.
@@ -162,13 +162,13 @@ Backend mengirim boolean untuk itu:
 // Layar kasir
 if (menu.pemanis.khusus) tampilkanJudulPemanis(menu.pemanis.jenis);
 
-// SoyaScan — tanpa syarat
+// SoyaScan, tanpa syarat
 tampilkanJudulPemanis(menu.pemanis.jenis);
 ```
 
 ⚠️ **Pakai `pemanis.khusus`, jangan `pemanis.jenis !== 'Gula Kelapa'`.**
 Perbandingan string langsung salah begitu nama resminya diubah, dan salahnya tidak
-memicu error apa pun — judulnya hanya hilang atau muncul di tempat yang keliru.
+memicu error apa pun, judulnya hanya hilang atau muncul di tempat yang keliru.
 
 Hasil praktisnya di layar kasir:
 
@@ -197,17 +197,17 @@ Kirim per item di `POST /api/order`:
 ]
 ```
 
-Keduanya **opsional** — item tanpa pilihan tetap sah. Response order memantulkan
+Keduanya **opsional**, item tanpa pilihan tetap sah. Response order memantulkan
 `level_sugar_label` / `level_ice_label` yang siap tampil (mis.
 `"Less Gula Kelapa"`), jadi layar sukses tidak perlu menyusun labelnya sendiri.
 
 ⚠️ **Kalau ini dikirim untuk menu yang tidak boleh**, backend menolak `422`
-`opsi_tidak_tersedia` — sengaja tidak diabaikan diam-diam, supaya salah kirim
+`opsi_tidak_tersedia`, sengaja tidak diabaikan diam-diam, supaya salah kirim
 kelihatan. Jadi kalau UI-nya sudah benar mengikuti flag, error ini tidak akan
 pernah muncul.
 
 **Keranjang: item yang sama dengan opsi berbeda adalah dua baris terpisah.**
-Backend tidak menggabungkan Original *less sugar* dengan Original *normal* —
+Backend tidak menggabungkan Original *less sugar* dengan Original *normal*,
 itu dua instruksi berbeda buat barista. Keranjang di frontend perlu ikut
 memperlakukan `menu_id + level_sugar + level_ice` sebagai kunci baris, bukan
 `menu_id` saja.
@@ -218,7 +218,7 @@ Sesuai keputusan pemilik produk, **SoyaScan tidak punya field catatan per item.*
 Backend tidak menerimanya (kalau dikirim, diabaikan dan tidak disimpan), dan ada
 test yang menjaga itu tetap begitu. Jangan menambahkan input catatan di SoyaScan.
 
-Permintaan bebas pelanggan disampaikan langsung ke kasir di konter — kasir punya
+Permintaan bebas pelanggan disampaikan langsung ke kasir di konter, kasir punya
 field `catatan` sendiri.
 
 ### 2.3 Tampilan QRIS saat pembayaran
@@ -237,13 +237,13 @@ Tiga kondisi yang harus ditangani:
 | ------------------------------ | ----------------------------------------------------------- |
 | `metode_bayar = "qris"`, `qris_url` berisi URL | Tampilkan gambarnya di layar pembayaran      |
 | `metode_bayar = "qris"`, `qris_url` = `null`   | Manager belum unggah QRIS → tampilkan pesan "bayar di kasir", **jangan** `<img>` kosong |
-| `metode_bayar = "cash"` atau tidak dipilih     | Key `qris_url` **tidak ada** di response — jangan diakses buta |
+| `metode_bayar = "cash"` atau tidak dipilih     | Key `qris_url` **tidak ada** di response, jangan diakses buta |
 
 Tombol QRIS-nya sudah ada di `resources/views/scan/index.blade.php` (~baris 110);
 yang belum ada layar penampil gambarnya.
 
 > QRIS ini **gambar statis merchant**. Tidak ada polling status pembayaran, tidak
-> ada callback — jangan bangun UI yang menunggu konfirmasi otomatis.
+> ada callback, jangan bangun UI yang menunggu konfirmasi otomatis.
 
 ### 2.4 Sidebar: tambah logo landing page
 
@@ -251,7 +251,7 @@ Murni frontend, tidak ada endpoint terkait.
 
 ---
 
-## 2b. P1 — Pencarian nomor HP pelanggan (kasir & manager)
+## 2b. P1, Pencarian nomor HP pelanggan (kasir & manager)
 
 Backend sekarang **menjamin** satu kontrak yang sama di semua pencarian nomor:
 pelanggan terdaftar ketemu baik dari **nomor lengkap** maupun dari **4 digit
@@ -265,7 +265,7 @@ terakhir**. Ini sudah ada test-nya, jadi UI boleh mengandalkannya sepenuhnya.
 
 Berlaku di dua endpoint:
 
-### 2b.1 `GET /api/customers/cari?no_wa=` — auto-detect pelanggan (halaman Pesanan)
+### 2b.1 `GET /api/customers/cari?no_wa=`, auto-detect pelanggan (halaman Pesanan)
 
 ```json
 { "data": [ { "id": 1, "nama": "Budi Santoso", "no_wa": "6281234567890", "poin": 400 } ] }
@@ -274,24 +274,24 @@ Berlaku di dua endpoint:
 Yang perlu diperhatikan di UI:
 
 - **Minimal 3 digit** sebelum request dikirim. Di bawah itu backend mengembalikan
-  `data: []` (bukan error) — sengaja, supaya mengetik 1 digit tidak menumpahkan
+  `data: []` (bukan error), sengaja, supaya mengetik 1 digit tidak menumpahkan
   seluruh daftar pelanggan. Jangan tampilkan "tidak ditemukan" untuk kondisi ini,
   tampilkan saja belum ada saran.
 - **Hasilnya array, bukan satu objek.** Empat digit terakhir bisa cocok ke lebih
   dari satu pelanggan (`…7890` dan `…17890`). Render sebagai daftar pilihan, jangan
-  auto-pilih `data[0]` — salah pilih pelanggan berarti poin masuk ke akun orang lain.
+  auto-pilih `data[0]`, salah pilih pelanggan berarti poin masuk ke akun orang lain.
 - **Nomor yang persis sama selalu di urutan pertama.** Jadi kalau kasir mengetik
   nomor lengkap, `data[0]` memang yang dimaksud.
 - `data: []` = pelanggan baru. Itu **state normal** saat kasir masih mengetik,
-  bukan error — jangan tampilkan pesan gagal.
+  bukan error, jangan tampilkan pesan gagal.
 - `nama` juga bisa dipakai (`?nama=budi`), min 2 karakter, dan sekarang
   **case-insensitive**.
 - Butuh auth (kasir/manager). Jangan dipanggil dari SoyaScan.
 
-### 2b.2 `GET /api/transaksi?cari=` — riwayat transaksi pelanggan
+### 2b.2 `GET /api/transaksi?cari=`, riwayat transaksi pelanggan
 
 Param `cari` yang sama mencocokkan **tiga hal sekaligus**: `kode_pesanan`, nama
-customer, dan nomor WA customer. Jadi satu kotak pencarian cukup — user tidak
+customer, dan nomor WA customer. Jadi satu kotak pencarian cukup, user tidak
 perlu memilih dulu "cari berdasarkan apa".
 
 ```
@@ -302,7 +302,7 @@ GET /api/transaksi?cari=%23K001       → cocok ke kode pesanan (# di-encode)
 ```
 
 `meta.jumlah_transaksi` / `total_omzet` / `total_qty` ikut menyempit sesuai hasil
-pencarian — pakai itu untuk header "N transaksi · Rp X" di atas daftar.
+pencarian, pakai itu untuk header "N transaksi · Rp X" di atas daftar.
 
 Gabungkan dengan filter lain kalau perlu, mis. riwayat pelanggan yang lunas saja:
 `?cari=7890&status=lunas&urut=terlama`.
@@ -314,12 +314,12 @@ Ini disengaja: endpoint itu publik tanpa login, jadi kalau 4 digit bisa dipakai,
 siapa pun bisa menebak-nebak dan memanen nama + saldo poin pelanggan lain.
 
 Konsekuensi untuk UI SoyaScan: input cek poin harus meminta nomor lengkap, dan
-`404 pelanggan_tidak_ditemukan` ditampilkan sebagai "nomor belum terdaftar" —
+`404 pelanggan_tidak_ditemukan` ditampilkan sebagai "nomor belum terdaftar",
 jangan bikin fitur "cari nomor saya" dengan sebagian digit di sana.
 
 ---
 
-## 3. P1/P2 — Halaman Manager
+## 3. P1/P2, Halaman Manager
 
 ### 3.1 Bar chart tanpa bucket "other" (P1)
 
@@ -336,7 +336,7 @@ Tambahkan `?sembunyikan_tidak_diketahui=true` pada:
 Param itu membuang bucket tersebut dari hasil **dan** dari perhitungan
 persentasenya, jadi tidak ada lagi selisih yang tidak bisa dijelaskan.
 
-> Datanya tidak dihapus dari database — ini keputusan tampilan. Kalau nanti ada
+> Datanya tidak dihapus dari database, ini keputusan tampilan. Kalau nanti ada
 > yang perlu merekonsiliasi total, panggil tanpa param itu.
 
 ### 3.2 Tren penjualan: tanggal → hari (P1)
@@ -360,9 +360,9 @@ grafik tidak lagi menyambung dua titik berjauhan dan membaca naik-turun yang tid
 terjadi. Chart-nya tidak perlu mengisi celah sendiri lagi.
 
 > Rentang yang **sama sekali** tidak punya data tetap mengembalikan `data: []`
-> dengan `data_tersedia: false` — pakai itu untuk empty state.
+> dengan `data_tersedia: false`, pakai itu untuk empty state.
 
-⚠️ Endpoint ini **belum dipanggil frontend sama sekali** — jadi ini pekerjaan
+⚠️ Endpoint ini **belum dipanggil frontend sama sekali**, jadi ini pekerjaan
 "bangun chart-nya", bukan sekadar ganti label.
 
 ### 3.3 Edit menu: cup kiri, botol kanan (P1)
@@ -372,21 +372,21 @@ dari string.
 
 Dua cara, pilih yang paling pas dengan struktur halaman:
 
-1. **Satu request, pisah di frontend** — `GET /api/menu-internal` sekarang
+1. **Satu request, pisah di frontend**, `GET /api/menu-internal` sekarang
    mengembalikan `golongan_ukuran` (`"cup"` | `"botol"` | `"lainnya"`) per menu.
-2. **Dua request** — `GET /api/menu-internal?golongan=cup` dan `?golongan=botol`.
+2. **Dua request**, `GET /api/menu-internal?golongan=cup` dan `?golongan=botol`.
 
 **Urutan ukuran sudah diperbaiki di backend** menjadi
 `Hot → Reguler → Large → 250ml → 500ml → 1000ml`. Sebelumnya alfabetis
 (`1000ml, 250ml, 500ml, Hot, Large, Reguler`). **Jangan di-sort ulang di
-frontend** — urutan dari API sudah benar, me-sort lagi akan mengembalikan
+frontend**, urutan dari API sudah benar, me-sort lagi akan mengembalikan
 kekacauan itu.
 
 Perhatikan `golongan_ukuran: "lainnya"` (Dessert & Cookies, `ukuran` string
-kosong) — tentukan mau ditaruh di kolom mana, jangan sampai hilang dari layar.
+kosong), tentukan mau ditaruh di kolom mana, jangan sampai hilang dari layar.
 
 File terkait: `resources/js/manager/menu/index.js`, `edit.js`, `create.js`.
-`create.js` punya `UKURAN_PRESET` sendiri (~baris 117) — pastikan urutannya
+`create.js` punya `UKURAN_PRESET` sendiri (~baris 117), pastikan urutannya
 disamakan.
 
 ### 3.4 Sidebar lawan arah (P1)
@@ -396,7 +396,7 @@ Murni frontend/CSS.
 ### 3.5 Halaman transaksi: filter + ringkasan (P2)
 
 Saat ini `resources/js/manager/transaksi.js` (36 baris) **hanya berisi widget
-dropdown** — belum ada satu pun panggilan API. Jadi halaman transaksi manager
+dropdown**, belum ada satu pun panggilan API. Jadi halaman transaksi manager
 praktis harus dibangun.
 
 `GET /api/transaksi` sekarang menerima:
@@ -410,14 +410,14 @@ praktis harus dibangun.
 | `sumber`                       | `kasir` \| `self_order`                                              |
 | `metode_bayar`                 | `cash` \| `qris`                                                     |
 | `ada_redeem`                   | `true` \| `false`                                                    |
-| `cari`                         | kode pesanan / nama customer / no WA — **nomor lengkap maupun 4 digit terakhir**, lihat §2b.2 |
+| `cari`                         | kode pesanan / nama customer / no WA, **nomor lengkap maupun 4 digit terakhir**, lihat §2b.2 |
 | `total_min`, `total_max`       | rentang nilai transaksi                                              |
 | `dibuat_oleh`, `dibayar_oleh`  | per akun kasir                                                       |
 | `per_page`                     | maks 200                                                             |
 
 Semua opsional dan bisa digabung. `tanggal` yang lama tetap didukung.
 
-**Ringkasan ikut berubah saat difilter** — ini yang membuat filternya berguna:
+**Ringkasan ikut berubah saat difilter**, ini yang membuat filternya berguna:
 
 ```json
 "meta": {
@@ -439,12 +439,12 @@ terfilter. Keduanya sama isinya di sini, tapi jangan tertukar maknanya.
   "kasir":            { "id": 2, "nama": "Kasir Dua" } }
 ```
 
-- `sumber_label` sudah siap tampil (`"Kasir"` / `"SoyaScan"`) — **jangan** memetakan
+- `sumber_label` sudah siap tampil (`"Kasir"` / `"SoyaScan"`), **jangan** memetakan
   `self_order` sendiri, nanti ejaannya beda-beda antar halaman.
 - `kasir` (key lama) **tetap ada dan tidak berubah artinya** untuk kode yang sudah
   jalan: penyelesai bila ada, jatuh ke pembuat bila belum dibayar.
 - Tampilkan `kasir_pembuat` vs `kasir_penyelesai` berdampingan hanya kalau
-  keduanya berbeda — itu sinyal pesanan berpindah tangan saat pergantian akun.
+  keduanya berbeda, itu sinyal pesanan berpindah tangan saat pergantian akun.
 
 > ⚠️ **JANGAN memfilter antrean pesanan `pending` ke akun sendiri.** Kalau
 > `?user_id=` / `?dibuat_oleh=` dipasang sebagai default di antrean, Kasir 2 tidak
@@ -452,7 +452,7 @@ terfilter. Keduanya sama isinya di sini, tapi jangan tertukar maknanya.
 > yang sudah dibuat. Filter per-akun hanya boleh default di **kartu statistik**.
 > Detail: [`laporan-kasir.md`](laporan-kasir.md) §3.
 
-### 3.6 Laporan perbandingan kasir — halaman baru (P2)
+### 3.6 Laporan perbandingan kasir, halaman baru (P2)
 
 `GET /api/laporan/kasir` (manager only). Param tanggal sama persis dengan §3.5.
 
@@ -470,14 +470,14 @@ jumlah_transaksi_dibuat_kasir_lain
 Plus `meta` berisi total seluruh kasir.
 
 Dua kolom yang paling gampang dianggap tidak penting tapi justru inti permintaan
-pembimbing — tolong jangan dipotong dari tabel:
+pembimbing, tolong jangan dipotong dari tabel:
 
-- **`jumlah_transaksi_dibuat_kasir_lain`** — tanpa ini, laporan Kasir 2 terlihat
+- **`jumlah_transaksi_dibuat_kasir_lain`**: tanpa ini, laporan Kasir 2 terlihat
   seolah semua pesanan dia yang buat.
-- **`jumlah_pembatalan`** — pembatalan berlebih dari satu akun adalah pola yang
+- **`jumlah_pembatalan`**: pembatalan berlebih dari satu akun adalah pola yang
   perlu terlihat.
 
-> Tidak ada UI shift (buka/tutup shift, modal awal, hitung kas) — memang tidak
+> Tidak ada UI shift (buka/tutup shift, modal awal, hitung kas), memang tidak
 > dibangun, sesuai keputusan pemilik produk. Jangan bikin placeholder-nya.
 
 Arti tiap kolom & kenapa `nilai_dibatalkan` bisa beda dari pengurang omzet:
@@ -499,7 +499,7 @@ Dua hal yang perlu dijelaskan di UI-nya:
 
 - File berisi **7 sheet**; kalau difilter satu kasir jadi **5 sheet** (RFM &
   Rekomendasi Switch dikeluarkan karena keduanya analisis segmen pelanggan tanpa
-  dimensi kasir — kalau ikut, isinya data seluruh toko di file yang berjudul satu
+  dimensi kasir, kalau ikut, isinya data seluruh toko di file yang berjudul satu
   nama kasir).
 - Sheet baru **`Rekap Kasir`** ada di posisi kedua, tepat setelah `Ringkasan`.
 
@@ -513,7 +513,7 @@ Dua hal yang perlu dijelaskan di UI-nya:
 | `GET /api/pengaturan/toko/qr-menu?format=svg\|png&ukuran=512` | QR untuk dicetak & ditempel di meja           |
 
 - Validasi unggah: `jpg`/`jpeg`/`png`, maks **2 MB**. Non-gambar → `422`.
-- `qr-menu` mengembalikan **berkas gambar**, bukan JSON base64 — jadi cukup
+- `qr-menu` mengembalikan **berkas gambar**, bukan JSON base64, jadi cukup
   `<img src="...">` atau link download/print. Default `svg` (tetap tajam saat
   dicetak); `ukuran` 64–2048 px.
 - Keduanya **manager-only** → kasir dapat `403 tidak_berwenang`. Sembunyikan menunya
@@ -521,12 +521,12 @@ Dua hal yang perlu dijelaskan di UI-nya:
 
 ### 3.9 Laporan langsung berubah saat diklik (P2)
 
-Endpointnya sudah ada sejak lama — ini murni menyambungkan filter/klik ke
+Endpointnya sudah ada sejak lama, ini murni menyambungkan filter/klik ke
 `fetch` ulang. Tidak ada perubahan backend untuk butir ini.
 
 ---
 
-## 4. Halaman Kasir — kepemilikan perlu dipastikan
+## 4. Halaman Kasir, kepemilikan perlu dipastikan
 
 Backend-nya siap, tapi belum jelas siapa yang mengerjakan UI-nya
 (`resources/js/kasir/pesanan.js` sudah ada).
@@ -543,10 +543,10 @@ POST /api/transaksi/{id}/pembatalan
 ```
 
 - `items` kosong / tidak dikirim = pembatalan **penuh**
-- **`alasan` wajib**, minimal 3 karakter — ini satu-satunya pagar terhadap
+- **`alasan` wajib**, minimal 3 karakter, ini satu-satunya pagar terhadap
   penyalahgunaan, jadi jangan diberi nilai default otomatis
 - Pembatalan **sebagian hanya untuk transaksi `lunas`**. Untuk pesanan yang belum
-  dibayar, arahkan ke ubah/hapus item yang sudah ada — backend menolak `422`
+  dibayar, arahkan ke ubah/hapus item yang sudah ada, backend menolak `422`
   `pembatalan_sebagian_butuh_lunas` kalau dipaksa
 
 Response `201` memuat yang perlu langsung diucapkan ke pelanggan:
@@ -557,7 +557,7 @@ Response `201` memuat yang perlu langsung diucapkan ke pelanggan:
   "saldo_poin_pelanggan": 84 }
 ```
 
-Tampilkan `saldo_poin_pelanggan` di layar konfirmasi — itu sebabnya field ini ada
+Tampilkan `saldo_poin_pelanggan` di layar konfirmasi, itu sebabnya field ini ada
 di response, supaya kasir tidak perlu membuka halaman lain sementara pelanggannya
 masih berdiri di depan konter. Isinya `null` untuk transaksi walk-in.
 
@@ -566,7 +566,7 @@ Aturan lengkap & daftar kode error: [`pembatalan-pesanan.md`](pembatalan-pesanan
 
 ### 4.2 Input sugar & ice di panel kasir
 
-Aturan dan flag-nya **sama persis** dengan SoyaScan (§2.1) — kasir harus bisa
+Aturan dan flag-nya **sama persis** dengan SoyaScan (§2.1), kasir harus bisa
 mencatat hal yang sama seperti pelanggan. Kirim `level_sugar` / `level_ice` di
 `POST /api/transaksi/{id}/items` dan `PATCH .../items/{item}`.
 
@@ -582,7 +582,7 @@ perlu ikut tercetak di nota supaya barista membacanya.
 Supaya tidak ada yang membangun sesuatu yang sudah diputuskan di luar lingkup:
 
 - ❌ Field catatan/notes di SoyaScan (§2.2)
-- ❌ Pencarian nomor sebagian di SoyaScan (`/api/loyalty/{nomorWa}`) — §2b.3
+- ❌ Pencarian nomor sebagian di SoyaScan (`/api/loyalty/{nomorWa}`), §2b.3
 - ❌ Normalisasi/pembersihan nomor di frontend sebelum dikirim. Backend sudah
   menormalkan `0812…`/`+62…`/`812…` ke `62…`; kalau frontend ikut "membantu",
   potongan 4 digit terakhir justru rusak (`8122` jadi `628122` yang tidak cocok)
@@ -596,10 +596,10 @@ Supaya tidak ada yang membangun sesuatu yang sudah diputuskan di luar lingkup:
 
 ## 6. Sebelum mulai
 
-1. Backend ada di branch `revisi-pembimbing-backend` — pastikan sudah di-merge/deploy
+1. Backend ada di branch `revisi-pembimbing-backend`, pastikan sudah di-merge/deploy
    sebelum menguji, terutama karena §1 bergantung padanya.
 2. **`php artisan storage:link` wajib dijalankan** di environment yang dipakai,
    kalau tidak `qris_url` mengembalikan 404 tanpa error apa pun di backend.
-3. Set `SOYASCAN_URL` di `.env` sebelum QR menu dicetak — QR yang sudah ditempel
+3. Set `SOYASCAN_URL` di `.env` sebelum QR menu dicetak, QR yang sudah ditempel
    di meja tidak bisa ditarik lagi.
 4. Setup dev/CORS: [`local-preview-setup.md`](local-preview-setup.md).

@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
- * Pembatalan / koreksi pesanan yang salah. BUKAN pengembalian uang — lihat
+ * Pembatalan / koreksi pesanan yang salah. BUKAN pengembalian uang, lihat
  * docs/pembatalan-pesanan.md.
  */
 class PembatalanController extends Controller
@@ -33,7 +33,7 @@ class PembatalanController extends Controller
         return response()->json([
             'data' => new PembatalanResource($pembatalan),
             'status_transaksi' => $transaksi->fresh()->status,
-            // Kasir perlu menyebutkan saldo terkini ke pelanggan saat itu juga —
+            // Kasir perlu menyebutkan saldo terkini ke pelanggan saat itu juga,
             // kalau tidak ada di response, dia harus membuka halaman lain
             // sementara pelanggannya masih berdiri di depan konter.
             'saldo_poin_pelanggan' => $this->saldoPoin($transaksi),
@@ -54,7 +54,7 @@ class PembatalanController extends Controller
     }
 
     /**
-     * Semua pembatalan (manager) — dipotong tanggal dokumen pembatalannya,
+     * Semua pembatalan (manager), dipotong tanggal dokumen pembatalannya,
      * bukan tanggal penjualan aslinya, karena yang ditanya adalah "siapa
      * membatalkan apa periode ini".
      */
@@ -81,7 +81,7 @@ class PembatalanController extends Controller
 
         // Ringkasan dihitung dari query SEBELUM paginate() menempelkan
         // limit/offset ke builder-nya, supaya angkanya mencakup seluruh hasil
-        // filter — bukan cuma halaman yang sedang dibuka.
+        // filter, bukan cuma halaman yang sedang dibuka.
         $meta = [
             'jumlah_pembatalan' => $query->clone()->count(),
             'nilai_dibatalkan' => (int) $query->clone()->sum('nilai_dibatalkan'),

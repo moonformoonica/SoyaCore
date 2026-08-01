@@ -8,7 +8,7 @@ namespace App\Support;
  * Ada di backend, bukan di frontend, karena dua hal ikut bergantung padanya:
  * tata letak halaman Edit Menu (cup kiri, botol kanan) dan ketersediaan opsi
  * sugar/ice ({@see OpsiMinuman}). Kalau frontend menebak golongan dari string
- * ukuran, penambahan ukuran baru harus diingat di dua tempat — dan yang satu
+ * ukuran, penambahan ukuran baru harus diingat di dua tempat, dan yang satu
  * pasti terlewat.
  *
  * Ukuran dessert & cookies tersimpan sebagai string kosong (bukan null) di
@@ -25,7 +25,7 @@ class GolonganUkuran
     /**
      * Urutan tampil yang benar menurut ukuran gelas/kemasan, dari kecil ke
      * besar. `orderBy('ukuran')` menghasilkan `1000ml, 250ml, 500ml, Hot,
-     * Large, Reguler` — alfabetis, dan tidak berarti apa pun buat manager yang
+     * Large, Reguler`, alfabetis, dan tidak berarti apa pun buat manager yang
      * sedang mengedit harga.
      *
      * Kunci di-lowercase supaya toleran terhadap ejaan "Regular"/"Reguler"
@@ -45,7 +45,7 @@ class GolonganUkuran
 
     /**
      * Ukuran yang tidak terdaftar di sini ikut jatuh ke urutan terakhir, jadi
-     * ukuran baru yang belum didaftarkan tetap tampil — hanya di paling bawah.
+     * ukuran baru yang belum didaftarkan tetap tampil, hanya di paling bawah.
      *
      * @var list<string>
      */

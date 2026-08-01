@@ -68,7 +68,7 @@ class AuthTest extends TestCase
             ->postJson('/api/logout')
             ->assertOk();
 
-        // Guard meng-cache user dalam satu proses test — reset supaya
+        // Guard meng-cache user dalam satu proses test, reset supaya
         // request berikutnya benar-benar re-resolve token dari DB.
         $this->app['auth']->forgetGuards();
 

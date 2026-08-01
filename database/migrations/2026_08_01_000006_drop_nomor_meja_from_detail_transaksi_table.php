@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
  * kolomnya.
  *
  * Boleh dihapus permanen karena SoyaScan masih dalam revisi dan belum berjalan
- * produksi — tidak ada riwayat pesanan asli yang perlu dijaga. Kalau nanti
+ * produksi, tidak ada riwayat pesanan asli yang perlu dijaga. Kalau nanti
  * ternyata dibutuhkan lagi, ia kembali sebagai kolom baru, bukan sebagai data
  * yang dipulihkan.
  *

@@ -1,4 +1,4 @@
-# Prompt Revisi Backend SoyaCore — Monica (Backend)
+# Prompt Revisi Backend SoyaCore, Monica (Backend)
 
 > **Cara pakai.** File ini sengaja disimpan **di luar folder project** supaya tidak
 > ikut ter-commit. Buka Claude Code di VS Code pada root repo SoyaCore, lalu:
@@ -10,16 +10,16 @@
 > Kalau path relatif tidak terbaca, salin-tempel isi file ini ke chat.
 >
 > **Sebelum mulai:** buat branch baru (`git checkout -b revisi-pembimbing-backend`).
-> Saat ini `master` masih menyimpan pekerjaan loyalty v2 yang belum di-commit —
+> Saat ini `master` masih menyimpan pekerjaan loyalty v2 yang belum di-commit,
 > jangan menimpanya.
 
 ---
 
 ## 1. Batas tanggung jawab
 
-Brief ini **hanya backend** (Laravel 12 — `app/`, `database/`, `routes/`,
+Brief ini **hanya backend** (Laravel 12, `app/`, `database/`, `routes/`,
 `tests/`, `docs/`). Yang menyentuh `resources/views`, `resources/js`, dan
-`resources/css` dikerjakan orang lain — **jangan disentuh**, kecuali disebut
+`resources/css` dikerjakan orang lain, **jangan disentuh**, kecuali disebut
 eksplisit.
 
 Peta seluruh butir revisi pembimbing dan siapa yang mengerjakan:
@@ -27,31 +27,31 @@ Peta seluruh butir revisi pembimbing dan siapa yang mengerjakan:
 | Butir revisi                                          | Status     | Penanggung jawab                      |
 | ----------------------------------------------------- | ---------- | ------------------------------------- |
 | **Manager**                                           |            |                                       |
-| Keterangan pemesanan lewat kasir (SoyaScan sudah ada) | ⬜         | **Backend — Blok A1**                 |
-| Bagian transaksi diatur tanggalnya                    | ⬜         | **Backend — Blok A2**                 |
-| Transaksi bisa memunculkan data yang ingin dilihat    | ⬜         | **Backend — Blok A3**                 |
-| Penambahan pesanan nambah ke dashboard                | ⬜         | **Backend — Blok B1** ⚠️ arsitektur   |
-| Bar chart "other" dihilangkan                         | ⬜         | **Backend — Blok B2** + frontend      |
-| Tren penjualan: tanggal → hari                        | ⬜         | **Backend — Blok B3** + frontend      |
+| Keterangan pemesanan lewat kasir (SoyaScan sudah ada) | ⬜         | **Backend, Blok A1**                 |
+| Bagian transaksi diatur tanggalnya                    | ⬜         | **Backend, Blok A2**                 |
+| Transaksi bisa memunculkan data yang ingin dilihat    | ⬜         | **Backend, Blok A3**                 |
+| Penambahan pesanan nambah ke dashboard                | ⬜         | **Backend, Blok B1** ⚠️ arsitektur   |
+| Bar chart "other" dihilangkan                         | ⬜         | **Backend, Blok B2** + frontend      |
+| Tren penjualan: tanggal → hari                        | ⬜         | **Backend, Blok B3** + frontend      |
 | Urutan poin loyalty termahal/termurah                 | ✅ selesai | —                                     |
-| Edit menu: kiri cup, kanan botol                      | ⬜         | **Backend — Blok F1** + frontend      |
+| Edit menu: kiri cup, kanan botol                      | ⬜         | **Backend, Blok F1** + frontend      |
 | Numerasi diskon (10/20/30/50%)                        | ✅ selesai | —                                     |
 | Poin gratis minuman dinaikkan                         | ✅ selesai | —                                     |
 | Numerasi redeem poin diatur ulang                     | ✅ selesai | —                                     |
 | Laporan langsung berubah saat diklik                  | ⬜         | Frontend (endpoint sudah ada)         |
-| Perbedaan data kasir 1 vs kasir 2 (per akun)          | ⬜         | **Backend — Blok C**                  |
+| Perbedaan data kasir 1 vs kasir 2 (per akun)          | ⬜         | **Backend, Blok C**                  |
 | Sidebar lawan arah                                    | ⬜         | Frontend saja                         |
 | **SoyaScan**                                          |            |                                       |
-| Keterangan pilih sugar **dan ice** setelah pilih menu | ⬜         | **Backend — Blok E1** + frontend      |
-| Nomor meja dihilangkan                                | ⬜         | **Backend — Blok E2** ⚠️ ubah kontrak |
-| Tampilan QRIS saat pembayaran                         | ⬜         | **Backend — Blok E3** + frontend      |
+| Keterangan pilih sugar **dan ice** setelah pilih menu | ⬜         | **Backend, Blok E1** + frontend      |
+| Nomor meja dihilangkan                                | ⬜         | **Backend, Blok E2** ⚠️ ubah kontrak |
+| Tampilan QRIS saat pembayaran                         | ⬜         | **Backend, Blok E3** + frontend      |
 | Sidebar tambah logo landing page                      | ⬜         | Frontend saja                         |
-| QR untuk scan menu                                    | ⬜         | **Backend — Blok E4**                 |
+| QR untuk scan menu                                    | ⬜         | **Backend, Blok E4**                 |
 | **Kasir**                                             |            |                                       |
-| Pembatalan/koreksi pesanan salah                      | ⬜         | **Backend — Blok D**                  |
+| Pembatalan/koreksi pesanan salah                      | ⬜         | **Backend, Blok D**                  |
 
 Urutan pengerjaan yang disarankan: **A → B → C → D → E → F**. Blok D
-(pembatalan) bergantung pada B1 dan C — jangan dikerjakan lebih dulu.
+(pembatalan) bergantung pada B1 dan C, jangan dikerjakan lebih dulu.
 
 ---
 
@@ -60,14 +60,14 @@ Urutan pengerjaan yang disarankan: **A → B → C → D → E → F**. Blok D
 Empat hal ini sudah diverifikasi langsung di kode. Salah paham di sini membuat
 implementasinya salah arah.
 
-### T1. Dashboard tidak membaca transaksi live — ini akar masalah butir "pesanan nambah ke dashboard"
+### T1. Dashboard tidak membaca transaksi live, ini akar masalah butir "pesanan nambah ke dashboard"
 
 `DashboardController` → `LaporanQuery` → model **`LaporanTransaksi`**, yaitu
 tabel `laporan_transaksi` yang diisi dari CSV historis
 (`database/seeders/data/Data_Transaksi_Bersih.csv`). Tabel POS live
 (`transaksi` + `detail_transaksi`) **tidak pernah dibaca dashboard sama sekali**.
 
-Jadi pesanan baru memang tidak akan pernah muncul — bukan bug polling atau
+Jadi pesanan baru memang tidak akan pernah muncul, bukan bug polling atau
 cache, tapi memang dua sumber data yang terpisah. Perbaikannya butuh keputusan
 arsitektur, bukan tambal kecil. Lihat Blok B1.
 
@@ -77,7 +77,7 @@ Kolom `sumber` (`'kasir'` | `'self_order'`) ada di **`detail_transaksi`**, bukan
 `transaksi`. `TransaksiResource` tidak mengeksposnya sama sekali, sehingga
 halaman transaksi manager tidak punya cara membedakan pesanan kasir vs SoyaScan.
 
-### T3. `nomor_meja` saat ini wajib — menghapusnya adalah perubahan kontrak
+### T3. `nomor_meja` saat ini wajib, menghapusnya adalah perubahan kontrak
 
 `StoreOrderRequest` memvalidasi `'nomor_meja' => ['required', 'string', 'max:20']`,
 `OrderService` menulisnya ke tiap baris `detail_transaksi`, dan `OrderController`
@@ -92,7 +92,7 @@ berstatus `pending` (`pastikanPending()`), seluruhnya, tanpa alasan, tanpa
 jejak siapa yang membatalkan. Transaksi yang sudah lunas belum bisa dikoreksi
 sama sekali. Lihat Blok D.
 
-### T6. ⚠️ `user_id` transaksi ditimpa saat pembayaran — jejak kasir pembuat hilang
+### T6. ⚠️ `user_id` transaksi ditimpa saat pembayaran, jejak kasir pembuat hilang
 
 `TransaksiController::store()` mengisi `user_id` dengan kasir pembuat, lalu
 `bayar()` **menimpanya** dengan kasir yang menandai lunas:
@@ -104,8 +104,8 @@ $transaksi->update([
 ]);
 ```
 
-Akibatnya, tepat pada skenario yang ingin dibedakan pembimbing — Kasir 1
-membuat pesanan, shift berganti, Kasir 2 yang menutup pembayaran — seluruh
+Akibatnya, tepat pada skenario yang ingin dibedakan pembimbing, Kasir 1
+membuat pesanan, shift berganti, Kasir 2 yang menutup pembayaran, seluruh
 transaksi tercatat atas nama Kasir 2 dan kontribusi Kasir 1 lenyap tanpa jejak.
 
 Satu kolom tidak cukup menampung dua peran yang berbeda. Perbaikannya ada di
@@ -117,7 +117,7 @@ Blok C2.
 yang memakai `config('app.timezone')`, sementara
 `OrderService::generateKodePesananSelfOrder()` eksplisit menghitung awal hari
 dengan `Carbon::now('Asia/Jakarta')`. Kalau `app.timezone` bukan
-`Asia/Jakarta`, filter tanggal manager akan bergeser sampai 7 jam — transaksi
+`Asia/Jakarta`, filter tanggal manager akan bergeser sampai 7 jam, transaksi
 malam masuk ke tanggal berikutnya.
 
 **Cek `config/app.php` dan `.env` lebih dulu.** Kalau memang berbeda, perbaiki
@@ -145,7 +145,7 @@ tidak bisa lepas sinkron.
 ## 3. Aturan kerja
 
 - **Bahasa Indonesia** untuk seluruh komentar, docblock, dan pesan error.
-  Ikuti gaya repo: komentar menjelaskan **kenapa**, bukan **apa** — lihat
+  Ikuti gaya repo: komentar menjelaskan **kenapa**, bukan **apa**, lihat
   `LoyaltyRedemptionCatalog.php` dan `docs/pengaturan-loyalty.md` sebagai acuan.
 - Idiom repo yang sudah mapan, pertahankan:
     - error lewat `ApiException(kode_snake_case, pesan_manusiawi, http_status)`
@@ -165,7 +165,7 @@ tidak bisa lepas sinkron.
 
 ---
 
-## BLOK A — Halaman transaksi manager
+## BLOK A, Halaman transaksi manager
 
 ### A1. Bedakan pesanan kasir vs SoyaScan
 
@@ -183,7 +183,7 @@ Lihat temuan **T2**.
    item, jatuhkan ke `'kasir'`.
 4. Ekspos `sumber` di `TransaksiResource`, beserta label siap tampil
    (`'Kasir'` / `'SoyaScan'`) supaya frontend tidak perlu memetakan sendiri.
-5. Kolom `detail_transaksi.sumber` **tetap dipertahankan** — dipakai
+5. Kolom `detail_transaksi.sumber` **tetap dipertahankan**, dipakai
    `LoyaltyService` saat membuat item reward. Jangan dihapus.
 
 ### A2. Filter dan urutan tanggal
@@ -198,7 +198,7 @@ Tambahkan:
 | `preset`          | `hari_ini` \| `kemarin` \| `7_hari` \| `30_hari` \| `bulan_ini` | Jalan pintas; kalah dari `tanggal_mulai`/`tanggal_selesai` bila keduanya dikirim |
 | `urut`            | `terbaru` \| `terlama`                                          | Default `terbaru` (perilaku sekarang)                                            |
 
-- Buat `IndexTransaksiRequest` (FormRequest) untuk memvalidasi semuanya —
+- Buat `IndexTransaksiRequest` (FormRequest) untuk memvalidasi semuanya,
   jangan menumpuk `$request->query()` mentah di controller.
 - Tolak `tanggal_mulai > tanggal_selesai` dengan `422` dan pesan yang jelas.
 - `?tanggal=` yang lama **tetap didukung** supaya frontend yang belum diperbarui
@@ -216,7 +216,7 @@ Tambahkan pada endpoint yang sama:
 | `sumber`                       | `kasir` \| `self_order`                                                                    |
 | `user_id`                      | sudah ada, pertahankan                                                                     |
 | `metode_bayar`                 | `cash` \| `qris`                                                                           |
-| `ada_redeem`                   | `true` \| `false` — transaksi yang memakai poin                                            |
+| `ada_redeem`                   | `true` \| `false`, transaksi yang memakai poin                                            |
 | `cari`                         | Cocokkan ke `kode_pesanan`, nama customer, atau no WA customer                             |
 | `total_min` / `total_max`      | Rentang nilai transaksi                                                                    |
 | `dibuat_oleh` / `dibayar_oleh` | Per akun kasir _(menyusul dari Blok C5)_                                                   |
@@ -228,12 +228,12 @@ Ketentuan:
   customer, jangan `join` manual.
 - Sertakan blok `meta` di response berisi ringkasan **hasil terfilter**:
   `jumlah_transaksi`, `total_omzet`, `total_qty`. Ini yang membuat filter
-  berguna buat manager — angkanya ikut berubah, bukan cuma daftarnya.
+  berguna buat manager, angkanya ikut berubah, bukan cuma daftarnya.
 - Pertahankan paginasi yang sudah ada (`per_page`, maksimum 200).
 
 ---
 
-## BLOK B — Dashboard
+## BLOK B, Dashboard
 
 ### B1. Pesanan baru masuk ke dashboard ⚠️ butuh keputusan arsitektur
 
@@ -251,7 +251,7 @@ Lihat temuan **T1**. Tiga opsi, dan **pakai opsi B**:
 2. Dipanggil dari `TransaksiController::bayar()` **di dalam** `DB::transaction`
    yang sudah ada, setelah `earnPoinFor()`.
 
-    **Harus sinkron — jangan dijadikan queued job.** Kebutuhan yang diminta
+    **Harus sinkron, jangan dijadikan queued job.** Kebutuhan yang diminta
     adalah laporan yang bisa di-export _real-time_; kalau proyeksinya antre di
     queue, transaksi yang baru dibayar tidak muncul di file Excel yang di-download
     satu menit kemudian, dan tidak ada yang sadar datanya tertinggal. Beban satu
@@ -262,7 +262,7 @@ Lihat temuan **T1**. Tiga opsi, dan **pakai opsi B**:
 
     | Kolom laporan                   | Sumber                                                                                 |
     | ------------------------------- | -------------------------------------------------------------------------------------- |
-    | `kode`                          | `"TRX-{transaksi_id}-{detail_id}"` — deterministik, jadi idempoten                     |
+    | `kode`                          | `"TRX-{transaksi_id}-{detail_id}"`, deterministik, jadi idempoten                     |
     | `tanggal`                       | `waktu_lunas` dalam zona `Asia/Jakarta`                                                |
     | `platform`                      | `metode_bayar` transaksi (`cash`/`qris`)                                               |
     | `nama_pelanggan`, `no_wa`       | dari customer; `null` untuk walk-in                                                    |
@@ -275,7 +275,7 @@ Lihat temuan **T1**. Tiga opsi, dan **pakai opsi B**:
     | `kasir_user_id`                 | `dibayar_oleh`, jatuh ke `user_id` bila kosong                                         |
     | `kasir_nama`                    | Snapshot nama kasir saat itu                                                           |
 
-    **Dua kolom kasir terakhir adalah kolom baru** pada `laporan_transaksi` —
+    **Dua kolom kasir terakhir adalah kolom baru** pada `laporan_transaksi`,
     tabel itu sekarang sama sekali tidak menyimpan kasir, sehingga export
     per-kasir (C4) mustahil tanpa keduanya. Tambahkan lewat migrasi.
 
@@ -283,21 +283,21 @@ Lihat temuan **T1**. Tiga opsi, dan **pakai opsi B**:
 
     | Sumber baris                                     | Kasir            | Status                                          |
     | ------------------------------------------------ | ---------------- | ----------------------------------------------- |
-    | Impor CSV Juni–Juli 2026 (`kode` bukan `TRX-`)   | `null`           | Diterima — data lama memang tidak merekam kasir |
+    | Impor CSV Juni–Juli 2026 (`kode` bukan `TRX-`)   | `null`           | Diterima, data lama memang tidak merekam kasir |
     | Transaksi baru lewat SoyaCore (`kode` = `TRX-…`) | **Wajib terisi** | Mulai berlaku sejak fitur ini jalan             |
 
     Karena itu kolomnya `nullable`, tapi ada invarian yang harus dijaga dan
     diuji: **setiap baris berawalan `TRX-` wajib punya `kasir_user_id`.**
-    Proyeksi hanya terjadi di `bayar()`, dan di sana selalu ada user terautentikasi
-    — jadi baris baru ber-kasir kosong berarti ada yang bocor, bukan kondisi
-    normal. Jangan diamkan.
+    Proyeksi hanya terjadi di `bayar()`, dan di sana selalu ada user
+    terautentikasi, jadi baris baru ber-kasir kosong berarti ada yang bocor,
+    bukan kondisi normal. Jangan diamkan.
 
     `kasir_user_id` untuk pengelompokan yang benar (dua kasir bisa bernama sama),
     `kasir_nama` sebagai snapshot supaya laporan lama tidak berubah isinya kalau
     kasir mengganti nama atau akunnya dihapus. Pola denormalisasi ini sudah
     dipakai kolom `nama_pelanggan` di tabel yang sama.
 
-4. **Wajib idempoten** — pakai `updateOrCreate` berkunci `kode`. `bayar()` yang
+4. **Wajib idempoten**, pakai `updateOrCreate` berkunci `kode`. `bayar()` yang
    terpanggil dua kali tidak boleh menggandakan omzet.
 5. Sediakan method `sinkronkan(Transaksi $t)` yang menulis ulang seluruh baris
    proyeksi milik satu transaksi (hapus lalu tulis ulang dari kondisi terkini),
@@ -324,12 +324,12 @@ Sumber bucket tak berlabel ada di `LaporanQuery`:
 
 Yang dikerjakan:
 
-1. Beri label eksplisit `'Tidak diketahui'` untuk nilai `NULL`/string kosong —
+1. Beri label eksplisit `'Tidak diketahui'` untuk nilai `NULL`/string kosong,
    jangan biarkan frontend menerima key kosong.
 2. Tambahkan query param `sembunyikan_tidak_diketahui=true` pada
    `GET /api/dashboard/platform` dan `GET /api/dashboard/revenue-ukuran` yang
    membuang bucket itu dari hasil **dan** dari perhitungan persentase.
-3. Jangan menghapus datanya dari database — ini keputusan tampilan, dan angka
+3. Jangan menghapus datanya dari database, ini keputusan tampilan, dan angka
    ringkasan harus tetap bisa direkonsiliasi dengan total keseluruhan.
 
 ### B3. Tren penjualan: tanggal → hari
@@ -339,12 +339,12 @@ untuk grain harian). Yang dibutuhkan label hari.
 
 1. Tambahkan dua field pada tiap bucket, **tanpa menghapus `periode`** (dipakai
    sorting dan sebagai key stabil):
-    - `periode_label` — siap tampil, Indonesia: `'Sen, 28 Jul'` (harian),
+    - `periode_label`, siap tampil, Indonesia: `'Sen, 28 Jul'` (harian),
       `'28 Jul – 3 Agu'` (mingguan), `'Juli 2026'` (bulanan), `'2026'` (tahunan)
-    - `hari` — nama hari penuh (`'Senin'`), diisi **hanya** untuk grain harian,
+    - `hari`, nama hari penuh (`'Senin'`), diisi **hanya** untuk grain harian,
       `null` untuk grain lain
 2. Nama hari dan bulan **di-hardcode sebagai array Indonesia** di satu Support
-   class. Jangan bergantung pada locale server — di container produksi locale
+   class. Jangan bergantung pada locale server, di container produksi locale
    Indonesia sering tidak terpasang dan hasilnya diam-diam jadi bahasa Inggris.
 3. Isi tanggal kosong: kalau suatu hari dalam rentang tidak punya transaksi,
    keluarkan bucket bernilai 0, bukan dilewati. Grafik tren yang melompati hari
@@ -352,9 +352,9 @@ untuk grain harian). Yang dibutuhkan label hari.
 
 ---
 
-## BLOK C — Pembedaan data per akun kasir
+## BLOK C, Pembedaan data per akun kasir
 
-### C0. Keputusan lingkup — JANGAN membangun mekanisme shift
+### C0. Keputusan lingkup, JANGAN membangun mekanisme shift
 
 Butir pembimbing berbunyi _"bikin perbedaan data kasir misalnya kasir 1 dan
 kasir 2 pas pergantian shift"_. Pemilik produk sudah menegaskan maksudnya:
@@ -371,10 +371,10 @@ Yang tetap dibutuhkan hanya dua hal: **atribusi yang benar** ke akun kasir, dan
 **laporan yang menyandingkan** antar kasir.
 
 > Konsekuensi yang perlu diketahui: tanpa hitung kas fisik, sistem tidak bisa
-> mendeteksi selisih laci. Itu memang di luar permintaan — cukup catat saja
+> mendeteksi selisih laci. Itu memang di luar permintaan, cukup catat saja
 > kalau nanti ditanya.
 
-### C1. Dua peran kasir, dua kolom — jaring pengaman T6
+### C1. Dua peran kasir, dua kolom, jaring pengaman T6
 
 Karena satu terminal hanya dipakai satu akun pada satu waktu, pembuat dan
 penyelesai transaksi **hampir selalu akun yang sama**, dan penimpaan `user_id`
@@ -384,7 +384,7 @@ Yang tersisa satu celah sempit tapi nyata: **pesanan berstatus `pending` yang
 menyeberangi pergantian akun.** Kasir 1 membuat pesanan pukul 13:55, logout;
 Kasir 2 login; pelanggan baru membayar pukul 14:05. Tanpa pemisahan kolom,
 transaksi itu tercatat seolah Kasir 1 tidak pernah menyentuhnya, dan tidak ada
-error apa pun yang muncul — datanya diam-diam salah.
+error apa pun yang muncul, datanya diam-diam salah.
 
 Biayanya satu kolom nullable dan nol perubahan UI, jadi kerjakan sebagai jaring
 pengaman. **Jangan diperlakukan sebagai fitur besar.**
@@ -394,11 +394,11 @@ Nullable karena transaksi yang masih `pending` belum dibayar siapa pun.
 
 | Kolom          | Arti                                         | Diisi saat                                    |
 | -------------- | -------------------------------------------- | --------------------------------------------- |
-| `user_id`      | Akun kasir **pembuat** pesanan               | `store()` — dan **tidak pernah ditimpa lagi** |
+| `user_id`      | Akun kasir **pembuat** pesanan               | `store()`, dan **tidak pernah ditimpa lagi** |
 | `dibayar_oleh` | Akun kasir yang **menyelesaikan pembayaran** | `bayar()`                                     |
 
 1. **Hapus `'user_id' => $request->user()->id` dari `bayar()`** dan ganti dengan
-   `'dibayar_oleh' => $request->user()->id`. Ini inti perbaikannya — tanpa ini,
+   `'dibayar_oleh' => $request->user()->id`. Ini inti perbaikannya, tanpa ini,
    membedakan Kasir 1 dan Kasir 2 tidak akan pernah akurat.
 2. Pesanan SoyaScan punya `user_id = null` (memang tidak ada kasir pembuat),
    tapi `dibayar_oleh` tetap terisi saat kasir menerimanya di konter.
@@ -407,7 +407,7 @@ Nullable karena transaksi yang masih `pending` belum dibayar siapa pun.
    lama tidak rusak; isi dengan penyelesai bila ada, jatuhkan ke pembuat bila
    belum dibayar.
 4. **Pembatalan** (Blok D) tercatat atas akun yang memprosesnya, lewat kolom
-   `user_id` di tabel `pembatalan` — bukan atas akun pembuat penjualan aslinya.
+   `user_id` di tabel `pembatalan`, bukan atas akun pembuat penjualan aslinya.
 
 ### C2. Penjualan dihitung ke akun siapa
 
@@ -417,20 +417,20 @@ Nullable karena transaksi yang masih `pending` belum dibayar siapa pun.
 - Skenario pergantian: pesanan dibuat Kasir 1 pukul 13:55, dibayar Kasir 2 pukul
   14:05 → omzet masuk ke **Kasir 2**, sementara `user_id` tetap merekam bahwa
   Kasir 1 yang menyusunnya. Tidak ada informasi yang hilang.
-- Laporan memotong berdasarkan **`waktu_lunas`**, bukan `created_at` —
+- Laporan memotong berdasarkan **`waktu_lunas`**, bukan `created_at`,
   transaksi yang dibuat kemarin malam dan dibayar pagi ini masuk ke hari ini.
   Konsisten dengan aturan WIB di **T5**.
 - Transaksi berstatus `pending` belum masuk laporan kasir mana pun. Ia belum
   jadi penjualan.
 
-### C3. Laporan perbandingan kasir — inti permintaan pembimbing
+### C3. Laporan perbandingan kasir, inti permintaan pembimbing
 
 Ini deliverable utamanya: satu endpoint yang menyandingkan kasir berdampingan,
 supaya manager tidak perlu membuka satu per satu lalu membandingkan sendiri.
 
-`GET /api/laporan/kasir` — **manager saja**.
+`GET /api/laporan/kasir`, **manager saja**.
 
-Query param: `tanggal_mulai`, `tanggal_selesai`, `preset` — **pakai ulang aturan
+Query param: `tanggal_mulai`, `tanggal_selesai`, `preset`, **pakai ulang aturan
 dan validasi dari Blok A2**, jangan menulis parser tanggal kedua.
 
 Response: satu baris per akun kasir dalam rentang itu, diurutkan omzet menurun:
@@ -449,11 +449,11 @@ dengan dashboard.
 
 Dua kolom yang gampang terlewat tapi justru paling berguna:
 
-- **`jumlah_transaksi_dibuat_kasir_lain`** — transaksi yang omzetnya masuk ke
+- **`jumlah_transaksi_dibuat_kasir_lain`**: transaksi yang omzetnya masuk ke
   kasir ini tapi `user_id`-nya kasir lain. Inilah angka yang menunjukkan serah
   terima pesanan saat pergantian; tanpa itu, laporan Kasir 2 terlihat seolah
   semua pesanan dia yang buat.
-- **`jumlah_pembatalan`** — pembatalan berlebih dari satu akun adalah pola yang
+- **`jumlah_pembatalan`**: pembatalan berlebih dari satu akun adalah pola yang
   perlu terlihat, dan inilah gunanya alasan pembatalan diwajibkan di Blok D.
 
 ### C4. Export Excel per kasir
@@ -474,11 +474,11 @@ Ketiganya sudah terjawab oleh pekerjaan sebelumnya, asal disambungkan:
 
 Yang dikerjakan:
 
-1. **`DetailTransaksiSheet`** — tambah kolom **"Kasir"** setelah "Platform".
+1. **`DetailTransaksiSheet`**, tambah kolom **"Kasir"** setelah "Platform".
    Baris impor CSV historis yang tidak punya kasir diisi
    `'—'`, jangan dibiarkan kosong: sel kosong terbaca sebagai data hilang,
    sedangkan ini memang transaksi dari sebelum SoyaCore dipakai.
-2. **Sheet baru `RekapKasirSheet`** — inilah inti permintaannya. Satu baris per
+2. **Sheet baru `RekapKasirSheet`**, inilah inti permintaannya. Satu baris per
    kombinasi **tanggal × kasir**, diurutkan tanggal lalu nama.
 
     Baris impor Juni–Juli yang tidak punya kasir **tetap dimasukkan** di bawah
@@ -494,11 +494,11 @@ Yang dikerjakan:
     | Tanggal · Kasir · Jumlah Transaksi · Total Qty · Total Omzet (Rp) · Rata-rata per Transaksi (Rp) · Cash (Rp) · QRIS (Rp) · Total Diskon (Rp) · Poin Diberikan · Poin Ditukar · Jumlah Pembatalan · Nilai Dibatalkan (Rp) |
 
     Tambahkan baris **TOTAL** di akhir tiap tanggal, dan satu baris total
-    keseluruhan — manager membaca file ini tanpa membuat pivot sendiri.
+    keseluruhan, manager membaca file ini tanpa membuat pivot sendiri.
 
 3. Daftarkan sheet baru itu di `LaporanExport::sheets()`, letakkan **setelah**
    `RingkasanSheet` supaya terlihat lebih dulu daripada sheet detail.
-4. **`LaporanRequest`** — tambah aturan `kasir_user_id`
+4. **`LaporanRequest`**, tambah aturan `kasir_user_id`
    (`nullable|integer|exists:users,id`) dan accessor `kasirUserId()`, mengikuti
    pola `startInput()`/`grain()` yang sudah ada.
 5. `GET /api/laporan/export?kasir_user_id=` menyaring **seluruh sheet** ke satu
@@ -518,17 +518,17 @@ peran, karena keduanya pertanyaan yang berbeda:
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dibuat_oleh`  | Transaksi yang **disusun** akun ini                                                                                                                                  |
 | `dibayar_oleh` | Transaksi yang **diselesaikan** akun ini                                                                                                                             |
-| `user_id`      | Alias lama — perlakukan sebagai `dibayar_oleh`, jatuhkan ke `user_id` untuk transaksi `pending`. Pertahankan supaya kartu statistik kasir yang sudah ada tidak rusak |
+| `user_id`      | Alias lama, perlakukan sebagai `dibayar_oleh`, jatuhkan ke `user_id` untuk transaksi `pending`. Pertahankan supaya kartu statistik kasir yang sudah ada tidak rusak |
 
 ⚠️ **Daftar pesanan `pending` tidak boleh difilter ke akun sendiri.**
 
 Saat akun berganti, pesanan yang belum dibayar harus tetap terlihat oleh kasir
-yang baru login — kalau tidak, Kasir 2 tidak akan menemukan pesanan Kasir 1 dan
+yang baru login, kalau tidak, Kasir 2 tidak akan menemukan pesanan Kasir 1 dan
 pelanggan terlantar di depan konter dengan minuman yang sudah dibuat.
 
 Kasir 2 **tidak perlu memasukkan ulang data apa pun**: transaksi tersimpan di
 database, bukan di sesi login. Customer, item, diskon, dan redeem semuanya masih
-menempel. Cukup buka pesanan itu lalu Tandai Lunas — yang berubah hanya
+menempel. Cukup buka pesanan itu lalu Tandai Lunas, yang berubah hanya
 `status`, `waktu_lunas`, dan `dibayar_oleh`.
 
 Karena itu: filter `user_id`/`dibuat_oleh` di daftar transaksi harus tetap
@@ -539,7 +539,7 @@ ikut tahu.
 
 ---
 
-## BLOK D — Pembatalan / Koreksi Pesanan
+## BLOK D, Pembatalan / Koreksi Pesanan
 
 > Bergantung pada Blok B1 (proyeksi laporan) dan Blok C (atribusi akun kasir).
 
@@ -550,7 +550,7 @@ contoh Loyverse POS. Pemilik produk sudah menegaskan artinya:
 
 > **Ini pembatalan/koreksi pesanan yang salah, BUKAN pengembalian uang.**
 
-Konsekuensinya untuk penamaan dan model data — ikuti ini dengan konsisten:
+Konsekuensinya untuk penamaan dan model data, ikuti ini dengan konsisten:
 
 - Jangan pakai istilah `refund` di nama tabel, kolom, endpoint, maupun pesan
   error. Pakai **`pembatalan`**.
@@ -561,14 +561,14 @@ Konsekuensinya untuk penamaan dan model data — ikuti ini dengan konsisten:
   integrasi payment gateway.
 
 Nilainya tetap wajib dicatat karena omzet dashboard dan laporan kasir harus ikut
-terkoreksi — penjualan yang dibatalkan tidak boleh tetap terhitung.
+terkoreksi, penjualan yang dibatalkan tidak boleh tetap terhitung.
 
 ### D1. ⚠️ Bug yang sudah ada dan harus ikut diperbaiki di sini
 
 `LoyaltyService::redeemPoin()` **langsung memotong saldo poin pelanggan saat
 redeem**, dan redeem hanya boleh pada transaksi berstatus `pending`. Sementara
 itu `TransaksiController::batal()` yang ada sekarang hanya mengubah status
-menjadi `batal` — **poin yang sudah terpotong tidak pernah dikembalikan.**
+menjadi `batal`, **poin yang sudah terpotong tidak pernah dikembalikan.**
 
 Artinya hari ini: pelanggan menukar 350 poin untuk gratis Original, pesanannya
 dibatalkan sebelum bayar, poinnya hilang dan minumannya tidak dapat.
@@ -589,11 +589,11 @@ Aturan finalnya jadi sederhana dan otomatis benar untuk kedua kasus:
 ### D2. Prinsip
 
 - **Transaksi asli tidak pernah dihapus atau diubah isinya.** Ia hanya berubah
-  status, dan pembatalannya dicatat sebagai dokumen tersendiri — supaya selalu
+  status, dan pembatalannya dicatat sebagai dokumen tersendiri, supaya selalu
   bisa ditelusuri siapa membatalkan apa, kapan, dan kenapa.
 - Berlaku untuk transaksi berstatus **`pending` maupun `lunas`**. Yang sudah
   dibatalkan tidak bisa dibatalkan lagi.
-- Bisa **penuh** atau **sebagian** (pilih item dan qty) — kasus paling umum:
+- Bisa **penuh** atau **sebagian** (pilih item dan qty), kasus paling umum:
   pesan 3 item, yang salah cuma 1.
 - **Alasan wajib diisi.** Ini satu-satunya pagar terhadap penyalahgunaan;
   tanpa alasan, pembatalan jadi cara menghapus penjualan tanpa jejak.
@@ -606,7 +606,7 @@ Migrasi `pembatalan`:
 | ------------------- | --------------- | ---------------------------------------------------------------------- |
 | `id`                | id              |                                                                        |
 | `transaksi_id`      | FK transaksi    |                                                                        |
-| `user_id`           | FK users        | Akun kasir yang memproses pembatalan — bukan pembuat penjualan aslinya |
+| `user_id`           | FK users        | Akun kasir yang memproses pembatalan, bukan pembuat penjualan aslinya |
 | `alasan`            | string, wajib   |                                                                        |
 | `nilai_dibatalkan`  | unsignedInteger | Nilai penjualan yang gugur                                             |
 | `poin_ditarik`      | unsignedInteger | Poin earn yang dibatalkan                                              |
@@ -617,10 +617,10 @@ Migrasi `pembatalan_item`: `pembatalan_id`, `detail_transaksi_id`, `qty`,
 `nilai_dibatalkan`.
 
 Migrasi tambahan: status `transaksi` menerima nilai baru **`batal_sebagian`**.
-Status `batal` yang sudah ada dipakai untuk pembatalan penuh — jangan membuat
+Status `batal` yang sudah ada dipakai untuk pembatalan penuh, jangan membuat
 status baru untuk itu.
 
-### D4. Aturan perhitungan — bagian paling rawan
+### D4. Aturan perhitungan, bagian paling rawan
 
 1. **Qty kumulatif dijaga.** Total qty yang dibatalkan untuk satu
    `detail_transaksi` tidak boleh melebihi qty aslinya, **dihitung lintas semua
@@ -634,7 +634,7 @@ status baru untuk itu.
     pernah tercatat, dan dashboard jadi minus.
 3. **Poin earn** ditarik proporsional terhadap nilai yang dibatalkan, dibulatkan
    ke bawah, dan **hanya jika `loyalty_applied_at !== null`**. Saldo boleh
-   menjadi 0 tapi **tidak boleh negatif** — kalau pelanggan sudah membelanjakan
+   menjadi 0 tapi **tidak boleh negatif**, kalau pelanggan sudah membelanjakan
    poinnya, kekurangannya ditanggung toko. Menagih poin negatif memicu komplain
    yang lebih mahal daripada selisihnya.
 4. **Poin redeem dikembalikan utuh** setiap kali pembatalan menggugurkan
@@ -643,10 +643,10 @@ status baru untuk itu.
     - pembatalan **sebagian yang menyertakan item reward** (`is_reward`).
 
     Pembatalan sebagian yang **tidak** menyentuh item reward tidak mengembalikan
-    poin — rewardnya memang tetap diterima pelanggan.
+    poin, rewardnya memang tetap diterima pelanggan.
 
     Saat poin redeem dikembalikan, kosongkan juga `kode_redeem`, `poin_ditukar`,
-    dan `maks_potongan` pada transaksi, lalu hitung ulang totalnya — kalau tidak,
+    dan `maks_potongan` pada transaksi, lalu hitung ulang totalnya, kalau tidak,
     diskon dari reward yang sudah digugurkan akan tetap menempel.
 
 5. **Proyeksi laporan disinkronkan**: panggil `LaporanProjector::sinkronkan()`
@@ -677,21 +677,21 @@ Body `POST`:
 
 Response memuat rincian per item, `nilai_dibatalkan`, `poin_ditarik`,
 `poin_dikembalikan`, status transaksi setelahnya, dan **saldo poin pelanggan
-terkini** — kasir perlu menyebutkannya ke pelanggan saat itu juga.
+terkini**, kasir perlu menyebutkannya ke pelanggan saat itu juga.
 
 **Endpoint lama `POST /api/transaksi/{transaksi}/batal` tetap dipertahankan**
 sebagai alias pembatalan penuh supaya frontend yang ada tidak rusak, tapi
 sekarang ikut melewati alur baru: mengembalikan poin redeem, mencatat dokumen
-pembatalan, dan menyinkronkan proyeksi. Alasan boleh kosong pada alias ini —
+pembatalan, dan menyinkronkan proyeksi. Alasan boleh kosong pada alias ini,
 isi dengan `'Dibatalkan lewat endpoint lama'` supaya kolomnya tetap jujur.
 
 ---
 
-## BLOK E — SoyaScan
+## BLOK E, SoyaScan
 
 ### E1. Pilihan sugar dan ice
 
-> Butuh `GolonganUkuran` dari **Blok F1** — kerjakan F1 lebih dulu, atau buat
+> Butuh `GolonganUkuran` dari **Blok F1**: kerjakan F1 lebih dulu, atau buat
 > Support class-nya di sini dan pakai bersama. Jangan menulis dua klasifikasi
 > ukuran yang berbeda.
 
@@ -708,7 +708,7 @@ isi dengan `'Dibatalkan lewat endpoint lama'` supaya kolomnya tetap jujur.
 |           | `no`     | No Ice      |
 |           | `extra`  | Extra Ice   |
 
-**Ketersediaan per ukuran** — ini aturannya, turunkan dari `GolonganUkuran`,
+**Ketersediaan per ukuran**, ini aturannya, turunkan dari `GolonganUkuran`,
 jangan dari daftar nama menu:
 
 | Ukuran                            | Sugar | Ice | Alasan                                            |
@@ -721,64 +721,64 @@ jangan dari daftar nama menu:
 Yang dikerjakan:
 
 1. Support class `app/Support/OpsiMinuman.php` berisi kedua daftar dan aturan
-   ketersediaan di atas. **Satu sumber kebenaran** — jangan menyalin daftarnya
+   ketersediaan di atas. **Satu sumber kebenaran**, jangan menyalin daftarnya
    ke FormRequest maupun resource.
 2. Migrasi: kolom `level_sugar` dan `level_ice` (`string`, nullable) pada
    `detail_transaksi`. Nullable = item lama, kemasan botol, dan dessert.
-3. Validasi di `StoreOrderRequest` (per item) **dan** `TransaksiItemController`
-   — kasir harus bisa mencatat hal yang sama seperti pelanggan SoyaScan.
+3. Validasi di `StoreOrderRequest` (per item) **dan** `TransaksiItemController`,
+   karena kasir harus bisa mencatat hal yang sama seperti pelanggan SoyaScan.
 4. **Tolak pilihan yang tidak relevan** dengan `422`, jangan diam-diam
    diabaikan: mengirim `level_ice` untuk menu `Hot` atau kemasan botol adalah
    kesalahan yang harus terlihat, bukan data yang disimpan lalu membingungkan
    barista. Kode error: `opsi_tidak_tersedia`.
 5. `GET /api/menu` menyertakan:
-    - `meta.opsi_sugar` dan `meta.opsi_ice` berisi daftar `{kode, label}` —
+    - `meta.opsi_sugar` dan `meta.opsi_ice` berisi daftar `{kode, label}`,
       frontend merender dari sini, tidak menyalin daftarnya sendiri
     - per menu: `bisa_pilih_sugar` dan `bisa_pilih_ice` (boolean), supaya
       frontend cukup membaca flag dan tidak perlu tahu aturan ukurannya
-6. Tampilkan `level_sugar` dan `level_ice` di `DetailTransaksiResource` —
+6. Tampilkan `level_sugar` dan `level_ice` di `DetailTransaksiResource`,
    kasir dan barista harus melihatnya saat menyiapkan pesanan, dan keduanya
    ikut tercetak di nota.
 
 ### E2. Hapus nomor meja
 
 Lihat temuan **T3**. Sudah dikonfirmasi: **hapus sepenuhnya**, termasuk
-kolomnya — SoyaScan masih dalam revisi dan belum berjalan produksi, jadi tidak
+kolomnya, SoyaScan masih dalam revisi dan belum berjalan produksi, jadi tidak
 ada riwayat yang perlu dijaga.
 
-1. `StoreOrderRequest` — hapus aturan `nomor_meja`.
-2. `OrderService::buatOrder()` — berhenti menulis `nomor_meja`; sesuaikan juga
+1. `StoreOrderRequest`, hapus aturan `nomor_meja`.
+2. `OrderService::buatOrder()`, berhenti menulis `nomor_meja`; sesuaikan juga
    docblock `@param` di atasnya yang masih mencantumkannya.
-3. `OrderController::store()` — hapus `nomor_meja` dari response, termasuk baris
+3. `OrderController::store()`, hapus `nomor_meja` dari response, termasuk baris
    `$nomorMeja = $transaksi->detailTransaksi->first()?->nomor_meja;`.
-4. `DetailTransaksi` — keluarkan `nomor_meja` dari `$fillable`.
+4. `DetailTransaksi`, keluarkan `nomor_meja` dari `$fillable`.
 5. Migrasi baru: **drop kolom `nomor_meja`** dari `detail_transaksi`.
    `down()` harus mengembalikan kolomnya (`string`, nullable) supaya rollback
-   tetap sah — datanya memang tidak kembali, dan itu diterima.
+   tetap sah, datanya memang tidak kembali, dan itu diterima.
 6. Pastikan tidak ada sisa referensi: cari `nomor_meja` di seluruh `app/`,
    `tests/`, dan `docs/` sebelum menyatakan selesai.
-7. Perbarui `docs/kontrak-api-v1.md` — tandai sebagai **perubahan kontrak**,
+7. Perbarui `docs/kontrak-api-v1.md`, tandai sebagai **perubahan kontrak**,
    jangan cuma dihapus diam-diam.
 8. Sesuaikan test yang mengirim `nomor_meja` (`tests/Feature/OrderApiTest.php`),
    dan **tambahkan** test bahwa request tanpa `nomor_meja` kini diterima `201`.
 
 ### E3. QRIS saat pembayaran
 
-1. Migrasi: kolom `qris_gambar` (`string`, nullable) pada `pengaturan_toko` —
+1. Migrasi: kolom `qris_gambar` (`string`, nullable) pada `pengaturan_toko`,
    menyimpan path, bukan berkas.
-2. `POST /api/pengaturan/toko/qris` — upload, **manager saja**. Validasi
+2. `POST /api/pengaturan/toko/qris`, upload, **manager saja**. Validasi
    `image|mimes:jpg,jpeg,png|max:2048`. Simpan ke disk `public`
    (`storage/app/public/qris`), pastikan `php artisan storage:link` disebut di
    README/dokumen deploy.
 3. `GET /api/pengaturan/toko` menyertakan `qris_url` (URL penuh, `null` kalau
    belum diunggah).
-4. `DELETE /api/pengaturan/toko/qris` — manager, untuk mengganti/menghapus.
+4. `DELETE /api/pengaturan/toko/qris`, manager, untuk mengganti/menghapus.
    Hapus juga berkas lama saat diganti supaya storage tidak menumpuk.
 5. Response `POST /api/order` menyertakan `qris_url` **hanya** ketika
    `metode_bayar = 'qris'`, supaya halaman pembayaran SoyaScan bisa langsung
    menampilkannya.
 
-> QRIS statis milik merchant hanyalah gambar — backend tidak memvalidasi,
+> QRIS statis milik merchant hanyalah gambar, backend tidak memvalidasi,
 > membaca, atau memproses pembayaran apa pun. Jangan menambahkan integrasi
 > payment gateway; itu di luar lingkup.
 
@@ -788,18 +788,18 @@ ada riwayat yang perlu dijaga.
 2. Tambah konfigurasi URL publik SoyaScan (`config/soyascan.php` dengan
    `env('SOYASCAN_URL')`, fallback ke `config('app.url')`). **Jangan hardcode
    domain di kode.**
-3. `GET /api/pengaturan/toko/qr-menu` — manager saja. Query param
+3. `GET /api/pengaturan/toko/qr-menu`, manager saja. Query param
    `format=svg|png` (default `svg`, karena akan dicetak dan harus tajam) dan
    `ukuran` (px, default 512, batasi maksimum 2048).
 4. Response mengembalikan berkas gambar dengan `Content-Type` yang sesuai,
-   bukan JSON berisi base64 — supaya manager bisa langsung menyimpan/mencetak
+   bukan JSON berisi base64, supaya manager bisa langsung menyimpan/mencetak
    dari browser.
 5. Tambahkan test yang memastikan endpoint mengembalikan `200` dengan
    `Content-Type` benar, dan `403` untuk kasir.
 
 ---
 
-## BLOK F — Menu cup vs botol
+## BLOK F, Menu cup vs botol
 
 Butir "edit menu ukuran sebelah kiri buat cup dan sebelah kanan buat botol"
 adalah tata letak (frontend), tapi frontend butuh backend memberi tahu **ukuran
@@ -815,12 +815,12 @@ Nilai `ukuran` yang benar-benar ada di seeder:
 
 1. Support class `app/Support/GolonganUkuran.php` dengan method
    `dari(?string $ukuran): string` dan `semua(): array`.
-   **Blok E1 ikut memakainya** untuk menentukan ketersediaan sugar/ice — kalau
+   **Blok E1 ikut memakainya** untuk menentukan ketersediaan sugar/ice, kalau
    F1 dikerjakan belakangan, pastikan E1 memanggil class yang sama, bukan
    membuat klasifikasi ukuran kedua yang bisa lepas sinkron.
 2. Ekspos `golongan_ukuran` di `MenuResource` dan di `GET /api/menu`.
 3. `GET /api/menu-internal` menerima param `golongan=cup|botol|lainnya`.
-4. Urutan ukuran di dalam golongan **jangan alfabetis** — `orderBy('ukuran')`
+4. Urutan ukuran di dalam golongan **jangan alfabetis**, `orderBy('ukuran')`
    sekarang menghasilkan `1000ml, 250ml, 500ml, Hot, Large, Reguler`, yang
    membingungkan. Definisikan urutan eksplisit
    (`Hot → Reguler → Large → 250ml → 500ml → 1000ml`) dan pakai di
@@ -832,27 +832,27 @@ Nilai `ukuran` yang benar-benar ada di seeder:
 
 Perbarui bersamaan dengan kodenya, jangan ditumpuk di akhir:
 
-- `docs/kontrak-api-v1.md` — `nomor_meja` dihapus (**tandai sebagai perubahan
+- `docs/kontrak-api-v1.md`, `nomor_meja` dihapus (**tandai sebagai perubahan
   kontrak**), `level_sugar` + `level_ice` ditambahkan beserta aturan
   ketersediaannya per ukuran, `qris_url` di response order.
-- `docs/kontrak-api-kasir-v1-draft.md` — filter transaksi baru, laporan kasir,
+- `docs/kontrak-api-kasir-v1-draft.md`, filter transaksi baru, laporan kasir,
   endpoint pembatalan.
-- **Dokumen baru** `docs/laporan-kasir.md` — perbedaan `user_id` (pembuat) vs
+- **Dokumen baru** `docs/laporan-kasir.md`, perbedaan `user_id` (pembuat) vs
   `dibayar_oleh` (penyelesai) dan kenapa keduanya perlu, aturan "penjualan
   dihitung ke akun penyelesai pembayaran", contoh lengkap skenario pergantian
   akun kasir (termasuk bahwa kasir baru **tidak perlu input ulang apa pun**),
   serta isi sheet `Rekap Kasir` dan arti tiap kolomnya. Sebut juga secara
   eksplisit bahwa **tidak ada mekanisme shift** (buka/tutup, modal awal, hitung
-  kas) — supaya tidak ada yang mengira fitur itu terlewat dikerjakan.
-- **Dokumen baru** `docs/pembatalan-pesanan.md` — tegaskan di paragraf pembuka
+  kas), supaya tidak ada yang mengira fitur itu terlewat dikerjakan.
+- **Dokumen baru** `docs/pembatalan-pesanan.md`, tegaskan di paragraf pembuka
   bahwa ini pembatalan pesanan, **bukan pengembalian uang**. Lalu: aturan qty
   kumulatif, rumus nilai proporsional setelah diskon, dan tabel perilaku poin
   (earn ditarik hanya bila sudah lunas; redeem selalu dikembalikan utuh).
   Cantumkan alasannya, bukan cuma rumusnya.
-- `docs/pengaturan-loyalty.md` — tambahkan catatan bahwa poin redeem
+- `docs/pengaturan-loyalty.md`, tambahkan catatan bahwa poin redeem
   dikembalikan saat pesanan dibatalkan, karena dokumen itu yang menjelaskan
   alur poin.
-- `README.md` — sebut `php artisan storage:link` dan command
+- `README.md`, sebut `php artisan storage:link` dan command
   `laporan:proyeksi-ulang`.
 
 ---
@@ -880,7 +880,7 @@ Feature test di `tests/Feature/`, gaya mengikuti `LoyaltyPengaturanTest.php`.
 - `periode_label` dan `hari` berbahasa Indonesia dan benar isinya
 - Hari tanpa transaksi tetap muncul sebagai bucket bernilai 0
 
-**Blok C — pergantian akun kasir (inti permintaan pembimbing)**
+**Blok C, pergantian akun kasir (inti permintaan pembimbing)**
 
 - **Kasir 1 membuat pesanan, Kasir 2 menandai lunas** → `user_id` tetap Kasir 1,
   `dibayar_oleh` Kasir 2. Ini regression test untuk **T6**; sebelum perbaikan,
@@ -897,19 +897,19 @@ Feature test di `tests/Feature/`, gaya mengikuti `LoyaltyPengaturanTest.php`.
 - Filter `?dibuat_oleh=` dan `?dibayar_oleh=` memberi hasil berbeda untuk
   transaksi yang berpindah tangan
 - **Pesanan `pending` milik Kasir 1 tetap muncul di `GET /api/transaksi?status=pending`
-  saat dipanggil dengan token Kasir 2** — regression test untuk jebakan di C5
+  saat dipanggil dengan token Kasir 2**, regression test untuk jebakan di C5
 - Kasir 2 bisa `bayar()` pesanan yang dibuat Kasir 1 tanpa mengirim ulang data
   customer maupun item; isi transaksi tidak berubah selain status,
   `waktu_lunas`, dan `dibayar_oleh`
 
-**Blok C — export Excel per kasir**
+**Blok C, export Excel per kasir**
 
 - Kolom `kasir_user_id` + `kasir_nama` terisi di `laporan_transaksi` setelah
   `bayar()`, dan **langsung terbaca di export detik itu juga** (bukti proyeksi
   sinkron, bukan queue)
 - Baris impor CSV historis tetap ber-kasir `null` dan tampil `'—'` di Excel
 - **Invarian: tidak ada satu pun baris berawalan `TRX-` yang `kasir_user_id`-nya
-  `null`** — jalankan sebagai assertion setelah beberapa transaksi dibayar
+  `null`**, jalankan sebagai assertion setelah beberapa transaksi dibayar
 - Sheet `Rekap Kasir` memuat baris `'— (data historis)'`, dan total
   keseluruhannya cocok dengan total di sheet `Ringkasan`
 - Sheet `Rekap Kasir` ada di file, satu baris per tanggal × kasir
@@ -917,7 +917,7 @@ Feature test di `tests/Feature/`, gaya mengikuti `LoyaltyPengaturanTest.php`.
   penjumlahan barisnya
 - `?kasir_user_id=` menyaring **semua** sheet, bukan cuma sheet rekap
 - Nama kasir masuk ke nama file saat difilter
-- Kolom Tanggal di Excel memakai WIB — transaksi 23:30 tanggal 5 tertulis
+- Kolom Tanggal di Excel memakai WIB, transaksi 23:30 tanggal 5 tertulis
   tanggal 5
 
 **Blok D**
@@ -928,9 +928,9 @@ Feature test di `tests/Feature/`, gaya mengikuti `LoyaltyPengaturanTest.php`.
 - Item berdiskon menghasilkan nilai setelah diskon, bukan harga mentah
 - Poin earn ditarik proporsional dan **tidak pernah negatif**
 - **Transaksi `pending` yang dibatalkan tidak menarik poin earn sama sekali**
-  (`loyalty_applied_at` masih `null`) — ini regression test untuk D1
+  (`loyalty_applied_at` masih `null`), ini regression test untuk D1
 - **Transaksi `pending` ber-redeem yang dibatalkan mengembalikan poin redeem
-  secara utuh**, dan `kode_redeem` ikut dikosongkan — ini bug yang diperbaiki
+  secara utuh**, dan `kode_redeem` ikut dikosongkan, ini bug yang diperbaiki
 - Pembatalan penuh transaksi lunas ber-redeem mengembalikan poin redeem utuh
 - Pembatalan sebagian tanpa item reward **tidak** mengembalikan poin redeem
 - Alasan kosong ditolak `422`
@@ -956,7 +956,7 @@ Feature test di `tests/Feature/`, gaya mengikuti `LoyaltyPengaturanTest.php`.
 - `golongan_ukuran` benar untuk cup, botol, dan dessert
 - Urutan ukuran mengikuti urutan eksplisit, bukan alfabetis
 
-**Zona waktu (T5) — lintas blok**
+**Zona waktu (T5), lintas blok**
 
 - Transaksi pukul 23:30 WIB tanggal 5 muncul di filter `tanggal=2026-xx-05`,
   bukan tanggal 6
@@ -972,7 +972,7 @@ php artisan migrate:fresh --seed && php artisan test
 ```
 
 - Seluruh test lama tetap lulus, kecuali yang memang harus disesuaikan karena
-  perubahan kontrak (`OrderApiTest` untuk `nomor_meja`) — perubahan itu harus
+  perubahan kontrak (`OrderApiTest` untuk `nomor_meja`), perubahan itu harus
   disengaja dan disebut di ringkasan akhir.
 - Setiap migrasi bisa `migrate:rollback` tanpa error.
 - Tidak ada perubahan di `resources/views`, `resources/js`, atau `resources/css`.
@@ -987,7 +987,7 @@ php artisan migrate:fresh --seed && php artisan test
 - Seluruh pekerjaan frontend: sidebar (arah panah maupun logo), tata letak dua
   kolom edit menu, interaktivitas klik di halaman laporan, tampilan chart.
 - Integrasi payment gateway. QRIS di sini hanya gambar statis milik merchant.
-- **Pengembalian uang.** Blok D adalah pembatalan pesanan, bukan refund dana —
+- **Pengembalian uang.** Blok D adalah pembatalan pesanan, bukan refund dana,
   tidak ada alur kas keluar, tidak ada pencatatan metode pengembalian.
 - WebSocket/broadcasting untuk dashboard real-time. Blok B1 membuat data benar
   saat halaman dimuat ulang; live-push adalah kebutuhan terpisah dan belum

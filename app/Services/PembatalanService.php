@@ -11,7 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Pembatalan / koreksi pesanan yang salah — BUKAN pengembalian uang.
+ * Pembatalan / koreksi pesanan yang salah, BUKAN pengembalian uang.
  * Lihat docs/pembatalan-pesanan.md.
  *
  * PRINSIP. Transaksi asli tidak pernah dihapus atau diubah isinya. Ia hanya
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  * gugur tetap wajib dicatat karena omzet dashboard dan laporan kasir harus ikut
  * terkoreksi.
  *
- * PERILAKU POIN — dua jenis poin yang gampang dianggap sama:
+ * PERILAKU POIN: dua jenis poin yang gampang dianggap sama:
  *
  * | Jenis poin            | Kapan berubah                        | Saat pembatalan            |
  * | --------------------- | ------------------------------------ | -------------------------- |
@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\DB;
  * > Kembalikan poin redeem kapan pun `kode_redeem` terisi.
  *
  * Sebelum perbaikan ini, `redeemPoin()` sudah memotong saldo pelanggan saat
- * redeem sementara `batal()` cuma mengubah status — jadi pelanggan yang menukar
+ * redeem sementara `batal()` cuma mengubah status, jadi pelanggan yang menukar
  * 350 poin lalu pesanannya dibatalkan sebelum bayar kehilangan poinnya DAN
  * tidak mendapat minumannya.
  */
@@ -70,7 +70,7 @@ class PembatalanService
             // `$rincian` boleh kosong pada pembatalan penuh: pesanan yang
             // ditinggalkan sebelum satu pun item ditambahkan tetap harus bisa
             // dibatalkan. Pembatalan sebagian tidak pernah sampai ke sini
-            // dengan rincian kosong — `items` yang kosong berarti pembatalan
+            // dengan rincian kosong, `items` yang kosong berarti pembatalan
             // penuh.
             $nilaiDibatalkan = array_sum(array_column($rincian, 'nilai'));
 
@@ -96,7 +96,7 @@ class PembatalanService
 
             // Total transaksi hanya dihitung ulang pada pembatalan SEBAGIAN.
             // Pada pembatalan penuh, angka yang tersimpan justru harus tetap
-            // seperti apa adanya — ia catatan tentang penjualan seperti apa
+            // seperti apa adanya, ia catatan tentang penjualan seperti apa
             // yang dibatalkan, bukan tagihan yang masih akan dibayar.
             if (! $penuh && $poinDikembalikan > 0) {
                 $this->transaksiService->recalculateTotals($transaksi);
@@ -129,12 +129,12 @@ class PembatalanService
         // (`PATCH`/`DELETE /api/transaksi/{id}/items/{item}`), yang sudah
         // menghitung ulang totalnya dengan benar. Kalau pembatalan sebagian
         // diizinkan di sini, transaksi pending akan punya `total` yang tidak
-        // lagi sama dengan yang harus dibayar pelanggan — dan kasir menagih
+        // lagi sama dengan yang harus dibayar pelanggan, dan kasir menagih
         // angka yang salah.
         if ($transaksi->status === 'pending' && ! $penuh) {
             throw new ApiException(
                 'pembatalan_sebagian_butuh_lunas',
-                "Transaksi {$transaksi->kode_pesanan} belum dibayar — koreksi itemnya lewat ubah/hapus item pesanan, bukan pembatalan sebagian. Pembatalan sebagian hanya untuk transaksi yang sudah lunas.",
+                "Transaksi {$transaksi->kode_pesanan} belum dibayar, koreksi itemnya lewat ubah/hapus item pesanan, bukan pembatalan sebagian. Pembatalan sebagian hanya untuk transaksi yang sudah lunas.",
                 422,
             );
         }
@@ -144,7 +144,7 @@ class PembatalanService
      * Seluruh sisa yang belum pernah dibatalkan.
      *
      * Nilainya dihitung sebagai SISA (nilai bersih item dikurangi yang sudah
-     * dibatalkan), bukan lewat rumus proporsional — supaya penjumlahan seluruh
+     * dibatalkan), bukan lewat rumus proporsional, supaya penjumlahan seluruh
      * pembatalan sebuah item selalu pas dengan nilai aslinya, tanpa residu
      * pembulatan yang menempel di omzet selamanya.
      *
@@ -199,7 +199,7 @@ class PembatalanService
             $sisaQty = (int) $detail->qty - $sudahQty;
 
             // Dijaga LINTAS semua pembatalan sebelumnya, bukan hanya request
-            // ini — tiga kali membatalkan 1 dari qty 2 harus tetap ditolak.
+            // ini, tiga kali membatalkan 1 dari qty 2 harus tetap ditolak.
             if ($qty > $sisaQty) {
                 throw new ApiException(
                     'qty_pembatalan_melebihi',
@@ -227,7 +227,7 @@ class PembatalanService
      * daripada yang pernah tercatat, dan dashboard jadi minus.
      *
      * Kalau pembatalan ini menghabiskan sisa qty item, dipakai nilai sisanya
-     * secara persis — jadi residu pembulatan tidak tertinggal sebagai omzet
+     * secara persis, jadi residu pembulatan tidak tertinggal sebagai omzet
      * beberapa rupiah yang tidak bisa dihilangkan.
      */
     private function nilaiSebagian(DetailTransaksi $detail, int $qty, int $sisaQty, int $sudahNilai): int
@@ -269,14 +269,14 @@ class PembatalanService
     }
 
     /**
-     * Poin earn hanya ada kalau transaksinya sudah lunas — `loyalty_applied_at`
+     * Poin earn hanya ada kalau transaksinya sudah lunas, `loyalty_applied_at`
      * yang mengunci itu. Transaksi pending yang dibatalkan tidak menarik apa
      * pun, karena poinnya memang belum pernah diberikan.
      *
      * Saldo boleh menjadi 0 tapi TIDAK boleh negatif: kalau pelanggan sudah
      * membelanjakan poinnya, kekurangannya ditanggung toko. Menagih poin
      * negatif memicu komplain yang lebih mahal daripada selisihnya. Yang
-     * dicatat adalah poin yang BENAR-BENAR ditarik, bukan yang seharusnya —
+     * dicatat adalah poin yang BENAR-BENAR ditarik, bukan yang seharusnya,
      * supaya laporan tidak mengklaim menarik poin yang tidak pernah kembali.
      */
     private function tarikPoinEarn(Transaksi $transaksi, ?Loyalty $loyalty, int $nilaiDibatalkan): int
@@ -316,7 +316,7 @@ class PembatalanService
      * - pembatalan sebagian yang menyertakan item reward (`is_reward`).
      *
      * Pembatalan sebagian yang tidak menyentuh item reward TIDAK mengembalikan
-     * poin — rewardnya memang tetap diterima pelanggan.
+     * poin, rewardnya memang tetap diterima pelanggan.
      *
      * @param  list<array{detail: DetailTransaksi, qty: int, nilai: int}>  $rincian
      */
@@ -363,7 +363,7 @@ class PembatalanService
 
     /**
      * Pembatalan sebagian yang ternyata menghabiskan seluruh sisa item berakhir
-     * sebagai `batal`, bukan `batal_sebagian` — transaksi tanpa satu pun item
+     * sebagai `batal`, bukan `batal_sebagian`, transaksi tanpa satu pun item
      * tersisa bukan "sebagian".
      *
      * @param  list<array{detail: DetailTransaksi, qty: int, nilai: int}>  $rincian

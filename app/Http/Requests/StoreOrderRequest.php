@@ -15,7 +15,7 @@ class StoreOrderRequest extends FormRequest
 
     /**
      * PERUBAHAN KONTRAK: `nomor_meja` sudah TIDAK ada lagi, termasuk kolomnya
-     * di database. Request yang masih mengirimnya tetap diterima 201 — nilainya
+     * di database. Request yang masih mengirimnya tetap diterima 201, nilainya
      * diabaikan, bukan ditolak, supaya klien lama tidak rusak di tengah revisi.
      *
      * @return array<string, list<mixed>>
@@ -29,7 +29,7 @@ class StoreOrderRequest extends FormRequest
             'items' => ['array'],
 
             // JANGAN dihapus. Begitu ada satu aturan `items.*`, `validated()`
-            // hanya mengembalikan key `items.*` yang PUNYA aturan — `menu_id`
+            // hanya mengembalikan key `items.*` yang PUNYA aturan, `menu_id`
             // dan `qty` akan ikut hilang dari data tervalidasi dan setiap
             // pesanan ditolak "items_kosong". Aturannya sengaja longgar:
             // validasi sesungguhnya (beserta kode error `qty_invalid` /
@@ -40,7 +40,7 @@ class StoreOrderRequest extends FormRequest
 
             // Hanya kodenya yang divalidasi di sini. Apakah ukuran menunya
             // MEMANG boleh memilih sugar/ice diputuskan OpsiMinuman saat
-            // menunya sudah diketahui — aturannya milik satu class itu, bukan
+            // menunya sudah diketahui, aturannya milik satu class itu, bukan
             // disalin ke FormRequest.
             'items.*.level_sugar' => ['nullable', 'string', Rule::in(OpsiMinuman::kodeSugar())],
             'items.*.level_ice' => ['nullable', 'string', Rule::in(OpsiMinuman::kodeIce())],

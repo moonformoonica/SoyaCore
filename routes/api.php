@@ -14,19 +14,38 @@ use App\Http\Controllers\PengaturanLoyaltyController;
 use App\Http\Controllers\PengaturanTokoController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\TransaksiItemController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// Publik — kontrak v1 self-order (konsumen: SoyaScan, tanpa auth)
+// Publik. Kontrak v1 self-order (konsumen: SoyaScan, tanpa auth)
 Route::get('/menu', [MenuController::class, 'katalog']);
 Route::post('/order', [OrderController::class, 'store']);
 Route::get('/loyalty/{nomorWa}', [LoyaltyController::class, 'show']);
 
+// Polling status pembayaran dari layar "Menunggu Pembayaran" SoyaScan.
+//
+// Throttle-nya longgar dengan sengaja: SoyaScan menembak tiap 4 detik = 15
+// request/menit per pelanggan, dan pelanggan yang memakai WiFi kedai keluar
+// dari satu IP publik yang sama. Batas 60/menit hanya memuat 4 pelanggan
+// sebelum layar orang kelima berhenti ter-update. Kegagalan seperti itu
+// muncul di jam ramai, justru saat endpoint ini paling dibutuhkan. 180/menit
+// memuat 12 pelanggan yang menunggu berbarengan, dan tetap menahan enumerasi
+// ngawur.
+Route::get('/order/{kodePesanan}', [OrderController::class, 'status'])
+    ->middleware('throttle:180,1');
+
+// QRIS toko untuk layar pembayaran SoyaScan. Alasan lengkapnya ada di
+// PengaturanTokoController::publik(); ringkasnya, `qris_url` di response
+// POST /api/order cuma potret saat pesanan dibuat, jadi pesanan yang dibuat
+// sebelum QRIS diunggah tidak akan pernah bisa menampilkannya.
+Route::get('/toko', [PengaturanTokoController::class, 'publik']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Pengaturan > Profil Saya. Selalu menyasar akun pemanggil sendiri —
+    // Pengaturan > Profil Saya. Selalu menyasar akun pemanggil sendiri,
     // tidak ada id user di path maupun body, jadi tidak ada jalan mengedit
     // akun orang lain lewat sini.
     Route::get('/me', [AuthController::class, 'me']);
@@ -45,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['show'])
         ->parameters(['menu' => 'menu']);
 
-    // Auto-detect pelanggan lama/baru di halaman Pesanan — read-only.
+    // Auto-detect pelanggan lama/baru di halaman Pesanan, read-only.
     Route::get('customers/cari', [CustomerController::class, 'cari']);
 
     // Alur transaksi kasir (kasir & manager)
@@ -58,30 +77,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('transaksi/{transaksi}/diskon', [TransaksiController::class, 'diskon']);
     Route::post('transaksi/{transaksi}/redeem-poin', [TransaksiController::class, 'redeemPoin']);
     Route::post('transaksi/{transaksi}/bayar', [TransaksiController::class, 'bayar']);
-    // alias sesuai penamaan M3 — action yang sama dengan /bayar
+    // alias sesuai penamaan M3, action yang sama dengan /bayar
     Route::post('transaksi/{transaksi}/tandai-lunas', [TransaksiController::class, 'bayar']);
-    // Alias lama pembatalan penuh — sekarang ikut melewati alur pembatalan
+    // Alias lama pembatalan penuh, sekarang ikut melewati alur pembatalan
     // baru (poin redeem dikembalikan, dokumen pembatalan dicatat, proyeksi
     // laporan disinkronkan).
     Route::post('transaksi/{transaksi}/batal', [TransaksiController::class, 'batal']);
 
-    // Pembatalan / koreksi pesanan yang salah — BUKAN pengembalian uang.
+    // Pembatalan / koreksi pesanan yang salah, BUKAN pengembalian uang.
     // Kasir ikut boleh karena dialah yang berhadapan dengan pelanggan saat
     // kesalahan pesanan ketahuan; jejaknya dijaga oleh alasan yang wajib diisi
     // dan pencatatan akun pemroses.
     Route::post('transaksi/{transaksi}/pembatalan', [PembatalanController::class, 'store']);
     Route::get('transaksi/{transaksi}/pembatalan', [PembatalanController::class, 'index']);
 
-    // Pengaturan loyalty — BACA saja di sini. Kasir ikut butuh: rate dipakai
+    // Pengaturan loyalty, BACA saja di sini. Kasir ikut butuh: rate dipakai
     // menampilkan estimasi poin di struk, katalog dipakai merender tombol
     // redeem (termasuk menyembunyikan reward yang dinonaktifkan manager).
     Route::get('pengaturan/loyalty', [PengaturanLoyaltyController::class, 'show']);
     Route::get('pengaturan/loyalty/katalog', [PengaturanLoyaltyController::class, 'katalog']);
 
-    // Info toko — kasir ikut baca karena dia yang mencetak nota berheader ini.
+    // Info toko, kasir ikut baca karena dia yang mencetak nota berheader ini.
     Route::get('pengaturan/toko', [PengaturanTokoController::class, 'show']);
 
-    // Dashboard porsi kasir — cukup untuk memantau performa harian sendiri.
+    // Dashboard porsi kasir, cukup untuk memantau performa harian sendiri.
     // Sengaja dibatasi: tidak ada data per-pelanggan (RFM/loyalty/switch) dan
     // tidak ada export. `meta` ikut karena date-picker kedua halaman di bawah
     // butuh rentang tanggal; isinya cuma daftar tanggal/ukuran/platform/segmen.
@@ -106,7 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('pengaturan/loyalty/katalog/{kode}', [PengaturanLoyaltyController::class, 'updateKatalog']);
 
         // Info toko dipakai di header nota & laporan, jadi bukan preferensi
-        // pribadi kasir — manager yang pegang.
+        // pribadi kasir, manager yang pegang.
         Route::patch('pengaturan/toko', [PengaturanTokoController::class, 'update']);
 
         // Reporting lanjutan + export (manager-only)
@@ -119,6 +138,20 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('switch', [DashboardController::class, 'switch']);
         });
 
+        // Akun kasir. Tanpa ini manager tidak punya jalan membuat akun kasir
+        // kedua, dan dua orang yang bergantian shift terpaksa berbagi satu
+        // login, yang membuat seluruh laporan per-kasir kehilangan artinya.
+        //
+        // DELETE hanya berlaku untuk akun yang belum pernah menyentuh
+        // transaksi. Akun yang sudah punya riwayat ditolak dan diarahkan ke
+        // nonaktifkan, supaya laporan lama tidak kehilangan atribusi.
+        // Alasannya di UserController.
+        Route::get('users', [UserController::class, 'index']);
+        Route::post('users', [UserController::class, 'store']);
+        Route::patch('users/{user}', [UserController::class, 'update']);
+        Route::delete('users/{user}', [UserController::class, 'destroy']);
+        Route::post('users/{user}/password', [UserController::class, 'resetPassword']);
+
         // Perbandingan antar akun kasir + rekap pembatalan seluruh toko.
         // Manager-only: keduanya menyandingkan performa akun orang lain.
         Route::get('laporan/kasir', [LaporanKasirController::class, 'index']);
@@ -126,7 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('laporan/export', [ExportController::class, 'export']);
 
-        // QRIS statis merchant & QR menu meja — keduanya menyentuh identitas
+        // QRIS statis merchant & QR menu meja, keduanya menyentuh identitas
         // toko, jadi bukan wewenang kasir.
         Route::post('pengaturan/toko/qris', [PengaturanTokoController::class, 'uploadQris']);
         Route::delete('pengaturan/toko/qris', [PengaturanTokoController::class, 'hapusQris']);

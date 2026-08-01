@@ -14,11 +14,11 @@ use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
- * Blok D — pembatalan / koreksi pesanan yang salah.
+ * Blok D, pembatalan / koreksi pesanan yang salah.
  *
  * BUKAN pengembalian uang: tidak ada kas keluar, tidak ada metode pengembalian
  * dana. Nilainya dicatat karena omzet dashboard dan laporan kasir harus ikut
- * terkoreksi — penjualan yang dibatalkan tidak boleh tetap terhitung.
+ * terkoreksi, penjualan yang dibatalkan tidak boleh tetap terhitung.
  */
 class PembatalanTest extends TestCase
 {
@@ -267,7 +267,7 @@ class PembatalanTest extends TestCase
     }
 
     /**
-     * REGRESSION D1 — sisi poin earn.
+     * REGRESSION D1: sisi poin earn.
      *
      * Transaksi pending belum pernah memberi poin earn (`loyalty_applied_at`
      * masih null), jadi tidak ada yang boleh ditarik.
@@ -288,7 +288,7 @@ class PembatalanTest extends TestCase
     }
 
     /**
-     * REGRESSION D1 — bug yang diperbaiki.
+     * REGRESSION D1: bug yang diperbaiki.
      *
      * `redeemPoin()` sudah memotong saldo saat redeem walau transaksinya masih
      * pending, sementara `batal()` lama cuma mengubah status. Akibatnya

@@ -33,7 +33,7 @@ class DaftarTransaksiQuery
     }
 
     /**
-     * Ringkasan hasil TERFILTER — bukan seluruh tabel. Inilah yang membuat
+     * Ringkasan hasil TERFILTER, bukan seluruh tabel. Inilah yang membuat
      * filter berguna buat manager: angkanya ikut berubah, bukan cuma daftarnya.
      *
      * @return array{jumlah_transaksi: int, total_omzet: int, total_qty: int}
@@ -53,7 +53,7 @@ class DaftarTransaksiQuery
      * Batas hari dihitung dalam WIB lewat {@see WaktuToko}, bukan
      * `whereDate()`. `whereDate()` memakai `config('app.timezone')` yang masih
      * UTC, sehingga transaksi pagi (sebelum 07.00 WIB) jatuh ke tanggal
-     * sebelumnya — dan manager yang membuka "hari ini" tidak melihatnya.
+     * sebelumnya, dan manager yang membuka "hari ini" tidak melihatnya.
      */
     private function filterTanggal(Builder $query, IndexTransaksiRequest $request): void
     {
@@ -110,7 +110,7 @@ class DaftarTransaksiQuery
         // Alias lama, dipakai kartu statistik kasir yang sudah jalan.
         // Diperlakukan sebagai `dibayar_oleh` karena ke akun itulah penjualan
         // dihitung, dengan fallback ke pembuat untuk transaksi yang belum
-        // dibayar — kalau tidak, pesanan pending kasir itu sendiri menghilang
+        // dibayar, kalau tidak, pesanan pending kasir itu sendiri menghilang
         // dari kartunya.
         $userId = $request->nilai('user_id');
         if ($userId !== null) {
@@ -124,7 +124,7 @@ class DaftarTransaksiQuery
     }
 
     /**
-     * `cari` mencocokkan kode pesanan, nama customer, atau nomor WA customer —
+     * `cari` mencocokkan kode pesanan, nama customer, atau nomor WA customer,
      * satu kotak pencarian untuk ketiganya, karena manager tidak selalu tahu
      * yang mana yang dia pegang.
      *
@@ -132,7 +132,7 @@ class DaftarTransaksiQuery
      * keduanya bekerja:
      *
      * - **nomor lengkap** dalam ejaan apa pun (`0812…`, `+62 812…`, `62812…`)
-     * - **potongan nomor**, termasuk 4 digit terakhir (`8122`) — inilah yang
+     * - **potongan nomor**, termasuk 4 digit terakhir (`8122`), inilah yang
      *   dipakai kasir/manager saat pelanggan hanya menyebut ekor nomornya
      *
      * Pola teks lewat {@see PolaCari} supaya case-insensitive di PostgreSQL dan

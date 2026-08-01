@@ -2,13 +2,20 @@
 
 namespace App\Exports\Sheets;
 
-use App\Models\LaporanRfm;
+use App\Services\RfmQuery;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
+/**
+ * Angkanya DIHITUNG lewat {@see RfmQuery}, sumbernya sama persis dengan yang
+ * dipakai halaman Laporan. Sebelumnya sheet ini membaca snapshot `laporan_rfm`
+ * sementara dashboard sudah dihitung ulang, dan dua tempat yang menjawab
+ * pertanyaan sama dengan angka berbeda adalah cara tercepat kehilangan
+ * kepercayaan pada laporannya.
+ */
 class RfmSheet implements FromArray, WithTitle
 {
-    private const PERIODE_LABEL = '1 Jun 2026 – 30 Jul 2026';
+    public function __construct(private readonly RfmQuery $rfm = new RfmQuery) {}
 
     public function title(): string
     {
@@ -20,21 +27,24 @@ class RfmSheet implements FromArray, WithTitle
      */
     public function array(): array
     {
+        $periode = $this->rfm->periode();
+
         $rows = [
-            ['Catatan: snapshot periode penuh '.self::PERIODE_LABEL.' — tidak difilter tanggal.'],
+            ['Catatan: seluruh periode data'.($periode === null ? '' : ' ('.$periode.')').', tidak difilter tanggal.'],
+            ['Recency dihitung dari hari setelah transaksi terakhir di data, dan ikut bergerak saat ada transaksi baru.'],
             [],
             [
-                'Nama Pelanggan', 'Recency (hari)', 'Kunjungan', 'Total Pcs',
-                'Monetary (Rp)', 'Total Poin', 'Skor Frekuensi',
+                'Nama Pelanggan', 'Recency (hari)', 'Kunjungan',
+                'Monetary (Rp)', 'Total Poin',
                 'R', 'F', 'M', 'RFM Total', 'Segmen',
             ],
         ];
 
-        foreach (LaporanRfm::query()->orderByDesc('rfm_total')->orderBy('nama_pelanggan')->get() as $r) {
+        foreach ($this->rfm->semua() as $r) {
             $rows[] = [
-                $r->nama_pelanggan, $r->recency, $r->frequency, $r->total_pcs_dibeli,
-                $r->monetary, $r->total_poin_loyalty, $r->frequency_skor,
-                $r->r_score, $r->f_score, $r->m_score, $r->rfm_total, $r->segmen,
+                $r['nama_pelanggan'], $r['recency'], $r['frequency'],
+                $r['monetary'], $r['total_poin_loyalty'],
+                $r['r_score'], $r['f_score'], $r['m_score'], $r['rfm_total'], $r['segmen'],
             ];
         }
 

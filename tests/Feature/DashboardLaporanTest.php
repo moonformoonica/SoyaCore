@@ -22,7 +22,7 @@ class DashboardLaporanTest extends TestCase
     private const FULL_REVENUE = 26257000;
 
     /**
-     * Revenue per ukuran hanya mencakup minuman — dessert & cookies
+     * Revenue per ukuran hanya mencakup minuman, dessert & cookies
      * (Cup/Pack) sengaja dikecualikan, jadi lebih kecil dari FULL_REVENUE.
      */
     private const MINUMAN_REVENUE = 21192000;
@@ -33,7 +33,7 @@ class DashboardLaporanTest extends TestCase
 
     /**
      * `Rekap Kasir` diletakkan setelah `Ringkasan` supaya terlihat lebih dulu
-     * daripada sheet detail — itu yang dibaca manager.
+     * daripada sheet detail, itu yang dibaca manager.
      */
     private const SHEET_LENGKAP = [
         'Ringkasan', 'Rekap Kasir', 'Detail Transaksi', 'Revenue per Ukuran',
@@ -144,32 +144,94 @@ class DashboardLaporanTest extends TestCase
             ->assertJsonCount(3, 'data.top_pelanggan');
     }
 
-    public function test_rfm_dan_switch_statis_dengan_periode_label(): void
+    public function test_rfm_dihitung_dari_laporan_transaksi_bukan_snapshot(): void
     {
         Sanctum::actingAs($this->manager());
 
-        $this->getJson('/api/dashboard/rfm')
+        $respon = $this->getJson('/api/dashboard/rfm')
             ->assertOk()
-            ->assertJsonPath('periode_label', '1 Jun 2026 – 30 Jul 2026')
             ->assertJsonStructure(['ringkasan_segmen', 'data'])
             ->assertJsonCount(345, 'data');
 
-        // Penamaan segmen berubah di data revisi Juni–Juli 2026:
+        // Label periode ikut rentang data yang benar-benar ada, bukan teks
+        // yang dipatok di kode.
+        $this->assertSame('1 Jun 2026 - 30 Jul 2026', $respon->json('periode_label'));
+
+        // Angka yang bisa direproduksi persis dari CSV Kamila: satu pelanggan
+        // yang belanja sekali, dan seorang pelanggan sering yang sudah lama
+        // tidak datang.
+        $baris = collect($respon->json('data'))->keyBy('nama_pelanggan');
+
+        $this->assertSame(1, $baris['Abi']['frequency']);
+        $this->assertSame(15000, $baris['Abi']['monetary']);
+        $this->assertSame('Pelanggan Baru', $baris['Abi']['segmen']);
+
+        $this->assertSame(2, $baris['Abdullah']['frequency']);
+        $this->assertSame(119000, $baris['Abdullah']['monetary']);
+
+        // Recency memakai acuan hari SETELAH transaksi terakhir di data,
+        // sehingga pelanggan di tanggal terbaru bernilai 1, bukan 0.
+        $this->assertSame(1, $baris->min('recency'));
+    }
+
+    public function test_rfm_ikut_berubah_saat_ada_transaksi_baru_selesai(): void
+    {
+        Sanctum::actingAs($this->manager());
+
+        $sebelum = collect($this->getJson('/api/dashboard/rfm')->json('data'))
+            ->keyBy('nama_pelanggan');
+
+        $this->assertArrayNotHasKey('Pelanggan Baru Sekali', $sebelum->all());
+
+        // Satu baris proyeksi POS, bentuk yang sama dengan yang ditulis
+        // LaporanProjector saat kasir menandai lunas.
+        \App\Models\LaporanTransaksi::create([
+            'kode' => \App\Models\LaporanTransaksi::PREFIX_POS.'900-1',
+            'tanggal' => '2026-07-30',
+            'platform' => 'cash',
+            'nama_pelanggan' => 'Pelanggan Baru Sekali',
+            'nama_produk' => 'Original',
+            'ukuran' => 'Reguler',
+            'qty' => 1,
+            'harga_satuan' => 17000,
+            'total' => 17000,
+            'poin_loyalty' => 17,
+        ]);
+
+        $sesudah = collect($this->getJson('/api/dashboard/rfm')->json('data'))
+            ->keyBy('nama_pelanggan');
+
+        $this->assertArrayHasKey('Pelanggan Baru Sekali', $sesudah->all());
+        $this->assertSame(1, $sesudah['Pelanggan Baru Sekali']['frequency']);
+        $this->assertSame(17000, $sesudah['Pelanggan Baru Sekali']['monetary']);
+        $this->assertSame('Pelanggan Baru', $sesudah['Pelanggan Baru Sekali']['segmen']);
+    }
+
+    public function test_switch_statis_dengan_periode_label(): void
+    {
+        Sanctum::actingAs($this->manager());
+
+        // Penamaan segmen berubah di data revisi Juni-Juli 2026:
         // "Pelanggan Loyal" -> "Loyal", "Pelanggan Potensial" -> "Potensial",
         // "Hampir Hilang" diganti "Pelanggan Baru".
-        $this->getJson('/api/dashboard/rfm?segmen=Loyal')
-            ->assertOk()
-            ->assertJsonPath('data.0.segmen', 'Loyal')
-            ->assertJsonCount(21, 'data');
+        $respon = $this->getJson('/api/dashboard/rfm?segmen=Loyal')->assertOk();
+
+        $segmen = array_column($respon->json('data'), 'segmen');
+        $this->assertNotEmpty($segmen);
+        $this->assertSame(['Loyal'], array_unique($segmen));
+
+        // Ringkasan segmen dihitung dari SELURUH pelanggan, tidak ikut
+        // tersaring; kalau ikut, donut chart-nya berubah jadi satu potong.
+        $this->assertSame(345, array_sum($respon->json('ringkasan_segmen')));
 
         $this->getJson('/api/dashboard/switch')
             ->assertOk()
-            ->assertJsonPath('periode_label', '1 Jun 2026 – 30 Jul 2026')
+            ->assertJsonPath('periode_label', '1 Jun 2026 - 30 Jul 2026')
             ->assertJsonCount(35, 'data');
     }
 
     /**
-     * Porsi dashboard yang boleh dibuka kasir — performa harian saja.
+     * Porsi dashboard yang boleh dibuka kasir, performa harian saja.
      *
      * @return list<string>
      */

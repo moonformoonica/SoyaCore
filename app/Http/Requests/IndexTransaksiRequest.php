@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *
  * Seluruh filter opsional dan bisa digabung (AND). Dikumpulkan di FormRequest,
  * bukan dibaca mentah dari `$request->query()` di controller, supaya nilai yang
- * tidak dikenal ditolak 422 dengan pesan — bukan diam-diam menghasilkan daftar
+ * tidak dikenal ditolak 422 dengan pesan, bukan diam-diam menghasilkan daftar
  * kosong yang terlihat seperti "tidak ada transaksi hari ini".
  */
 class IndexTransaksiRequest extends FormRequest
@@ -34,11 +34,11 @@ class IndexTransaksiRequest extends FormRequest
             'sumber' => ['nullable', 'in:kasir,self_order'],
             'metode_bayar' => ['nullable', 'in:cash,qris'],
             // Dikirim sebagai string di query param, jadi 'true'/'false' ikut
-            // diterima — bukan cuma 1/0 seperti aturan `boolean` bawaan.
+            // diterima, bukan cuma 1/0 seperti aturan `boolean` bawaan.
             'ada_redeem' => ['nullable', 'in:true,false,1,0'],
             'cari' => ['nullable', 'string', 'max:100'],
             'total_min' => ['nullable', 'integer', 'min:0'],
-            // `gte` baru dipasang kalau batas bawahnya ikut dikirim — sama
+            // `gte` baru dipasang kalau batas bawahnya ikut dikirim, sama
             // alasannya dengan `tanggal_selesai` di MemfilterRentangTanggal:
             // `gte:total_min` tanpa `total_min` menolak request yang sah.
             'total_max' => array_merge(
@@ -85,7 +85,7 @@ class IndexTransaksiRequest extends FormRequest
     }
 
     /**
-     * Maksimum 200 baris per halaman — pagar yang sudah berlaku sebelum filter
+     * Maksimum 200 baris per halaman, pagar yang sudah berlaku sebelum filter
      * ini ada, dipertahankan supaya satu request tidak bisa menarik seluruh
      * tabel.
      */

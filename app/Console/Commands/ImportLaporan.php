@@ -43,7 +43,7 @@ class ImportLaporan extends Command
         );
 
         if (in_array(0, $hasil, true)) {
-            $this->warn('Ada tabel yang terisi 0 baris — cek lagi isi CSV-nya.');
+            $this->warn('Ada tabel yang terisi 0 baris, cek lagi isi CSV-nya.');
         }
 
         $this->info('Selesai. Dashboard & export Excel otomatis memakai data ini.');

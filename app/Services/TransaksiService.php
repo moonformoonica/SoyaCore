@@ -6,8 +6,8 @@ use App\Exceptions\ApiException;
 use App\Models\Customer;
 use App\Models\Loyalty;
 use App\Models\Transaksi;
+use App\Support\KodePesanan;
 use App\Support\NomorWa;
-use App\Support\WaktuToko;
 use Illuminate\Support\Collection;
 
 class TransaksiService
@@ -23,7 +23,7 @@ class TransaksiService
         if ($persen > 0) {
             // Diskon persen diturunkan ulang tiap kali item berubah. Tanpa
             // membawa plafonnya ke sini, kasir yang menambah item setelah
-            // redeem membuat potongan ikut membengkak dan plafon terlewati —
+            // redeem membuat potongan ikut membengkak dan plafon terlewati,
             // persis celah yang ditutup kolom transaksi.maks_potongan.
             $hasil = $this->diskonEngine->hitung(
                 (int) $items->sum('subtotal'),
@@ -43,7 +43,7 @@ class TransaksiService
 
     /**
      * `$maksPotongan` hanya diisi jalur redeem poin. Diskon manual kasir tetap
-     * tanpa plafon — itu wewenang penuh kasir/manager.
+     * tanpa plafon, itu wewenang penuh kasir/manager.
      */
     public function terapkanDiskon(Transaksi $transaksi, string $tipe, int $nilai, ?int $maksPotongan = null): Transaksi
     {
@@ -55,7 +55,7 @@ class TransaksiService
         if ($transaksi->kode_redeem !== null) {
             throw new ApiException(
                 'diskon_terkunci_redeem',
-                "Transaksi ini sudah redeem '{$transaksi->kode_redeem}' — diskon manual tidak bisa ditumpuk di atas diskon reward. Kalau memang perlu diskon lain, batalkan transaksi dan buat baru.",
+                "Transaksi ini sudah redeem '{$transaksi->kode_redeem}', diskon manual tidak bisa ditumpuk di atas diskon reward. Kalau memang perlu diskon lain, batalkan transaksi dan buat baru.",
                 409,
             );
         }
@@ -81,16 +81,14 @@ class TransaksiService
         }
     }
 
+    /**
+     * Kode pesanan kasir dan SoyaScan kini berbagi satu urutan mingguan,
+     * lihat {@see KodePesanan}. Format lama `#K001` sudah tidak dipakai:
+     * huruf tidak lagi menandai asal pesanan, kolom `sumber` yang memegang itu.
+     */
     public function generateKodePesanan(): string
     {
-        // Batas harinya WIB, bukan `whereDate()` yang memakai zona server:
-        // dengan `app.timezone` = UTC, penomoran akan berganti pukul 07.00 WIB
-        // dan pesanan pagi melanjutkan nomor kemarin.
-        $urutanHariIni = Transaksi::where('kode_pesanan', 'like', '#K%')
-            ->where('created_at', '>=', WaktuToko::awalHari(WaktuToko::tanggalHariIni()))
-            ->count() + 1;
-
-        return sprintf('#K%03d', $urutanHariIni);
+        return KodePesanan::berikutnya();
     }
 
     /**

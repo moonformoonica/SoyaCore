@@ -5,12 +5,12 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Override katalog redeem (M3) — supaya manager bisa mengubah biaya poin
+ * Override katalog redeem (M3), supaya manager bisa mengubah biaya poin
  * tiap reward tanpa ngoding (mis. Gratis Original 150 -> 200 poin).
  *
  * PENTING, tabel ini menyimpan SELISIH dari default, bukan katalognya:
  * - Struktur item (label, tipe, persen, min_subtotal, mapping menu gratis,
- *   preferensi ukuran) tetap didefinisikan di LoyaltyRedemptionCatalog —
+ *   preferensi ukuran) tetap didefinisikan di LoyaltyRedemptionCatalog,
  *   itu bagian yang menentukan PERILAKU dan tidak aman diketik bebas.
  * - Yang boleh diubah manager cuma `poin` dan `is_active`.
  *

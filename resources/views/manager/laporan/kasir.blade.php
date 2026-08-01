@@ -12,7 +12,7 @@
     <div class="page-header">
         <div>
             <h1>Laporan Kasir</h1>
-            <p>Perbandingan kinerja antar akun kasir — <span id="lkPeriode">memuat…</span></p>
+            <p>Perbandingan kinerja antar akun kasir, <span id="lkPeriode">memuat…</span></p>
         </div>
 
         <div class="trx-date-range">

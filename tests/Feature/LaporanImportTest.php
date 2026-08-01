@@ -24,7 +24,7 @@ class LaporanImportTest extends TestCase
             mkdir($this->dir, 0777, true);
         }
 
-        // Semua file wajib ada — importer melempar exception kalau hilang.
+        // Semua file wajib ada, importer melempar exception kalau hilang.
         $this->tulis('Data_Transaksi_Bersih.csv', <<<'CSV'
             ID Transaksi,Tanggal,Platform,Nama Pelanggan,No WhatsApp,Nama Produk,Rasa,Ukuran,Jumlah (pcs),Harga Satuan (Rp),Total (Rp),Poin Loyalty,Catatan,Hari,Urutan_Hari
             TR-1,2026-06-01,QRIS,Budi,,Soya Original,Original,Reguler,1,17000,17000,17,,Senin,1

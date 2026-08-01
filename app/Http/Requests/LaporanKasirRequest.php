@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Rentang tanggal laporan perbandingan kasir. Aturan dan pesan errornya
- * dipakai bersama daftar transaksi lewat {@see MemfilterRentangTanggal} —
+ * dipakai bersama daftar transaksi lewat {@see MemfilterRentangTanggal},
  * dua halaman yang bersebelahan tidak boleh punya dua definisi "7 hari".
  */
 class LaporanKasirRequest extends FormRequest

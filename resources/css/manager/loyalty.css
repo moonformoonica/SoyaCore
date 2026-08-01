@@ -181,7 +181,7 @@
   border:none; outline:none; background:none; flex:1; font-family:'Inter'; font-size:13.5px;
 }
 .loyalty-manager .lm-cek-poin-result{margin-top:14px; display:flex; flex-direction:column; align-items:flex-start; gap:8px;}
-/* Belum ada hasil pencarian — jangan sisakan ruang kosong di bawah input */
+/* Belum ada hasil pencarian, jangan sisakan ruang kosong di bawah input */
 .loyalty-manager .lm-cek-poin-result:empty{display:none;}
 .loyalty-manager .lm-cek-poin-loading,
 .loyalty-manager .lm-cek-poin-empty{margin:0; font-size:13px; color:var(--lm-ink-soft);}

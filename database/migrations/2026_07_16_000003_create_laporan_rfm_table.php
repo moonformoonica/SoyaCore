@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Snapshot RFM statis satu periode penuh (1 Jun 2026 – 30 Jul 2026).
- * Tanpa kolom tanggal — tidak menerima filter tanggal.
+ * Tanpa kolom tanggal, tidak menerima filter tanggal.
  */
 return new class extends Migration
 {

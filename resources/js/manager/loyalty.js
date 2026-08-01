@@ -374,7 +374,7 @@
       }
     }
     if (gagalMuatKatalog) {
-      toast('Gagal memuat katalog reward — angka di bawah ini setelan bawaan, belum tentu sama dengan yang tersimpan.');
+      toast('Gagal memuat katalog reward, angka di bawah ini setelan bawaan, belum tentu sama dengan yang tersimpan.');
     }
 
     renderRewards();

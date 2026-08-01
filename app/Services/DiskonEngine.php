@@ -32,7 +32,7 @@ class DiskonEngine
     }
 
     /**
-     * Begitu plafon mengikat, diskonnya bukan persen murni lagi — ia jadi
+     * Begitu plafon mengikat, diskonnya bukan persen murni lagi, ia jadi
      * potongan nominal. Bentuk hasilnya ikut berubah supaya pemanggil menulis
      * potongan yang sudah dipotong plafon ke tiap item, bukan menghitung ulang
      * persen di subtotal yang sudah membesar.

@@ -11,10 +11,38 @@
 .filter-form button { background: #1f7a4d; color: #fff; cursor: pointer; }
 .filter-sd { color: #fff; font-size: 13px; padding: 0 2px; }
 
-.cards { display: flex; gap: 1px; background: #cfe8da; border-radius: 8px; overflow: hidden; margin-bottom: 16px; flex-wrap: wrap; }
-.card { flex: 1; min-width: 160px; background: #cfe8da; padding: 16px 24px; }
+/* Tiga kartu terpisah, bukan satu balok panjang.
+   Sebelumnya `.cards` dan `.card` memakai warna latar yang sama persis dengan
+   `gap: 1px`, jadi ketiganya menempel jadi satu blok yang cuma dibelah garis
+   rambut, dan tidak punya shadow sama sekali sementara `.panel` di bawahnya
+   punya. Gap dan shadow-nya kini disamakan dengan `.panel` supaya seluruh
+   dashboard terbaca sebagai satu bahasa visual. */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.card {
+    background: #E6F1EA;
+    border: 1px solid #D3E6DA;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+    min-width: 0;
+}
+
 .card .label { font-size: 13px; color: #1f4d33; }
-.card .value { font-size: 24px; font-weight: 700; color: #14532d; margin-top: 4px; }
+.card .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #14532d;
+    margin-top: 4px;
+    /* Angka rupiah bisa panjang; tanpa ini kartunya melebar dan grid-nya
+       kehilangan lebar yang sama rata. */
+    overflow-wrap: anywhere;
+}
 .dash-content { min-width: 0; width: 100%; overflow-x: hidden; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; min-width: 0; }
 .panel { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); min-width: 0; overflow: hidden; }
@@ -26,6 +54,27 @@
 
 .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .dash-table th, .dash-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; }
+
+/* Header tabel ini dulu ikut kecipratan `thead { background:#7FB77E }` dari
+   manager/transaksi.css, yang dimuat app-wide. Sekarang aturan itu sudah
+   dibatasi ke `.table-card`, jadi gayanya ditulis eksplisit di sini, bukan
+   menumpang gaya halaman lain. */
+.dash-table thead th {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E5E7EB;
+    white-space: nowrap;
+}
+
+/* Kolom 1 (#) dan 2 (nama) rata kiri, kolom angka rata kanan supaya digitnya
+   berbaris dan Total/Monetary gampang dibandingkan antar baris. */
+.dash-table th:nth-child(n+3),
+.dash-table td:nth-child(n+3) { text-align: right; }
+.dash-table td { font-variant-numeric: tabular-nums; }
 
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; min-width: 0; }
 .grid-split { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px; min-width: 0; align-items: start; }
@@ -78,7 +127,10 @@
         grid-template-columns: 1fr;
     }
     .dash-header h1 { font-size: 16px; }
-    .card { min-width: 45%; padding: 14px 16px; }
+    /* Tiga kartu berdampingan jadi terlalu sempit untuk angka rupiah di layar
+       tablet, jadi dipecah dua kolom dulu sebelum turun ke satu. */
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .card { padding: 14px 16px; }
     .card .value { font-size: 20px; }
 }
 
@@ -88,7 +140,7 @@
     .filter-form input,
     .filter-form select,
     .filter-form button { flex: 1; min-width: 0; }
-    .card { min-width: 100%; }
+    .cards { grid-template-columns: 1fr; }
     .panel { padding: 12px; }
     .dash-content canvas { max-height: 200px; }
 }

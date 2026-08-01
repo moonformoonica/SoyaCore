@@ -56,7 +56,7 @@ trait MemfilterRentangTanggal
      * Rentang inklusif menurut WIB, `null` = tak dibatasi di sisi itu.
      *
      * Prioritasnya: batas eksplisit menang atas `preset`. Kalau salah satu
-     * batas dikirim, preset diabaikan seluruhnya — rentang yang setengah
+     * batas dikirim, preset diabaikan seluruhnya, rentang yang setengah
      * eksplisit setengah preset menghasilkan angka yang tidak bisa dijelaskan
      * ke siapa pun.
      *

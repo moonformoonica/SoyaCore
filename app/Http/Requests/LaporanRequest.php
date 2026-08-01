@@ -26,10 +26,10 @@ class LaporanRequest extends FormRequest
             'rekomendasi' => ['nullable', 'string', 'max:100'],
             // Keputusan TAMPILAN: membuang bucket tak berlabel dari chart.
             // Dikirim sebagai string di query param, jadi 'true'/'false' ikut
-            // diterima — bukan cuma 1/0 seperti aturan `boolean` bawaan.
+            // diterima, bukan cuma 1/0 seperti aturan `boolean` bawaan.
             'sembunyikan_tidak_diketahui' => ['nullable', 'in:true,false,1,0'],
             // Menyaring SELURUH sheet export ke satu akun kasir. Divalidasi
-            // `exists` karena namanya ikut masuk ke nama file — id asal-asalan
+            // `exists` karena namanya ikut masuk ke nama file, id asal-asalan
             // menghasilkan file bernama aneh yang lebih membingungkan
             // daripada error.
             'kasir_user_id' => ['nullable', 'integer', 'exists:users,id'],

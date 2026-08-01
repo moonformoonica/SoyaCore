@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Pengaturan Loyalty (M3) — memindahkan rate poin dari hardcode
+ * Pengaturan Loyalty (M3), memindahkan rate poin dari hardcode
  * LoyaltyService (intdiv(total, 1000)) ke tabel yang bisa diedit manager.
  *
  * Tabel ini SINGLETON: hanya pernah berisi 0 atau 1 baris.

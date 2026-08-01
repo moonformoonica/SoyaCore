@@ -1,6 +1,6 @@
-# Format Export Excel — Laporan SoyaCore
+# Format Export Excel, Laporan SoyaCore
 
-> **Status: v1 — locked, 6 Juli 2026.**
+> **Status: v1, locked, 6 Juli 2026.**
 > Format ini sudah disepakati dengan Kamila dan menjadi acuan pembuatan
 > export class (Laravel Excel) di milestone berikutnya.
 
@@ -21,7 +21,7 @@ Aturan umum:
 
 ---
 
-## Sheet 1 — "Penjualan"
+## Sheet 1, "Penjualan"
 
 **Grain: satu baris = satu item transaksi** (baris `detail_transaksi`), bukan per transaksi.
 Transaksi dengan 3 item menghasilkan 3 baris; kolom level-transaksi (ID, tanggal, pelanggan,
@@ -39,7 +39,7 @@ platform, catatan) berulang di tiap barisnya.
 | 8 | Rasa | `menu.rasa` | Boleh kosong |
 | 9 | Ukuran | `menu.ukuran` | Boleh kosong |
 | 10 | Jumlah | `detail_transaksi.qty` | |
-| 11 | Harga Satuan | `detail_transaksi.harga_satuan` | Snapshot harga saat transaksi — **jangan** ambil `menu.harga` live |
+| 11 | Harga Satuan | `detail_transaksi.harga_satuan` | Snapshot harga saat transaksi, **jangan** ambil `menu.harga` live |
 | 12 | Total | `detail_transaksi.subtotal` | `qty × harga_satuan`; 0 jika `is_reward = true` |
 | 13 | Point Loyalty | `transaksi.point_earned` | Level transaksi, berulang per baris item |
 | 14 | Catatan | `transaksi.catatan` | Free text, boleh kosong |
@@ -48,7 +48,7 @@ Filter: `transaksi.status = 'lunas'`. Urutkan `transaksi.waktu_lunas` ascending.
 
 ---
 
-## Sheet 2 — "Pelanggan"
+## Sheet 2, "Pelanggan"
 
 **Grain: satu baris = satu pelanggan** (agregat dari seluruh transaksi lunas miliknya).
 Pelanggan tanpa transaksi lunas tidak perlu dimunculkan.
@@ -68,5 +68,5 @@ Pelanggan tanpa transaksi lunas tidak perlu dimunculkan.
 Catatan implementasi untuk export class (Laravel Excel):
 - Semua agregasi difilter `transaksi.status = 'lunas'`.
 - MODE = nilai yang paling sering muncul; jika seri, ambil salah satu (yang terbaru
-  dipakai) — tidak perlu tie-breaking rumit.
+  dipakai), tidak perlu tie-breaking rumit.
 - Join Rasa/Ukuran Favorit: `customer → transaksi (lunas) → detail_transaksi → menu`.

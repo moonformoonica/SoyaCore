@@ -12,7 +12,7 @@ use App\Support\WaktuToko;
  *
  * DUA SUMBER, DAN INI DISENGAJA:
  *
- * - Kolom uang, qty, dan poin diberikan diambil dari `laporan_transaksi` —
+ * - Kolom uang, qty, dan poin diberikan diambil dari `laporan_transaksi`,
  *   tabel yang SAMA dengan yang dibaca sheet `Ringkasan` dan dashboard. Dengan
  *   begitu totalnya cocok by construction, bukan karena dua rumus terpisah
  *   kebetulan menghasilkan angka yang sama.
@@ -34,7 +34,7 @@ class RekapKasirHarian
 
     /**
      * Satu baris per kombinasi tanggal × kasir, diurutkan tanggal lalu nama,
-     * dengan baris TOTAL di akhir tiap tanggal dan satu total keseluruhan —
+     * dengan baris TOTAL di akhir tiap tanggal dan satu total keseluruhan,
      * supaya manager membaca file ini tanpa membuat pivot sendiri.
      *
      * @return list<array<string, mixed>>
@@ -117,7 +117,7 @@ class RekapKasirHarian
             // `platform` berisi metode bayar untuk baris POS, dan campuran
             // channel untuk baris CSV historis (Shopee/GoJek/…). Yang bukan
             // cash/qris tidak masuk kedua kolom itu tapi tetap ada di Total
-            // Omzet — jadi keduanya tidak selalu berjumlah sama dengan total,
+            // Omzet, jadi keduanya tidak selalu berjumlah sama dengan total,
             // dan itu memang apa adanya datanya.
             $metode = mb_strtolower((string) $row->platform);
             if ($metode === 'cash' || $metode === 'qris') {
@@ -155,7 +155,7 @@ class RekapKasirHarian
 
     /**
      * Kolom yang tidak ada di layer laporan: diskon, poin ditukar, dan
-     * pembatalan. Hanya berlaku untuk transaksi POS — baris CSV historis
+     * pembatalan. Hanya berlaku untuk transaksi POS, baris CSV historis
      * memang tidak punya padanannya, dan dibiarkan 0.
      *
      * @param  array<string, array<string, mixed>>  $rekap
@@ -184,7 +184,7 @@ class RekapKasirHarian
         }
 
         // Pembatalan diatribusikan ke akun yang MEMPROSESnya, dan ditaruh pada
-        // tanggal dokumen pembatalannya — bukan tanggal penjualan aslinya.
+        // tanggal dokumen pembatalannya, bukan tanggal penjualan aslinya.
         $pembatalan = Pembatalan::query()->with('user:id,nama');
         $this->batasiWaktu($pembatalan, 'created_at', $start, $end);
 

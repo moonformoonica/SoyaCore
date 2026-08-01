@@ -7,7 +7,7 @@ use App\Services\LaporanKasirQuery;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Laporan yang menyandingkan akun kasir berdampingan — manager tidak perlu
+ * Laporan yang menyandingkan akun kasir berdampingan, manager tidak perlu
  * membuka satu per satu lalu membandingkan sendiri.
  */
 class LaporanKasirController extends Controller

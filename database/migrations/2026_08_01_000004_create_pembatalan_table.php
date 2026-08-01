@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Pembatalan / koreksi pesanan yang salah — BUKAN pengembalian uang.
+ * Pembatalan / koreksi pesanan yang salah, BUKAN pengembalian uang.
  *
  * Karena itu penamaannya `pembatalan`, dan nilainya `nilai_dibatalkan` yang
  * artinya "penjualan sebesar ini tidak jadi", bukan "uang sebesar ini
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * CATATAN STATUS: `transaksi.status` menerima nilai baru `batal_sebagian`.
  * Kolomnya `string` tanpa enum/check constraint, jadi tidak ada perubahan skema
- * yang perlu dilakukan untuk itu — status `batal` yang sudah ada tetap dipakai
+ * yang perlu dilakukan untuk itu, status `batal` yang sudah ada tetap dipakai
  * untuk pembatalan penuh, dan tidak ada status baru untuk kasus itu.
  */
 return new class extends Migration
@@ -29,7 +29,7 @@ return new class extends Migration
         Schema::create('pembatalan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('transaksi_id')->constrained('transaksi');
-            // Akun kasir yang MEMPROSES pembatalan — bukan pembuat penjualan
+            // Akun kasir yang MEMPROSES pembatalan, bukan pembuat penjualan
             // aslinya. Pembatalan berlebih dari satu akun adalah pola yang
             // perlu terlihat di laporan kasir.
             $table->foreignId('user_id')->constrained('users');

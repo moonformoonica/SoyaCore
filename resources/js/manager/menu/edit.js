@@ -123,7 +123,7 @@ rasaInput.addEventListener("keydown", (e) => {
 const UKURAN_PRESET = ["Hot", "Reguler", "Large", "250ml", "500ml", "1000ml"];
 
 // Golongan tiap ukuran diambil dari `golongan_ukuran` milik backend, bukan
-// ditebak dari string — supaya penambahan ukuran baru cukup diurus di satu
+// ditebak dari string, supaya penambahan ukuran baru cukup diurus di satu
 // tempat. Diisi saat data menu dimuat.
 let golonganUkuran = {};
 
@@ -160,7 +160,7 @@ function renderUkuranGrid(existingVarian = []) {
     });
 
     // Preset dulu, lalu ukuran milik menu ini yang di luar preset (mis. dessert
-    // dengan ukuran kosong) supaya tidak hilang dari layar — kalau hilang,
+    // dengan ukuran kosong) supaya tidak hilang dari layar, kalau hilang,
     // harganya ikut terhapus saat disimpan.
     const daftar = UKURAN_PRESET.slice();
     existingVarian.forEach((v) => {

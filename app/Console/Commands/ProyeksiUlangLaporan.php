@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * transaksi yang sudah jadi penjualan.
  *
  * Dibutuhkan kalau proyeksi pernah gagal (mis. deploy di tengah transaksi) atau
- * rumusnya berubah. Aman dijalankan berkali-kali — hasilnya selalu sama.
+ * rumusnya berubah. Aman dijalankan berkali-kali, hasilnya selalu sama.
  *
  * TIDAK menyentuh baris impor CSV historis: yang dihapus dan ditulis ulang
  * hanya baris berawalan `TRX-`.

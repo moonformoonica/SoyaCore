@@ -17,7 +17,7 @@ use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
- * Blok E & F — opsi sugar/ice SoyaScan, penghapusan nomor meja, QRIS,
+ * Blok E & F, opsi sugar/ice SoyaScan, penghapusan nomor meja, QRIS,
  * QR menu, dan golongan ukuran cup vs botol.
  */
 class SoyaScanOpsiMenuTest extends TestCase
@@ -98,7 +98,7 @@ class SoyaScanOpsiMenuTest extends TestCase
     }
 
     /**
-     * SoyaScan sengaja TIDAK punya fitur catatan/notes per item — keputusan
+     * SoyaScan sengaja TIDAK punya fitur catatan/notes per item, keputusan
      * pemilik produk. Pelanggan hanya memilih sugar & ice; permintaan bebas
      * disampaikan ke kasir di konter.
      *
@@ -117,7 +117,7 @@ class SoyaScanOpsiMenuTest extends TestCase
             ]],
         ]))
             ->assertCreated()
-            // Tidak ditolak — klien yang mengirimnya tidak rusak — tapi juga
+            // Tidak ditolak, klien yang mengirimnya tidak rusak, tapi juga
             // tidak dijanjikan di response.
             ->assertJsonMissingPath('items.0.catatan');
 
@@ -127,7 +127,7 @@ class SoyaScanOpsiMenuTest extends TestCase
 
     /**
      * Pemanis tiap menu tidak sama, jadi label pilihannya harus ikut menunya.
-     * Sebelum ini semua minuman menawarkan "Less Sugar" — termasuk Honey Lemon
+     * Sebelum ini semua minuman menawarkan "Less Sugar", termasuk Honey Lemon
      * yang di gelasnya tidak ada gula sama sekali, sehingga barista tidak tahu
      * apa yang harus dikurangi.
      */
@@ -183,7 +183,7 @@ class SoyaScanOpsiMenuTest extends TestCase
      * pemanis perlu ditampilkan.
      *
      * SoyaScan selalu menampilkannya (Gula Kelapa itu nilai jual produk), kasir
-     * hanya untuk pemanis non-bawaan — dan keputusan itu harus bisa dibaca dari
+     * hanya untuk pemanis non-bawaan, dan keputusan itu harus bisa dibaca dari
      * satu boolean, bukan dari frontend membandingkan string nama pemanis.
      */
     public function test_flag_khusus_menandai_pemanis_non_gula_kelapa(): void
@@ -220,7 +220,7 @@ class SoyaScanOpsiMenuTest extends TestCase
 
     /**
      * Label opsi di layar pemesanan pendek (ada judul kelompoknya), tapi di nota
-     * harus lengkap — "Less" sendirian tidak memberi tahu barista apa pun.
+     * harus lengkap, "Less" sendirian tidak memberi tahu barista apa pun.
      */
     public function test_label_sugar_di_nota_menyebut_pemanis_menunya(): void
     {
@@ -274,7 +274,7 @@ class SoyaScanOpsiMenuTest extends TestCase
             'items' => [['menu_id' => $this->hot->id, 'qty' => 1, 'level_sugar' => 'less']],
         ]))->assertCreated()->assertJsonPath('items.0.level_sugar_label', 'Less Gula Kelapa');
 
-        // Es tidak relevan di minuman panas — dan itu harus terlihat, bukan
+        // Es tidak relevan di minuman panas, dan itu harus terlihat, bukan
         // diabaikan diam-diam.
         $this->postJson('/api/order', $this->payloadOrder([
             'items' => [['menu_id' => $this->hot->id, 'qty' => 1, 'level_ice' => 'less']],

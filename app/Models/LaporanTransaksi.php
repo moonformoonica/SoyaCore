@@ -29,7 +29,7 @@ class LaporanTransaksi extends Model
     /**
      * Prefix `kode` untuk baris hasil proyeksi transaksi POS SoyaCore.
      * Baris impor CSV historis berawalan `TR-`, jadi keduanya hidup
-     * berdampingan di satu tabel tanpa saling menimpa — dan `laporan:proyeksi-ulang`
+     * berdampingan di satu tabel tanpa saling menimpa, dan `laporan:proyeksi-ulang`
      * bisa menulis ulang miliknya sendiri tanpa menyentuh data lama.
      */
     public const PREFIX_POS = 'TRX-';

@@ -10,7 +10,7 @@
 
         <div>
             <h1>Transaksi</h1>
-            <p>Riwayat seluruh transaksi penjualan Gres'Soy</p>
+            <p>Riwayat seluruh transaksi penjualan GresSOY</p>
         </div>
 
         <button class="download-btn" data-role="manager">
@@ -53,7 +53,7 @@
 
     <p class="stats-note" id="statsNote" data-role="manager" style="display:none;">
         <i class="fa-solid fa-circle-info"></i>
-        Kartu di atas mengikuti <strong>rentang tanggal</strong> saja — filter Sumber, Kasir,
+        Kartu di atas mengikuti <strong>rentang tanggal</strong> saja, filter Sumber, Kasir,
         Status, Metode, Redeem, dan kata kunci pencarian belum memengaruhinya.
     </p>
 
@@ -340,7 +340,7 @@
                         <label for="koreksiAlasan">Alasan <span class="wajib">*</span></label>
                         <input type="text" id="koreksiAlasan" maxlength="200"
                                placeholder="Contoh: Pelanggan salah pesan ukuran" autocomplete="off">
-                        <p class="koreksi-hint">Minimal 3 karakter — ditulis kasir, tidak diisi otomatis.</p>
+                        <p class="koreksi-hint">Minimal 3 karakter, ditulis kasir, tidak diisi otomatis.</p>
                     </div>
 
                     <div class="koreksi-field">

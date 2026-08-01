@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * Kenapa perlu disimpan, bukan cukup dihitung saat redeem: recalculateTotals()
  * menurunkan ulang diskon dari persen tiap kali item transaksi berubah. Tanpa
  * plafon yang ikut tersimpan, kasir yang menambah item setelah pelanggan
- * redeem membuat potongan ikut membengkak melewati plafonnya — persis cacat
+ * redeem membuat potongan ikut membengkak melewati plafonnya, persis cacat
  * yang mau ditutup.
  *
  * Null = transaksi tanpa redeem berplafon (termasuk semua transaksi lama dan

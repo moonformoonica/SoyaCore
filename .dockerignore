@@ -1,4 +1,4 @@
-# .env JANGAN ikut masuk image — kredensial Supabase di-set lewat
+# .env JANGAN ikut masuk image, kredensial Supabase di-set lewat
 # Environment Variables di dashboard Render.
 .env
 .env.*

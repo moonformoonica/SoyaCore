@@ -91,14 +91,15 @@ class TransaksiDiskonTest extends TestCase
         $this->assertNotNull($respon->json('data.waktu_lunas'));
     }
 
-    public function test_kode_pesanan_kasir_berurutan_harian(): void
+    public function test_kode_pesanan_berurutan_dalam_satu_seri(): void
     {
         $this->buatTransaksi();
         $id = $this->buatTransaksi();
 
+        // Transaksi kedua memperoleh nomor berikutnya, bukan mengulang #A00.
         $this->getJson("/api/transaksi/{$id}")
             ->assertOk()
-            ->assertJsonPath('data.kode_pesanan', '#K002');
+            ->assertJsonPath('data.kode_pesanan', '#A01');
     }
 
     public function test_qty_item_bisa_diubah_dan_item_bisa_dihapus(): void

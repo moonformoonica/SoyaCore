@@ -1,4 +1,4 @@
-# Pengaturan Loyalty & LoyalSeed — rate poin + katalog redeem
+# Pengaturan Loyalty & LoyalSeed, rate poin + katalog redeem
 
 > Menutup celah M3: sebelum ini rate poin dan biaya poin tiap reward hanya ada
 > sebagai angka di kode (`LoyaltyService` membagi `total` dengan `1000`,
@@ -38,7 +38,7 @@ terbalik, jadi tolong dicek sekali lagi sebelum disimpan:
 | Rate | Belanja Rp 50.000 | Arti |
 |---|---|---|
 | `1000` (bawaan) | 50 poin | 1 poin tiap Rp 1.000 |
-| `10000` | 5 poin | 1 poin tiap Rp 10.000 — **10x lebih pelit** |
+| `10000` | 5 poin | 1 poin tiap Rp 10.000, **10x lebih pelit** |
 
 Batas yang diterima: **100 – 1.000.000**. Ini pagar salah ketik, bukan aturan
 bisnis: rate `1` berarti tiap Rp 1 dapat 1 poin, dan rate raksasa mematikan
@@ -59,7 +59,7 @@ earning diam-diam tanpa ada yang sadar.
 }
 ```
 
-- `contoh` dihitung server dari rate yang berlaku — UI Settings sebaiknya
+- `contoh` dihitung server dari rate yang berlaku, UI Settings sebaiknya
   menampilkan ini apa adanya, jangan menghitung ulang rumusnya di frontend.
 - `diperbarui_pada`/`diperbarui_oleh` `null` = belum pernah diubah, masih
   memakai nilai bawaan.
@@ -83,7 +83,7 @@ bukan cuma tersimpan di layar:
    - **5** → setting sudah dipakai. ✅
    - **50** → masih memakai rate lama, berarti ada yang belum nyambung.
 
-Response Tandai Lunas juga membawa `rupiah_per_poin` — rate yang **benar-benar
+Response Tandai Lunas juga membawa `rupiah_per_poin`, rate yang **benar-benar
 dipakai** saat poin dihitung, disnapshot di transaksinya (kolom
 `transaksi.rupiah_per_poin`). Gunanya: begitu rate bisa berubah, `point_earned`
 transaksi lama tidak lagi bisa diverifikasi dari totalnya saja. Bernilai `null`
@@ -103,7 +103,7 @@ Katalog terbentuk dari dua lapis:
 | `LoyaltyRedemptionCatalog::defaults()` (kode) | `label`, `tipe`, `persen`, mapping menu gratis, preferensi ukuran | ❌ |
 | Tabel `katalog_redeem` | `poin`, `is_active`, `maks_potongan`, `min_subtotal` | ✅ lewat endpoint |
 
-Yang menentukan **perilaku** redeem sengaja tetap di kode — mapping menu gratis
+Yang menentukan **perilaku** redeem sengaja tetap di kode, mapping menu gratis
 dan persen diskon tidak aman diketik bebas lewat API. Yang jadi keputusan
 bisnis harian (harga poin dan reward mana yang sedang jalan) dibuka.
 
@@ -136,17 +136,17 @@ seperti sebelum fitur ini ada.
 }
 ```
 
-- `poin_default` — nilai bawaan kode, ditampilkan sebagai pembanding supaya
+- `poin_default`, nilai bawaan kode, ditampilkan sebagai pembanding supaya
   manager tahu angka aslinya sebelum diubah.
-- `setara_belanja` = `poin × rupiah_per_poin` — **rupiah belanja yang harus
+- `setara_belanja` = `poin × rupiah_per_poin`, **rupiah belanja yang harus
   dikumpulkan pelanggan untuk menebus reward ini pada rate yang berlaku.**
   Ini angka yang menentukan reward masuk akal atau tidak (lihat §3).
-- `maks_potongan` — **plafon rupiah potongan voucher diskon.** Persennya
+- `maks_potongan`, **plafon rupiah potongan voucher diskon.** Persennya
   berlaku penuh sampai potongan menyentuh angka ini, di atas itu potongannya
   berhenti nambah. `null` untuk reward `gratis_menu`, yang tidak mengenal
   plafon.
-- `min_subtotal` — minimal belanja sebelum reward boleh ditukar.
-- `rupiah_per_poin_efektif` = nilai maksimal reward ÷ `poin` — **rupiah yang
+- `min_subtotal`, minimal belanja sebelum reward boleh ditukar.
+- `rupiah_per_poin_efektif` = nilai maksimal reward ÷ `poin`, **rupiah yang
   didapat pelanggan per 1 poin yang dia bayarkan.** Nilai reward diambil dari
   `maks_potongan` untuk voucher diskon, dan dari harga menu live untuk reward
   gratis minuman. **Angka di atas 50 berarti reward kemurahan** (lihat §3).
@@ -156,14 +156,14 @@ seperti sebelum fitur ini ada.
 
 ### PATCH /api/pengaturan/loyalty/katalog/{kode}
 
-Body boleh berisi `poin`, `is_active`, `maks_potongan`, `min_subtotal` — satu,
+Body boleh berisi `poin`, `is_active`, `maks_potongan`, `min_subtotal`, satu,
 sebagian, atau semuanya. Minimal salah satu wajib ada; body kosong ditolak
 `422` supaya tidak tercatat sebagai "perubahan" yang tidak mengubah apa pun.
 Field yang tidak dikirim dipertahankan. Response = satu objek item, bentuknya
 sama dengan elemen `data` di atas.
 
 Poin diterima di rentang **1 – 100.000**. `maks_potongan` dan `min_subtotal`
-minimal 0, dan keduanya `null` selama manager belum pernah menyetelnya —
+minimal 0, dan keduanya `null` selama manager belum pernah menyetelnya,
 artinya "ikut nilai bawaan", bukan "tanpa plafon".
 
 `maks_potongan` ditolak `422` pada reward bertipe `gratis_menu`: plafon
@@ -182,7 +182,7 @@ Kode yang tersedia: `diskon_10`, `diskon_20`, `diskon_30`, `diskon_50`,
 ## 3. Rate dan katalog harus diubah bersamaan
 
 Dua setting ini saling terkait dan gampang bikin loyalty mati diam-diam.
-Reward dibayar pakai poin, tapi poin dikumpulkan dari rupiah — jadi menaikkan
+Reward dibayar pakai poin, tapi poin dikumpulkan dari rupiah, jadi menaikkan
 rate otomatis menaikkan harga rupiah semua reward:
 
 | | Rate `1.000` | Rate `10.000` |
@@ -192,7 +192,7 @@ rate otomatis menaikkan harga rupiah semua reward:
 
 Naik 10x tanpa poin katalog ikut diturunkan = praktis tidak ada pelanggan yang
 sampai, dan katalognya jadi pajangan. Karena itu `setara_belanja` ikut
-dikirim di response katalog — **setelah mengubah rate, buka halaman katalog dan
+dikirim di response katalog, **setelah mengubah rate, buka halaman katalog dan
 cek kolom itu.** Kalau angkanya sudah di luar akal untuk belanja normal
 Gressoy, turunkan poin rewardnya di endpoint katalog.
 
@@ -200,7 +200,7 @@ Gressoy, turunkan poin rewardnya di endpoint katalog.
 
 Seluruh angka katalog bawaan diturunkan dari satu konstanta: **nilai 1 poin
 (V) = Rp 50.** Pada rate earn Rp 1.000/poin, itu berarti program loyalty ini
-berbiaya **5% omzet** — angka yang dipilih supaya masih muat di margin.
+berbiaya **5% omzet**, angka yang dipilih supaya masih muat di margin.
 
 ```
 biaya_program (%) = V ÷ rupiah_per_poin       = 50 ÷ 1.000 = 5%
@@ -210,7 +210,7 @@ poin gratis menu  = harga_reguler ÷ V         (dibulatkan KE ATAS per 50 poin)
 ```
 
 Satu tes untuk semua reward: **`nilai_reward ÷ poin` tidak boleh lebih dari
-50.** Itulah kolom `rupiah_per_poin_efektif` di response katalog — **angka di
+50.** Itulah kolom `rupiah_per_poin_efektif` di response katalog, **angka di
 atas 50 berarti reward kemurahan** (pelanggan dapat lebih banyak rupiah
 daripada yang dia kumpulkan untuk membelinya). Katalog bawaan seluruhnya duduk
 di rentang **46,7 – 50,0**; setelah mengubah `poin` atau `maks_potongan`,
@@ -228,7 +228,7 @@ atas itu potongannya berhenti nambah."*
 | `maks_potongan` | Toko | Pesanan besar yang menguras margin |
 | `min_subtotal` | Pelanggan | Membuang 500 poin untuk potongan Rp 5.000 |
 
-`min_subtotal` adalah **lantai**, `maks_potongan` adalah **plafon** — menaikkan
+`min_subtotal` adalah **lantai**, `maks_potongan` adalah **plafon**, menaikkan
 minimal belanja tidak melindungi toko dari pesanan besar, dan sebaliknya.
 
 Berapa angka yang benar adalah keputusan owner, bukan default teknis. Yang
@@ -262,7 +262,7 @@ memang batalkan transaksi dan buat baru.
 
 `redeemPoin()` **langsung memotong saldo poin** saat redeem, padahal redeem hanya
 boleh pada transaksi yang masih `pending`. Sebelum perbaikan ini,
-`POST /api/transaksi/{id}/batal` cuma mengubah status — poin yang sudah terpotong
+`POST /api/transaksi/{id}/batal` cuma mengubah status, poin yang sudah terpotong
 tidak pernah dikembalikan.
 
 Artinya: pelanggan menukar 350 poin untuk gratis Original, pesanannya dibatalkan
@@ -281,13 +281,13 @@ Satu kalimat yang otomatis benar untuk kedua kasus:
 > Kembalikan poin redeem kapan pun `kode_redeem` terisi.**
 
 Saat poin redeem kembali, `kode_redeem`, `poin_ditukar`, dan `maks_potongan` pada
-transaksi ikut dikosongkan — kalau tidak, plafon reward yang sudah digugurkan
+transaksi ikut dikosongkan, kalau tidak, plafon reward yang sudah digugurkan
 masih dipakai `recalculateTotals()` berikutnya. Masa berlaku poin juga
 diperpanjang ulang: poin yang kembali karena kesalahan pesanan tidak boleh
 langsung hangus gara-gara jam kedaluwarsa lama masih menempel.
 
 Pembatalan **sebagian** yang tidak menyentuh item reward **tidak** mengembalikan
-poin — rewardnya memang tetap diterima pelanggan.
+poin, rewardnya memang tetap diterima pelanggan.
 
 Rumus lengkap, aturan qty kumulatif, dan daftar kode error:
 [`pembatalan-pesanan.md`](pembatalan-pesanan.md).
@@ -298,7 +298,7 @@ Rumus lengkap, aturan qty kumulatif, dan daftar kode error:
 
 Sesuai lingkup yang disepakati, endpoint ini **tidak** bisa menambah/menghapus
 item reward baru, mengubah persen diskon, atau memilih menu gratis dari daftar
-menu — semua itu masih lewat `LoyaltyRedemptionCatalog`, karena bagian itulah
+menu, semua itu masih lewat `LoyaltyRedemptionCatalog`, karena bagian itulah
 yang menentukan perilaku redeem. Juga belum ada endpoint untuk mengembalikan
 sebuah kode ke nilai bawaannya (caranya: PATCH balik ke angka `poin_default`
 yang memang ikut dikirim di response katalog).
