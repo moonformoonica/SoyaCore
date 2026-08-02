@@ -4,13 +4,25 @@ namespace App\Exports\Sheets;
 
 use App\Models\LaporanTransaksi;
 use Illuminate\Database\Eloquent\Builder;
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, WithTitle
+class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, WithTitle, WithEvents
 {
+    use GayaTabelSoyaCore;
+
+    /**
+     * @return list<int>
+     */
+    protected function kolomAngka(): array
+    {
+        return [6, 7, 8, 9];
+    }
+
     /** Baris impor CSV historis memang tidak merekam kasir. */
     private const KASIR_TIDAK_ADA = '—';
 

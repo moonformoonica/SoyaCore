@@ -177,7 +177,9 @@ async function muatStatistikKasir() {
     function selSumber(trx) {
         const label = trx.sumber_label
             || (trx.sumber === 'self_order' ? 'SoyaScan' : 'Kasir');
-        const kelas = trx.sumber === 'self_order' ? 'trx-tag' : 'trx-tag trx-tag-kasir';
+        const kelas = trx.historis
+            ? 'trx-tag trx-tag-historis'
+            : (trx.sumber === 'self_order' ? 'trx-tag' : 'trx-tag trx-tag-kasir');
 
         const pembuat = trx.kasir_pembuat ? trx.kasir_pembuat.nama : null;
         const penyelesai = trx.kasir_penyelesai ? trx.kasir_penyelesai.nama : null;
@@ -204,9 +206,21 @@ async function muatStatistikKasir() {
                     ? (trx.metode_bayar.toLowerCase() === 'cash' ? 'Tunai' : trx.metode_bayar.toUpperCase())
                     : '—';
 
-                return '<tr data-id="' + trx.id + '">'
-                    + '<td>' + trx.id + '</td>'
-                    + '<td>' + (trx.customer ? trx.customer.nama : 'Umum') + '</td>'
+                // Baris historis berasal dari impor CSV Juni-Juli: tidak punya
+                // id transaksi, rincian pembayaran, maupun kasir, jadi tombol
+                // Detail dimatikan alih-alih membuka modal yang pasti gagal.
+                // Alasannya dijelaskan lewat `title` supaya tidak terbaca
+                // sebagai tombol rusak.
+                const aksi = trx.historis
+                    ? '<button type="button" class="detail-btn" disabled'
+                        + ' title="Transaksi hasil impor data lama, rinciannya tidak tersimpan di SoyaCore">'
+                        + '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>'
+                    : '<button type="button" class="detail-btn" data-id="' + trx.id + '">'
+                        + '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>';
+
+                return '<tr' + (trx.historis ? ' class="trx-historis"' : ' data-id="' + trx.id + '"') + '>'
+                    + '<td>' + (trx.id ?? '—') + '</td>'
+                    + '<td>' + (trx.customer && trx.customer.nama ? trx.customer.nama : 'Umum') + '</td>'
                     + '<td>' + (trx.kode_pesanan || '—') + '</td>'
                     + '<td>' + selSumber(trx) + '</td>'
                     + '<td>' + rupiah(trx.total) + '</td>'
@@ -214,8 +228,7 @@ async function muatStatistikKasir() {
                     + '<td>' + labelStatus(trx.status) + '</td>'
                     + '<td>' + (trx.point_earned ?? 0) + '</td>'
                     + '<td>' + jam(trx.created_at) + '</td>'
-                    + '<td><button type="button" class="detail-btn" data-id="' + trx.id + '">'
-                        + '<i class="fa-solid fa-arrow-up-right-from-square"></i></button></td>'
+                    + '<td>' + aksi + '</td>'
                     + '</tr>';
             }).join('');
         }

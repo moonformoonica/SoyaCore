@@ -515,7 +515,11 @@ class LaporanKasirTest extends TestCase
 
         $hasil = [];
         foreach ($spreadsheet->getAllSheets() as $sheet) {
-            $hasil[$sheet->getTitle()] = $sheet->toArray();
+            // `formatData: false` WAJIB di sini. Kolom angka di export memakai
+            // format ribuan `#,##0`, jadi pembacaan ber-format mengembalikan
+            // string "50,000" dan `(int)` di assertion memotongnya jadi 50.
+            // Yang diuji isinya, bukan tampilannya.
+            $hasil[$sheet->getTitle()] = $sheet->toArray(null, true, false);
         }
 
         @unlink($tmp);

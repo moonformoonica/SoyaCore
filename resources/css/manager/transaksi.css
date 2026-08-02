@@ -811,6 +811,25 @@ body{
     color:#3F51B5;
 }
 
+/* Transaksi hasil impor CSV Juni-Juli. Warnanya sengaja netral abu, bukan warna
+   merek: baris ini bukan penjualan yang lewat SoyaCore dan tidak bisa
+   ditindaklanjuti, jadi tidak boleh terlihat sederajat dengan transaksi hidup. */
+.trx-tag-historis{
+    background:#F1F2F4;
+    color:#5B6470;
+}
+
+.trx-historis td{
+    color:#6B7280;
+}
+
+/* Tombol Detail pada baris historis memang tidak punya sasaran. Dibuat jelas
+   mati, bukan sekadar tidak bereaksi saat diklik. */
+.trx-historis .detail-btn:disabled{
+    opacity:.35;
+    cursor:not-allowed;
+}
+
 .trx-kasir{
     margin-top:4px;
     font-size:11px;

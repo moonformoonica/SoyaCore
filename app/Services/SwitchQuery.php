@@ -30,6 +30,21 @@ use Illuminate\Support\Carbon;
  * - Dari situ: yang tiap datang membeli banyak (>= 2 pcs per kunjungan)
  *   diarahkan ke botol 1L, sisanya dinaikkan satu tingkat, Reguler ke Large
  *   dan Large ke botol 500ml.
+ *
+ * BEDANYA DENGAN SNAPSHOT LAMA, dan ini disengaja. Diuji terhadap 35 baris
+ * `laporan_switch`: SELURUH 35 pelanggan itu tetap muncul, dengan
+ * `beli_reguler`, `beli_large`, `beli_botol`, `total_transaksi`, dan
+ * `total_belanja` yang cocok 100%. Dua hal tetap berbeda dan tidak bisa
+ * disamakan dari data yang ada:
+ *
+ * 1. Daftarnya jadi lebih panjang (55, bukan 35). Aturan di atas diterapkan
+ *    rata ke semua pelanggan, sementara 35 baris snapshot adalah pilihan
+ *    tangan: ada pelanggan berprofil identik yang satu masuk dan satu tidak
+ *    (mis. Anggi reg=3 trx=3 masuk, Tata reg=3 trx=3 tidak). Tidak ada aturan
+ *    yang bisa memisahkan keduanya, jadi yang dipakai aturan yang konsisten.
+ * 2. `qty_per_kunjungan` dan `rasa_favorit` meleset di beberapa baris karena
+ *    snapshot dihitung pipeline spreadsheet terpisah dengan pembulatan dan
+ *    sumber kolom yang tidak ikut terbawa saat impor.
  */
 class SwitchQuery
 {
@@ -64,6 +79,7 @@ class SwitchQuery
             }
 
             $transaksi = count($b['transaksi']);
+
             $qtyPerKunjungan = $transaksi > 0 ? round($b['qty'] / $transaksi, 1) : 0.0;
             $dominan = $large > $reguler ? 'Large' : 'Reguler';
 
@@ -146,13 +162,30 @@ class SwitchQuery
             $baris[$nama]['belanja'] += (int) $row->total;
             $baris[$nama]['transaksi'][$this->kunciTransaksi((string) $row->kode)] = true;
 
-            $rasa = trim((string) ($row->rasa ?: $row->nama_produk));
-            if ($rasa !== '') {
-                $baris[$nama]['rasa'][$rasa] = ($baris[$nama]['rasa'][$rasa] ?? 0) + $qty;
+            // Rasa favorit memakai NAMA PRODUK, bukan kolom `rasa`. Kolom
+            // `rasa` berisi komposisi panjang ("Soya Original Premium + Taro
+            // Premium + Brown Sugar") yang tidak terbaca sebagai nama menu di
+            // tabel rekomendasi.
+            $produk = $this->namaMenu((string) $row->nama_produk);
+            if ($produk !== '') {
+                $baris[$nama]['rasa'][$produk] = ($baris[$nama]['rasa'][$produk] ?? 0) + $qty;
             }
         }
 
         return array_values($baris);
+    }
+
+    /**
+     * Nama produk di `laporan_transaksi` ditulis "Soya Choco Maniac", sementara
+     * tabel rekomendasi menampilkan rasanya saja ("Choco Maniac"). Awalan itu
+     * dibuang di sini, bukan di frontend, supaya export Excel dan halaman web
+     * tidak bisa berbeda ejaan.
+     */
+    private function namaMenu(string $namaProduk): string
+    {
+        $bersih = trim($namaProduk);
+
+        return trim(preg_replace('/^Soya\s+/i', '', $bersih) ?? $bersih);
     }
 
     /**

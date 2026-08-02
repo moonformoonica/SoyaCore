@@ -3,7 +3,9 @@
 namespace App\Exports\Sheets;
 
 use App\Services\RfmQuery;
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
 /**
@@ -13,8 +15,23 @@ use Maatwebsite\Excel\Concerns\WithTitle;
  * pertanyaan sama dengan angka berbeda adalah cara tercepat kehilangan
  * kepercayaan pada laporannya.
  */
-class RfmSheet implements FromArray, WithTitle
+class RfmSheet implements FromArray, WithTitle, WithEvents
 {
+    use GayaTabelSoyaCore;
+
+    protected function barisHeader(): int
+    {
+        return 4;
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function kolomAngka(): array
+    {
+        return [2, 3, 4, 5, 6, 7, 8, 9];
+    }
+
     public function __construct(private readonly RfmQuery $rfm = new RfmQuery) {}
 
     public function title(): string

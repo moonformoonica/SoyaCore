@@ -22,6 +22,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
+
+        // Aplikasi ini dijalankan di belakang tunnel (ngrok saat preview
+        // bersama, load balancer saat deploy). Yang memegang HTTPS adalah
+        // tunnel-nya, sementara Laravel menerima request polos lewat HTTP,
+        // jadi tanpa mempercayai header X-Forwarded-* setiap URL yang
+        // dibangun server keluar sebagai `http://` dan browser memblokirnya
+        // sebagai konten campuran di halaman yang dibuka lewat `https://`.
+        //
+        // Dipercaya semua (`*`) karena alamat tunnel-nya berganti-ganti dan
+        // tidak pernah bisa didaftarkan satu per satu. Aman selama aplikasi
+        // memang hanya dijangkau lewat tunnel atau proxy, bukan langsung dari
+        // internet.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Semua error API memakai format standar kontrak v1:

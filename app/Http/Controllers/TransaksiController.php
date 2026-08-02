@@ -14,9 +14,12 @@ use App\Services\DaftarTransaksiQuery;
 use App\Services\LaporanProjector;
 use App\Services\LoyaltyService;
 use App\Services\PembatalanService;
+use App\Services\TransaksiHistorisQuery;
 use App\Services\TransaksiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class TransaksiController extends Controller
@@ -30,8 +33,18 @@ class TransaksiController extends Controller
         private readonly DaftarTransaksiQuery $daftar,
         private readonly LaporanProjector $projector,
         private readonly PembatalanService $pembatalanService,
+        private readonly TransaksiHistorisQuery $historis,
     ) {}
 
+    /**
+     * Daftar transaksi = transaksi POS SoyaCore DITAMBAH transaksi historis
+     * hasil impor CSV Juni-Juli.
+     *
+     * Keduanya digabung di memori lalu dipaginasi manual, bukan lewat satu
+     * query. Alasannya di {@see TransaksiHistorisQuery}: bentuk kedua sumber
+     * berbeda (satu baris per transaksi vs satu baris per item) dan jumlahnya
+     * ratusan, bukan jutaan.
+     */
     public function index(IndexTransaksiRequest $request): AnonymousResourceCollection
     {
         $base = $this->daftar->bangun($request);
@@ -43,16 +56,76 @@ class TransaksiController extends Controller
 
         $arah = $request->urut() === 'terlama' ? 'asc' : 'desc';
 
-        $paginator = $base->clone()
+        $pos = $base->clone()
             ->with(['customer', 'user', 'dibayarOleh', 'detailTransaksi.menu'])
             // `id` sebagai tie-breaker: dua transaksi pada detik yang sama
             // tanpa ini bisa bertukar posisi antar halaman dan membuat satu
             // baris tampil dua kali sementara baris lain hilang.
             ->orderBy('created_at', $arah)
             ->orderBy('id', $arah)
-            ->paginate($request->perPage());
+            ->get()
+            ->map(fn (Transaksi $t) => (new TransaksiResource($t))->resolve($request) + ['historis' => false]);
 
-        return TransaksiResource::collection($paginator)->additional(['meta' => $ringkasan]);
+        $historis = $this->historis->daftar($request);
+
+        $ringkasanHistoris = $this->historis->ringkasan($historis);
+        foreach ($ringkasan as $kunci => $nilai) {
+            $ringkasan[$kunci] = $nilai + $ringkasanHistoris[$kunci];
+        }
+
+        $gabungan = $this->urutkan($pos->all(), $historis, $arah);
+
+        // `JsonResource`, bukan `TransaksiResource`: isinya sudah berupa array
+        // siap kirim, baik yang datang dari model POS maupun dari baris
+        // historis. Membungkusnya lagi dengan TransaksiResource akan membuatnya
+        // mencari properti model pada sebuah array.
+        return JsonResource::collection(
+            $this->paginasi($gabungan, $request)
+        )->additional(['meta' => $ringkasan]);
+    }
+
+    /**
+     * Menggabungkan dua sumber lalu mengurutkannya sebagai satu daftar.
+     *
+     * `kode_pesanan` jadi pemecah seri saat waktunya sama. Seluruh baris
+     * historis satu hari punya `created_at` yang identik (tanggalnya saja,
+     * tanpa jam), jadi tanpa pemecah seri urutannya bisa berubah tiap request
+     * dan satu transaksi bisa tampil di dua halaman sekaligus.
+     *
+     * @param  list<array<string, mixed>>  $pos
+     * @param  list<array<string, mixed>>  $historis
+     * @return list<array<string, mixed>>
+     */
+    private function urutkan(array $pos, array $historis, string $arah): array
+    {
+        $gabungan = array_merge($pos, $historis);
+
+        usort($gabungan, function (array $a, array $b) use ($arah) {
+            $kiri = [$a['created_at'] ?? '', $a['kode_pesanan'] ?? ''];
+            $kanan = [$b['created_at'] ?? '', $b['kode_pesanan'] ?? ''];
+
+            return $arah === 'asc' ? $kiri <=> $kanan : $kanan <=> $kiri;
+        });
+
+        return $gabungan;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $baris
+     * @return LengthAwarePaginator<int, array<string, mixed>>
+     */
+    private function paginasi(array $baris, IndexTransaksiRequest $request): LengthAwarePaginator
+    {
+        $perPage = $request->perPage();
+        $halaman = LengthAwarePaginator::resolveCurrentPage();
+
+        return new LengthAwarePaginator(
+            array_slice($baris, ($halaman - 1) * $perPage, $perPage),
+            count($baris),
+            $perPage,
+            $halaman,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()],
+        );
     }
 
     public function store(StoreTransaksiRequest $request): TransaksiResource

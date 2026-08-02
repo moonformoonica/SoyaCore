@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LaporanRequest;
-use App\Models\LaporanSwitch;
 use App\Models\LaporanTransaksi;
 use App\Services\LaporanQuery;
 use App\Services\RfmQuery;
+use App\Services\SwitchQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,6 +17,7 @@ class DashboardController extends Controller
     public function __construct(
         private readonly LaporanQuery $query,
         private readonly RfmQuery $rfm,
+        private readonly SwitchQuery $switch,
     ) {}
 
     public function meta(): JsonResponse
@@ -121,18 +122,28 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * DIHITUNG dari `laporan_transaksi`, tidak lagi dibaca dari snapshot
+     * `laporan_switch`. Alasan dan batasannya di {@see SwitchQuery}.
+     */
     public function switch(Request $request): JsonResponse
     {
-        $rekomendasi = $request->query('rekomendasi');
+        $rekomendasi = trim((string) $request->query('rekomendasi'));
 
-        $data = LaporanSwitch::query()
-            ->when($rekomendasi, fn ($q) => $q->where('rekomendasi', 'like', '%'.$rekomendasi.'%'))
-            ->orderByDesc('total_belanja')
-            ->orderBy('nama_pelanggan')
-            ->get();
+        $data = $this->switch->semua();
+
+        if ($rekomendasi !== '') {
+            // Pencarian bebas huruf besar-kecil, sama seperti perilaku
+            // `LIKE` di SQLite sebelumnya, supaya mengetik "upsize" dan
+            // "Upsize" memberi hasil yang sama.
+            $data = array_values(array_filter(
+                $data,
+                fn ($b) => mb_stripos($b['rekomendasi'], $rekomendasi) !== false,
+            ));
+        }
 
         return response()->json([
-            'periode_label' => self::PERIODE_LABEL,
+            'periode_label' => $this->switch->periode() ?? self::PERIODE_LABEL,
             'data' => $data,
         ]);
     }

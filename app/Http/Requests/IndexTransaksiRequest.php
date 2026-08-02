@@ -31,7 +31,11 @@ class IndexTransaksiRequest extends FormRequest
             'urut' => ['nullable', 'in:terbaru,terlama'],
 
             'status' => ['nullable', 'in:pending,lunas,batal,batal_sebagian'],
-            'sumber' => ['nullable', 'in:kasir,self_order'],
+            // `historis` bukan nilai kolom `transaksi.sumber`, melainkan
+            // penanda baris impor CSV Juni-Juli yang disusun ulang dari
+            // `laporan_transaksi`. Ikut diterima di sini supaya manager bisa
+            // memisahkan riwayat lama dari transaksi SoyaCore.
+            'sumber' => ['nullable', 'in:kasir,self_order,historis'],
             'metode_bayar' => ['nullable', 'in:cash,qris'],
             // Dikirim sebagai string di query param, jadi 'true'/'false' ikut
             // diterima, bukan cuma 1/0 seperti aturan `boolean` bawaan.
@@ -65,7 +69,7 @@ class IndexTransaksiRequest extends FormRequest
         return array_merge($this->pesanRentangTanggal(), [
             'urut.in' => 'urut harus terbaru atau terlama.',
             'status.in' => 'status harus salah satu dari: pending, lunas, batal, batal_sebagian.',
-            'sumber.in' => 'sumber harus kasir atau self_order.',
+            'sumber.in' => 'sumber harus kasir, self_order, atau historis.',
             'metode_bayar.in' => 'metode_bayar harus cash atau qris.',
             'ada_redeem.in' => 'ada_redeem harus true atau false.',
             'total_max.gte' => 'total_max tidak boleh lebih kecil dari total_min.',

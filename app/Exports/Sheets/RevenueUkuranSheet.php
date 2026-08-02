@@ -3,11 +3,28 @@
 namespace App\Exports\Sheets;
 
 use App\Services\LaporanQuery;
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class RevenueUkuranSheet implements FromArray, WithTitle
+class RevenueUkuranSheet implements FromArray, WithTitle, WithEvents
 {
+    use GayaTabelSoyaCore;
+
+    protected function barisHeader(): int
+    {
+        return 3;
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function kolomAngka(): array
+    {
+        return [2, 3, 4, 5];
+    }
+
     public function __construct(
         private readonly ?string $start,
         private readonly ?string $end,

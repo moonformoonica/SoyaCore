@@ -3,12 +3,16 @@
 namespace App\Exports\Sheets;
 
 use App\Services\LaporanQuery;
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class RingkasanSheet implements FromArray, WithHeadings, WithTitle
+class RingkasanSheet implements FromArray, WithHeadings, WithTitle, WithEvents
 {
+    use GayaTabelSoyaCore;
+
     public function __construct(
         private readonly string $grain,
         private readonly ?string $start,

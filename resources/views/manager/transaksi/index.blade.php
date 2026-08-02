@@ -110,6 +110,9 @@
                         <li data-value="">Semua Sumber</li>
                         <li data-value="self_order">SoyaScan</li>
                         <li data-value="kasir">Kasir</li>
+                        {{-- Transaksi Juni-Juli hasil impor CSV, sebelum
+                             SoyaCore dipakai. Read-only. --}}
+                        <li data-value="historis">Impor CSV (Juni-Juli)</li>
                     </ul>
                     <input type="hidden" name="sumber" value="">
                 </div>

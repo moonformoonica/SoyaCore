@@ -4,8 +4,10 @@ namespace App\Exports\Sheets;
 
 use App\Exports\LaporanExport;
 use App\Services\RekapKasirHarian;
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
 /**
@@ -19,8 +21,18 @@ use Maatwebsite\Excel\Concerns\WithTitle;
  * Baris TOTAL per tanggal dan satu TOTAL KESELURUHAN sudah dihitung di
  * {@see RekapKasirHarian}, jadi manager tidak perlu membuat pivot sendiri.
  */
-class RekapKasirSheet implements FromArray, WithHeadings, WithTitle
+class RekapKasirSheet implements FromArray, WithHeadings, WithTitle, WithEvents
 {
+    use GayaTabelSoyaCore;
+
+    /**
+     * @return list<int>
+     */
+    protected function kolomAngka(): array
+    {
+        return [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    }
+
     public function __construct(
         private readonly ?string $start,
         private readonly ?string $end,

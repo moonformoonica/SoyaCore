@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Kategori;
+use App\Models\LaporanTransaksi;
 use App\Models\Menu;
 use App\Models\Transaksi;
 use App\Models\User;
@@ -457,6 +458,161 @@ class TransaksiFilterTest extends TestCase
         $this->postJson('/api/transaksi', [])->assertCreated()->assertJsonPath('data.kode_pesanan', '#A00');
 
         $this->travelBack();
+    }
+
+    /**
+     * Tiga transaksi impor. `laporan_transaksi.kode` UNIK, jadi satu baris CSV
+     * memang satu transaksi berisi satu produk, bukan beberapa item.
+     */
+    private function buatHistoris(): void
+    {
+        LaporanTransaksi::insert([
+            [
+                'kode' => 'TR-JUN2026-0001', 'tanggal' => '2026-06-01', 'platform' => 'QRIS',
+                'nama_pelanggan' => 'Annisa', 'nama_produk' => 'Soya Honey Lemon', 'rasa' => 'Honey Lemon',
+                'ukuran' => 'Reguler', 'qty' => 1, 'harga_satuan' => 20000, 'total' => 20000, 'poin_loyalty' => 20,
+            ],
+            [
+                'kode' => 'TR-JUN2026-0002', 'tanggal' => '2026-06-02', 'platform' => 'QRIS',
+                'nama_pelanggan' => 'Annisa', 'nama_produk' => 'Soya Original', 'rasa' => 'Original',
+                'ukuran' => 'Large', 'qty' => 2, 'harga_satuan' => 21000, 'total' => 42000, 'poin_loyalty' => 42,
+            ],
+            [
+                'kode' => 'TR-JUL2026-0003', 'tanggal' => '2026-07-15', 'platform' => 'GrabFood',
+                'nama_pelanggan' => 'Bagas', 'nama_produk' => 'Soya Thai Tea', 'rasa' => 'Thai Tea',
+                'ukuran' => 'Reguler', 'qty' => 1, 'harga_satuan' => 22000, 'total' => 22000, 'poin_loyalty' => 22,
+            ],
+        ]);
+    }
+
+    public function test_daftar_transaksi_memuat_baris_historis_juni_juli(): void
+    {
+        $this->buatHistoris();
+        $this->transaksiLunas($this->reguler); // satu transaksi POS hari ini
+
+        $data = collect($this->getJson('/api/transaksi')->assertOk()->json('data'))
+            ->keyBy('kode_pesanan');
+
+        // Tiga baris impor dan satu baris POS berdampingan di satu daftar.
+        $this->assertCount(4, $data);
+
+        $juni = $data['TR-JUN2026-0001'];
+        $this->assertTrue($juni['historis']);
+        $this->assertSame('lunas', $juni['status']);
+        $this->assertSame('Annisa', $juni['customer']['nama']);
+        $this->assertSame('QRIS', $juni['sumber_label']);
+        $this->assertSame('qris', $juni['metode_bayar']);
+        $this->assertSame(20000, $juni['total']);
+        $this->assertSame(20, $juni['point_earned']);
+        $this->assertCount(1, $juni['items']);
+        $this->assertSame('Soya Honey Lemon', $juni['items'][0]['nama_menu']);
+
+        // Platform yang bukan metode bayar tidak dipaksakan jadi metode bayar.
+        $this->assertNull($data['TR-JUL2026-0003']['metode_bayar']);
+        $this->assertSame('GrabFood', $data['TR-JUL2026-0003']['sumber_label']);
+
+        // Baris POS tetap punya id dan tidak ditandai historis, itulah yang
+        // dipakai frontend untuk memutuskan tombol aksinya hidup atau mati.
+        $pos = $data->firstWhere('historis', false);
+        $this->assertNotNull($pos['id']);
+    }
+
+    public function test_baris_historis_tidak_punya_id_sehingga_aksinya_mati(): void
+    {
+        $this->buatHistoris();
+
+        $historis = collect($this->getJson('/api/transaksi')->json('data'))
+            ->where('historis', true);
+
+        $this->assertNotEmpty($historis);
+        foreach ($historis as $baris) {
+            // Tanpa id, Detail dan Batalkan memang tidak punya sasaran.
+            $this->assertNull($baris['id']);
+            $this->assertNull($baris['kasir_pembuat']);
+            $this->assertSame(0, $baris['poin_ditukar']);
+        }
+    }
+
+    public function test_ringkasan_menjumlahkan_transaksi_pos_dan_historis(): void
+    {
+        $this->buatHistoris();
+        $this->transaksiLunas($this->reguler); // 17.000, 1 item
+
+        $meta = $this->getJson('/api/transaksi')->assertOk()->json('meta');
+
+        // 3 historis + 1 POS
+        $this->assertSame(4, $meta['jumlah_transaksi']);
+        // 20.000 + 42.000 + 22.000 + 17.000
+        $this->assertSame(101000, $meta['total_omzet']);
+        // 1 + 2 + 1 pcs historis, 1 pcs POS
+        $this->assertSame(5, $meta['total_qty']);
+    }
+
+    public function test_filter_tanggal_dan_sumber_berlaku_untuk_baris_historis(): void
+    {
+        $this->buatHistoris();
+        $this->transaksiLunas($this->reguler);
+
+        // Rentang Juni saja: dua transaksi impor yang lolos, POS hari ini tidak.
+        $juni = $this->getJson('/api/transaksi?tanggal_mulai=2026-06-01&tanggal_selesai=2026-06-30')
+            ->assertOk()->json('data');
+        $this->assertCount(2, $juni);
+        $this->assertSame(
+            ['TR-JUN2026-0001', 'TR-JUN2026-0002'],
+            collect($juni)->pluck('kode_pesanan')->sort()->values()->all(),
+        );
+
+        // `sumber=historis` menyisakan baris impor saja, transaksi POS hilang.
+        $historisSaja = $this->getJson('/api/transaksi?sumber=historis')->assertOk()->json('data');
+        $this->assertCount(3, $historisSaja);
+        $this->assertSame([true], array_unique(array_column($historisSaja, 'historis')));
+
+        // Sebaliknya, `sumber=kasir` tidak boleh kemasukan baris impor.
+        $kasirSaja = $this->getJson('/api/transaksi?sumber=kasir')->assertOk()->json('data');
+        $this->assertSame([false], array_column($kasirSaja, 'historis'));
+    }
+
+    public function test_filter_status_selain_lunas_membuang_seluruh_baris_historis(): void
+    {
+        $this->buatHistoris();
+        $this->transaksiPending();
+
+        // Data impor semuanya sudah lunas, jadi filter `pending` tidak boleh
+        // menampilkan satu pun baris historis.
+        $pending = $this->getJson('/api/transaksi?status=pending')->assertOk()->json('data');
+        $this->assertNotEmpty($pending);
+        $this->assertSame([false], array_unique(array_column($pending, 'historis')));
+    }
+
+    public function test_cari_menemukan_transaksi_historis_lewat_kode_dan_nama(): void
+    {
+        $this->buatHistoris();
+
+        $lewatKode = $this->getJson('/api/transaksi?cari=TR-JUL2026')->assertOk()->json('data');
+        $this->assertCount(1, $lewatKode);
+        $this->assertSame('Bagas', $lewatKode[0]['customer']['nama']);
+
+        // Huruf kecil pun ketemu, sama seperti pencarian pada daftar POS.
+        $lewatNama = $this->getJson('/api/transaksi?cari=annisa')->assertOk()->json('data');
+        $this->assertCount(2, $lewatNama);
+        $this->assertSame(
+            ['TR-JUN2026-0001', 'TR-JUN2026-0002'],
+            collect($lewatNama)->pluck('kode_pesanan')->sort()->values()->all(),
+        );
+    }
+
+    public function test_baris_proyeksi_pos_tidak_tampil_dua_kali(): void
+    {
+        // Transaksi POS yang lunas ikut diproyeksikan ke laporan_transaksi
+        // dengan kode berawalan TRX-. Kalau baris proyeksi itu ikut dibaca
+        // sebagai "historis", satu transaksi akan muncul dua kali di daftar.
+        $this->transaksiLunas($this->reguler);
+
+        $this->assertGreaterThan(0, LaporanTransaksi::where('kode', 'like', 'TRX-%')->count());
+
+        $data = $this->getJson('/api/transaksi')->assertOk()->json('data');
+        $this->assertCount(1, $data);
+        $this->assertFalse($data[0]['historis']);
     }
 
     public function test_parameter_tanggal_lama_tetap_didukung(): void

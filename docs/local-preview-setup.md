@@ -1,5 +1,11 @@
 # Local Preview Setup, SoyaCore ↔ SoyaScan
 
+> **Untuk sesi bareng berempat, pakai
+> [docs/preview-bareng-ngrok.md](preview-bareng-ngrok.md).** Panduan itu lebih
+> baru dan memuat langkah `php artisan preview:url` yang wajib dijalankan,
+> tanpa itu gambar QRIS rusak di komputer semua orang selain Monica. Berkas ini
+> dipertahankan untuk opsi LAN (satu WiFi) dan catatan CORS.
+
 > Untuk Monica (backend) & Ghefira (frontend React/Vite). Tujuan: preview
 > alur self-order end-to-end (scan → pilih menu → submit → konfirmasi)
 > memakai API SoyaCore yang BENERAN jalan, bukan mock. Tanpa deploy.

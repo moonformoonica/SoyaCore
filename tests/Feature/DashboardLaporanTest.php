@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Exports\LaporanExport;
 use App\Models\LaporanRevenueUkuran;
+use App\Models\LaporanTransaksi;
 use App\Models\User;
 use App\Services\LaporanQuery;
 use App\Services\RekapKasirHarian;
@@ -224,10 +225,65 @@ class DashboardLaporanTest extends TestCase
         // tersaring; kalau ikut, donut chart-nya berubah jadi satu potong.
         $this->assertSame(345, array_sum($respon->json('ringkasan_segmen')));
 
-        $this->getJson('/api/dashboard/switch')
+        // Switch kini DIHITUNG dari laporan_transaksi, bukan dibaca dari
+        // snapshot 35 baris. Aturannya diterapkan rata ke semua pelanggan
+        // sehingga daftarnya lebih panjang; yang dijaga di sini adalah
+        // bentuk dan isinya masuk akal, bukan jumlah baris yang kebetulan.
+        $respon = $this->getJson('/api/dashboard/switch')
             ->assertOk()
-            ->assertJsonPath('periode_label', '1 Jun 2026 - 30 Jul 2026')
-            ->assertJsonCount(35, 'data');
+            ->assertJsonPath('periode_label', '1 Jun 2026 - 30 Jul 2026');
+
+        $data = $respon->json('data');
+        $this->assertNotEmpty($data);
+
+        foreach ($data as $baris) {
+            // Yang sudah pernah beli botol tidak perlu ditawari beralih.
+            $this->assertSame(0, $baris['beli_botol']);
+            $this->assertContains($baris['ukuran_saat_ini'], ['Reguler', 'Large']);
+            $this->assertStringStartsWith('Tawarkan', $baris['rekomendasi']);
+        }
+
+        // Terurut total belanja menurun.
+        $belanja = array_column($data, 'total_belanja');
+        $urut = $belanja;
+        rsort($urut);
+        $this->assertSame($urut, $belanja);
+
+        // Pencarian menyaring berdasarkan teks rekomendasi.
+        $hanyaBotol = $this->getJson('/api/dashboard/switch?rekomendasi=Botol')->assertOk()->json('data');
+        $this->assertNotEmpty($hanyaBotol);
+        foreach ($hanyaBotol as $baris) {
+            $this->assertStringContainsString('Botol', $baris['rekomendasi']);
+        }
+    }
+
+    public function test_switch_ikut_bergerak_saat_ada_transaksi_baru(): void
+    {
+        Sanctum::actingAs($this->manager());
+
+        $sebelum = collect($this->getJson('/api/dashboard/switch')->json('data'))
+            ->keyBy('nama_pelanggan');
+
+        // Pelanggan baru yang langsung membeli 3 gelas Reguler dalam satu
+        // kunjungan: memenuhi ambang pcs sekaligus tergolong beli banyak.
+        LaporanTransaksi::create([
+            'kode' => 'TRX-9001-1', 'tanggal' => '2026-07-30', 'platform' => 'cash',
+            'nama_pelanggan' => 'Pelanggan Borong', 'nama_produk' => 'Soya Original',
+            'ukuran' => 'Reguler', 'qty' => 3, 'harga_satuan' => 17000, 'total' => 51000,
+            'poin_loyalty' => 51,
+        ]);
+
+        $sesudah = collect($this->getJson('/api/dashboard/switch')->json('data'))
+            ->keyBy('nama_pelanggan');
+
+        $this->assertArrayNotHasKey('Pelanggan Borong', $sebelum->all());
+        $this->assertArrayHasKey('Pelanggan Borong', $sesudah->all());
+
+        $baru = $sesudah['Pelanggan Borong'];
+        $this->assertSame(3, $baru['beli_reguler']);
+        $this->assertSame(1, $baru['total_transaksi']);
+        $this->assertSame(51000, $baru['total_belanja']);
+        $this->assertStringContainsString('Botol 1L', $baru['rekomendasi']);
     }
 
     /**

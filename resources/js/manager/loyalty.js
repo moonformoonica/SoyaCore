@@ -459,10 +459,17 @@
   }
 
   // Ringkas item transaksi jadi teks aktivitas, mis. "2× Choco Maniac, 1× Tiramisu".
+  // Transaksi POS menamai itemnya `nama`, baris historis hasil impor CSV
+  // memakai `nama_menu`. Keduanya dibaca di sini supaya riwayat poin tidak
+  // menampilkan "1× undefined" untuk separuh barisnya.
+  function namaItem(i) {
+    return i.nama || i.nama_menu || 'Item';
+  }
+
   function ringkasItem(items) {
     const list = (items || []).filter(i => !i.is_reward);
     if (list.length === 0) return '';
-    const teks = list.slice(0, 2).map(i => `${i.qty}× ${i.nama}`).join(', ');
+    const teks = list.slice(0, 2).map(i => `${i.qty}× ${namaItem(i)}`).join(', ');
     return teks + (list.length > 2 ? ', …' : '');
   }
 
@@ -474,17 +481,40 @@
     return sizes.length ? sizes.join(', ') : '—';
   }
 
+  // Backend membatasi 200 baris per halaman. Riwayat poin harus memuat data
+  // Juni-Juli sekaligus transaksi terbaru, dan karena daftarnya terurut
+  // terbaru dulu, satu halaman saja akan memotong seluruh data lama.
+  // Halamannya ditarik berurutan sampai habis, dengan pagar supaya satu
+  // kesalahan di backend tidak berubah jadi permintaan tanpa akhir.
+  const HISTORY_MAX_HALAMAN = 6;
+
+  async function ambilSemuaTransaksi(headers) {
+    const semua = [];
+
+    for (let halaman = 1; halaman <= HISTORY_MAX_HALAMAN; halaman++) {
+      const res = await fetch(`/api/transaksi?per_page=200&page=${halaman}`, { headers });
+      if (!res.ok) break;
+
+      const json = await res.json();
+      const rows = json.data || [];
+      semua.push(...rows);
+
+      const terakhir = json.meta?.last_page ?? json.last_page;
+      if (rows.length < 200 || (terakhir && halaman >= terakhir)) break;
+    }
+
+    return semua;
+  }
+
   async function loadHistory() {
     const token = localStorage.getItem('auth_token');
     if (!token) { renderHistory(); return; }
 
     try {
-      const res = await fetch('/api/transaksi?per_page=200', {
-        headers: { Accept: 'application/json', Authorization: 'Bearer ' + token },
+      const rows = await ambilSemuaTransaksi({
+        Accept: 'application/json',
+        Authorization: 'Bearer ' + token,
       });
-      if (!res.ok) { renderHistory(); return; }
-
-      const rows = (await res.json()).data || [];
       const events = [];
 
       rows.forEach(trx => {
