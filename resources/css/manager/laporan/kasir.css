@@ -1,10 +1,9 @@
 .lk-table th, .lk-table td { white-space: nowrap; }
 
-/* Kolom 1 (nama kasir) rata kiri, sisanya angka dan dirata-kanankan supaya
-   digitnya berbaris. Tabel ini menyandingkan kinerja antar kasir, jadi
-   membandingkan kolom secara vertikal justru pekerjaan utamanya. */
+/* Kolom 1 (nama kasir) rata kiri, sisanya angka dan dirata-tengahkan
+   mengikuti headernya. */
 .lk-table th:not(:first-child),
-.lk-table td:not(:first-child) { text-align: right; }
+.lk-table td:not(:first-child) { text-align: center; }
 .lk-table th:first-child,
 .lk-table td:first-child { text-align: left; }
 .lk-table td { font-variant-numeric: tabular-nums; }

@@ -70,10 +70,10 @@
     white-space: nowrap;
 }
 
-/* Kolom 1 (#) dan 2 (nama) rata kiri, kolom angka rata kanan supaya digitnya
-   berbaris dan Total/Monetary gampang dibandingkan antar baris. */
+/* Kolom 1 (#) dan 2 (nama) rata kiri, kolom angka rata tengah mengikuti
+   headernya. */
 .dash-table th:nth-child(n+3),
-.dash-table td:nth-child(n+3) { text-align: right; }
+.dash-table td:nth-child(n+3) { text-align: center; }
 .dash-table td { font-variant-numeric: tabular-nums; }
 
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; min-width: 0; }

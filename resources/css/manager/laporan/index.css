@@ -71,22 +71,19 @@
 }
 .lap-table tbody tr:hover { background: #FAFAFA; }
 
-/* KOLOM ANGKA RATA KANAN, kolom teks rata kiri.
-   Angka yang rata kiri di bawah header lebar bikin digitnya tidak sejajar:
-   "7" dan "16" mulai di titik yang sama sehingga satuan, puluhan, dan ratusan
-   tidak berbaris, dan mata harus membaca satu per satu untuk membandingkan.
-   Header ikut dirata-kanankan supaya menempel pada kolomnya sendiri, bukan
+/* KOLOM ANGKA RATA TENGAH, kolom teks rata kiri.
+   Header ikut dirata-tengahkan supaya menempel pada kolomnya sendiri, bukan
    menggantung di atas kolom sebelah. */
 .lap-table--rfm th:nth-child(2), .lap-table--rfm td:nth-child(2),
 .lap-table--rfm th:nth-child(3), .lap-table--rfm td:nth-child(3),
 .lap-table--rfm th:nth-child(4), .lap-table--rfm td:nth-child(4),
 .lap-table--rfm th:nth-child(5), .lap-table--rfm td:nth-child(5) {
-    text-align: right;
+    text-align: center;
 }
 
 .lap-table--switch th:nth-child(n+4):nth-child(-n+9),
 .lap-table--switch td:nth-child(n+4):nth-child(-n+9) {
-    text-align: right;
+    text-align: center;
 }
 
 /* Kolom terakhir Switch berisi kalimat saran yang panjang. Dibiarkan rata kiri
