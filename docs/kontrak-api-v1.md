@@ -550,8 +550,30 @@ Error: `poin_kurang` (422, menyebut kekurangannya),
 
 Setelah redeem berhasil, `POST /api/transaksi/{id}/diskon` ditolak `409`
 `diskon_terkunci_redeem`, diskon manual menimpa (bukan menumpuk) diskon
-reward, padahal poinnya sudah terpotong. Kalau memang salah, batalkan
-transaksi dan buat baru.
+reward, padahal poinnya sudah terpotong. Kalau salah pilih, batalkan
+redeem-nya lewat endpoint di bawah, tidak perlu membuang seluruh transaksi.
+
+### DELETE /api/transaksi/{id}/redeem-poin
+
+Membatalkan redeem pada pesanan yang **belum dibayar**. Mengembalikan keadaan
+ke sebelum redeem, tiga hal sekaligus:
+
+1. **Poin pelanggan kembali utuh.** Poin redeem terpotong sejak reward dipilih
+   walau pesanannya masih `pending`, jadi membatalkan tanpa mengembalikannya
+   membuat pelanggan kehilangan poin tanpa mendapat apa pun. Masa berlaku poin
+   ikut diperpanjang, alasan yang sama dengan pembatalan pesanan.
+2. **Hadiahnya dicabut.** Item reward dihapus untuk `gratis_menu`, potongan
+   dinolkan untuk `diskon`. Kalau tidak, pelanggan tetap membawa hadiahnya
+   sementara poinnya sudah kembali, dan tokonya yang rugi.
+3. **`kode_redeem`, `poin_ditukar`, dan `maks_potongan` dikosongkan,** sehingga
+   transaksinya bebas dipakai redeem lain atau diskon manual.
+
+Response = objek transaksi ter-update.
+
+Error: `transaksi_tanpa_redeem` (422, tidak ada redeem yang perlu dibatalkan),
+`transaksi_sudah_lunas`/`_batal` (409). Sesudah dibayar, poin earn sudah
+diberikan dan laporan sudah diproyeksikan, jadi koreksinya harus lewat
+`POST /api/transaksi/{id}/pembatalan` yang mencatat dokumen pembatalannya.
 
 ### POST /api/transaksi/{id}/tandai-lunas
 

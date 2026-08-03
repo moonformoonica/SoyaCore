@@ -15,13 +15,20 @@
             <p>Perbandingan kinerja antar akun kasir, <span id="lkPeriode">memuat…</span></p>
         </div>
 
-        <div class="trx-date-range">
-            <i class="fa-regular fa-calendar"></i>
-            <input type="date" id="lkMulai" aria-label="Tanggal mulai">
-            <span class="trx-date-sd">s/d</span>
-            <input type="date" id="lkSelesai" aria-label="Tanggal selesai">
-            <button type="button" class="trx-date-reset" id="lkReset" title="Hapus filter tanggal">
-                <i class="fa-solid fa-xmark"></i>
+        <div class="lk-header-actions">
+            <div class="trx-date-range">
+                <i class="fa-regular fa-calendar"></i>
+                <input type="date" id="lkMulai" aria-label="Tanggal mulai">
+                <span class="trx-date-sd">s/d</span>
+                <input type="date" id="lkSelesai" aria-label="Tanggal selesai">
+                <button type="button" class="trx-date-reset" id="lkReset" title="Hapus filter tanggal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <button type="button" class="download-btn" id="lkUnduhBtn">
+                <i class="fa-solid fa-download"></i>
+                Unduh
             </button>
         </div>
     </div>

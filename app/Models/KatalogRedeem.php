@@ -20,6 +20,16 @@ class KatalogRedeem extends Model
         'min_subtotal',
         'is_active',
         'updated_by',
+        // Hanya terisi pada reward buatan manager (`is_custom`). Untuk kode
+        // bawaan semuanya null, strukturnya tetap dibaca dari
+        // LoyaltyRedemptionCatalog::defaults().
+        'is_custom',
+        'label',
+        'tipe',
+        'persen',
+        'kategori',
+        'menu',
+        'ukuran',
     ];
 
     protected $casts = [
@@ -27,6 +37,9 @@ class KatalogRedeem extends Model
         'maks_potongan' => 'integer',
         'min_subtotal' => 'integer',
         'is_active' => 'boolean',
+        'is_custom' => 'boolean',
+        'persen' => 'integer',
+        'ukuran' => 'array',
     ];
 
     public function updatedBy(): BelongsTo

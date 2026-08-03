@@ -60,7 +60,15 @@ class RekapKasirHarian
                 $this->akumulasi($totalSemua, $baris);
             }
 
-            $hasil[] = $this->lengkapi($totalTanggal);
+            // TOTAL per tanggal hanya ditulis kalau hari itu memang punya lebih
+            // dari satu kasir. Menjumlahkan satu baris bukan total, itu salinan
+            // persis baris di atasnya, dan periode Juni-Juli yang seluruhnya
+            // data historis (satu "kasir" saja per tanggal) menghasilkan
+            // enam puluh baris TOTAL berturut-turut yang tidak menjawab apa pun
+            // sambil menenggelamkan baris datanya.
+            if (count($barisTanggal) > 1) {
+                $hasil[] = $this->lengkapi($totalTanggal);
+            }
         }
 
         if ($hasil !== []) {

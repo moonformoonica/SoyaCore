@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\LaporanTransaksi;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /**
  * RFM dihitung dari `laporan_transaksi`, BUKAN dibaca dari snapshot
@@ -41,17 +40,26 @@ class RfmQuery
     public const SEGMEN = ['Pelanggan Baru', 'Butuh Perhatian', 'Potensial', 'Loyal'];
 
     /**
+     * Jendela tanggalnya lewat {@see LaporanQuery::base()}, definisi yang sama
+     * dipakai ringkasan, time series, dan revenue per ukuran. Kalau diparse
+     * ulang di sini, cukup satu selisih batas untuk membuat kartu segmen tidak
+     * pernah cocok dengan grafik di halaman yang sama.
+     */
+    public function __construct(private readonly LaporanQuery $laporan) {}
+
+    /**
+     * @param  ?string  $start  Batas rentang, `null` = tidak dibatasi di sisi itu.
      * @return list<array<string, mixed>> Terurut `rfm_total` menurun lalu nama.
      */
-    public function semua(): array
+    public function semua(?string $start = null, ?string $end = null): array
     {
-        $baris = $this->agregat();
+        $baris = $this->agregat($start, $end);
 
         if ($baris === []) {
             return [];
         }
 
-        $acuan = $this->tanggalAcuan();
+        $acuan = $this->tanggalAcuan($start, $end);
 
         foreach ($baris as &$b) {
             // Arah pengurangannya penting: `diffInDays` mengembalikan nilai
@@ -116,11 +124,11 @@ class RfmQuery
      *
      * @return list<array<string, mixed>>
      */
-    private function agregat(): array
+    private function agregat(?string $start, ?string $end): array
     {
         $baris = [];
 
-        foreach (LaporanTransaksi::query()->cursor() as $row) {
+        foreach ($this->laporan->base($start, $end)->cursor() as $row) {
             $nama = trim((string) $row->nama_pelanggan);
             if ($nama === '') {
                 continue; // baris tanpa identitas tidak bisa dimasukkan ke pelanggan mana pun
@@ -170,13 +178,18 @@ class RfmQuery
     }
 
     /**
-     * Hari setelah transaksi terakhir di seluruh data. Ini yang membuat
-     * pelanggan yang belanja di hari terbaru memperoleh `recency = 1`, bukan 0,
-     * sama seperti snapshot aslinya.
+     * Hari setelah transaksi terakhir DI RENTANG YANG SEDANG DILIHAT. Ini yang
+     * membuat pelanggan yang belanja di hari terbaru memperoleh `recency = 1`,
+     * bukan 0, sama seperti snapshot aslinya.
+     *
+     * Acuannya ikut menyempit bersama rentangnya, bukan dipaku ke ujung seluruh
+     * data. Kalau dipaku, memilih Juni saja membuat SEMUA pelanggan Juni
+     * terlihat "tidak datang 60 hari" dan seluruhnya jatuh ke Butuh Perhatian,
+     * padahal di dalam rentang itu mereka pelanggan yang aktif.
      */
-    private function tanggalAcuan(): Carbon
+    private function tanggalAcuan(?string $start, ?string $end): Carbon
     {
-        $maks = LaporanTransaksi::query()->max('tanggal');
+        $maks = $this->laporan->base($start, $end)->max('tanggal');
 
         return Carbon::parse($maks)->startOfDay()->addDay();
     }
@@ -229,17 +242,18 @@ class RfmQuery
     }
 
     /** Rentang tanggal data yang sedang dihitung, untuk label periode di UI. */
-    public function periode(): ?string
+    public function periode(?string $start = null, ?string $end = null): ?string
     {
-        $batas = DB::table('laporan_transaksi')
-            ->selectRaw('min(tanggal) as awal, max(tanggal) as akhir')
-            ->first();
+        $base = $this->laporan->base($start, $end);
 
-        if ($batas?->awal === null) {
+        $awal = $base->clone()->min('tanggal');
+        $akhir = $base->clone()->max('tanggal');
+
+        if ($awal === null) {
             return null;
         }
 
-        return Carbon::parse($batas->awal)->translatedFormat('j M Y')
-            .' - '.Carbon::parse($batas->akhir)->translatedFormat('j M Y');
+        return Carbon::parse($awal)->translatedFormat('j M Y')
+            .' - '.Carbon::parse($akhir)->translatedFormat('j M Y');
     }
 }

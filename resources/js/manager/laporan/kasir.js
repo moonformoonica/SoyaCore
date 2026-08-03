@@ -133,6 +133,63 @@
         }
     }
 
+    // =========================
+    // Unduh Excel. Isinya tabel halaman ini saja (satu sheet "Laporan Kasir"),
+    // memakai rentang tanggal yang sama dengan yang sedang ditampilkan, jadi
+    // angka di file tidak bisa berbeda dari angka di layar.
+    // =========================
+    const unduhBtn = document.getElementById('lkUnduhBtn');
+
+    unduhBtn?.addEventListener('click', async function () {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return showError('Sesi berakhir, silakan login ulang.');
+
+        const mulai = mulaiEl.value;
+        const selesai = selesaiEl.value;
+        if (mulai && selesai && mulai > selesai) {
+            return showError('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
+        }
+
+        errorEl.style.display = 'none';
+        unduhBtn.disabled = true;
+        unduhBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyiapkan...';
+
+        const params = new URLSearchParams();
+        if (mulai) params.set('tanggal_mulai', mulai);
+        if (selesai) params.set('tanggal_selesai', selesai);
+
+        try {
+            const qs = params.toString();
+            const res = await fetch(API + '/export' + (qs ? '?' + qs : ''), fetchOptions());
+
+            if (!res.ok) {
+                // Body-nya JSON hanya saat gagal, saat sukses isinya biner xlsx.
+                const json = await res.json().catch(() => ({}));
+                throw new Error(json.message
+                    || (res.status === 403
+                        ? 'Unduhan laporan hanya untuk akun manager.'
+                        : 'Gagal mengunduh laporan kasir (' + res.status + ').'));
+            }
+
+            const blob = await res.blob();
+            const cocok = (res.headers.get('Content-Disposition') || '').match(/filename="?([^"]+)"?/);
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = cocok ? cocok[1] : 'Laporan Kasir_SoyaCore.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            showError(e.message || 'Gagal mengunduh laporan kasir.');
+        } finally {
+            unduhBtn.disabled = false;
+            unduhBtn.innerHTML = '<i class="fa-solid fa-download"></i> Unduh';
+        }
+    });
+
     [mulaiEl, selesaiEl].forEach(function (el) {
         el.addEventListener('change', muat);
     });

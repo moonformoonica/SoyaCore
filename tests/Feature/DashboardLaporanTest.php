@@ -208,6 +208,54 @@ class DashboardLaporanTest extends TestCase
         $this->assertSame('Pelanggan Baru', $sesudah['Pelanggan Baru Sekali']['segmen']);
     }
 
+    /**
+     * REGRESSION: kartu segmen, donut, dan tabel RFM dulu dihitung dari SELURUH
+     * isi `laporan_transaksi` apa pun tanggal yang dipasang manager. Satu layar
+     * jadi menampilkan dua periode sekaligus: grafik revenue ikut berubah,
+     * kartu segmen di atasnya diam saja, dan tidak ada yang memberi tahu bahwa
+     * keduanya menjawab pertanyaan yang berbeda.
+     */
+    public function test_rfm_mengikuti_rentang_tanggal(): void
+    {
+        Sanctum::actingAs($this->manager());
+
+        $juni = $this->getJson('/api/dashboard/rfm?start=2026-06-01&end=2026-06-30')->assertOk();
+        $penuh = $this->getJson('/api/dashboard/rfm')->assertOk();
+
+        $this->assertLessThan(
+            count($penuh->json('data')),
+            count($juni->json('data')),
+            'Pelanggan yang cuma belanja di Juli tidak boleh ikut saat rentangnya Juni.',
+        );
+
+        // Label periode ikut menyempit, jadi manager bisa melihat rentang mana
+        // yang sedang dijawab angka-angka itu.
+        $this->assertSame('1 Jun 2026 - 30 Jun 2026', $juni->json('periode_label'));
+
+        // Ringkasan segmen dihitung ulang di rentang itu, bukan dibawa dari
+        // hitungan seluruh data.
+        $this->assertSame(
+            count($juni->json('data')),
+            array_sum($juni->json('ringkasan_segmen')),
+        );
+
+        // Recency memakai acuan ujung rentangnya, bukan ujung seluruh data.
+        // Kalau dipaku ke ujung data, semua pelanggan Juni terlihat "tidak
+        // datang 30 hari" dan seluruhnya jatuh ke Butuh Perhatian.
+        $this->assertSame(1, collect($juni->json('data'))->min('recency'));
+    }
+
+    public function test_switch_mengikuti_rentang_tanggal(): void
+    {
+        Sanctum::actingAs($this->manager());
+
+        $juni = $this->getJson('/api/dashboard/switch?start=2026-06-01&end=2026-06-30')->assertOk();
+        $penuh = $this->getJson('/api/dashboard/switch')->assertOk();
+
+        $this->assertLessThan(count($penuh->json('data')), count($juni->json('data')));
+        $this->assertSame('1 Jun 2026 - 30 Jun 2026', $juni->json('periode_label'));
+    }
+
     public function test_switch_statis_dengan_periode_label(): void
     {
         Sanctum::actingAs($this->manager());
@@ -396,7 +444,7 @@ class DashboardLaporanTest extends TestCase
 
         $this->getJson('/api/laporan/export')->assertOk();
 
-        Excel::assertDownloaded('Laporan_SoyaCore_harian_2026-06-01_2026-07-30.xlsx', function ($export) {
+        Excel::assertDownloaded('Laporan_SoyaCore_2026-06-01 Hingga 2026-07-30.xlsx', function ($export) {
             $titles = array_map(fn ($s) => $s->title(), $export->sheets());
 
             return $titles === self::SHEET_LENGKAP;

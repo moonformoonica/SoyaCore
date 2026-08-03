@@ -49,8 +49,11 @@ class LaporanExport implements WithMultipleSheets
         // pelanggan toko, angka yang tidak tersaring di dalam file yang
         // judulnya menyebut satu nama kasir. Lebih jujur dikeluarkan.
         if ($this->kasirUserId === null) {
-            $sheets[] = new RfmSheet;
-            $sheets[] = new SwitchSheet;
+            // Ikut rentang tanggal yang sama dengan sheet lain. Kalau kedua
+            // sheet ini tetap memuat seluruh data, satu file berisi dua periode
+            // dan Ringkasan tidak bisa dipakai menjelaskan angka di sini.
+            $sheets[] = new RfmSheet($this->start, $this->end);
+            $sheets[] = new SwitchSheet($this->start, $this->end);
         }
 
         return $sheets;

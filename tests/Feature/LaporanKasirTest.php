@@ -385,8 +385,14 @@ class LaporanKasirTest extends TestCase
 
         $rekap = $this->bacaExport('2026-08-05', '2026-08-06')['Rekap Kasir'];
 
-        // Baris 0 = heading. Lalu: 05 Kasir Satu, 05 Kasir Dua, TOTAL 05,
-        // 06 Kasir Satu, TOTAL 06, TOTAL KESELURUHAN.
+        // Baris 0 = heading. Lalu: 05 Kasir Dua, 05 Kasir Satu, TOTAL 05,
+        // 06 Kasir Satu, TOTAL KESELURUHAN.
+        //
+        // 6 Agustus SENGAJA tidak punya baris TOTAL: hari itu cuma satu kasir,
+        // dan menjumlahkan satu baris menghasilkan salinan persis baris di
+        // atasnya. Pada periode yang seluruhnya data historis (satu "kasir" per
+        // tanggal) baris seperti itu menumpuk puluhan dan menenggelamkan
+        // datanya sendiri.
         $this->assertSame('Tanggal', $rekap[0][0]);
         $this->assertSame('Kasir', $rekap[0][1]);
 
@@ -398,17 +404,18 @@ class LaporanKasirTest extends TestCase
             '2026-08-05|Kasir Satu',
             '2026-08-05|'.RekapKasirHarian::LABEL_TOTAL_TANGGAL,
             '2026-08-06|Kasir Satu',
-            '2026-08-06|'.RekapKasirHarian::LABEL_TOTAL_TANGGAL,
             '|'.RekapKasirHarian::LABEL_TOTAL_SEMUA,
         ], $label);
 
         // Total per tanggal dan total keseluruhan cocok dengan penjumlahan
         // barisnya, manager membaca file ini tanpa membuat pivot sendiri.
+        // Tanggal yang kehilangan baris TOTAL-nya tetap ikut ke total
+        // keseluruhan, itu syarat file ini bisa direkonsiliasi dengan Ringkasan.
         $omzet = fn (array $b) => (int) $b[4];
         $this->assertSame(50000, $omzet($baris[2]));                       // TOTAL 05
         $this->assertSame($omzet($baris[0]) + $omzet($baris[1]), $omzet($baris[2]));
-        $this->assertSame(30000, $omzet($baris[4]));                       // TOTAL 06
-        $this->assertSame(80000, $omzet($baris[5]));                       // TOTAL KESELURUHAN
+        $this->assertSame(30000, $omzet($baris[3]));                       // 06 Kasir Satu
+        $this->assertSame(80000, $omzet($baris[4]));                       // TOTAL KESELURUHAN
 
         // Cash/QRIS terpisah per baris.
         $this->assertSame(30000, (int) $baris[0][7]); // Kasir Dua, QRIS
@@ -467,7 +474,8 @@ class LaporanKasirTest extends TestCase
         Sanctum::actingAs($this->manager());
         $this->getJson('/api/laporan/export?kasir_user_id='.$this->kasir1->id)->assertOk();
 
-        Excel::assertDownloaded('Laporan_SoyaCore_harian_'.WaktuToko::tanggalHariIni().'_'.WaktuToko::tanggalHariIni().'_kasir_satu.xlsx');
+        $hariIni = WaktuToko::tanggalHariIni();
+        Excel::assertDownloaded('Laporan_SoyaCore_'.$hariIni.' Hingga '.$hariIni.'_kasir_satu.xlsx');
     }
 
     public function test_export_kasir_user_id_tidak_dikenal_ditolak(): void

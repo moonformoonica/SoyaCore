@@ -28,6 +28,9 @@ trait GayaTabelSoyaCore
 
     private const HIJAU_MUDA = 'FFF4F8F2';
 
+    /** Latar baris total, sengaja lebih pekat dari baris belang biasa. */
+    private const HIJAU_TOTAL = 'FFDDE9DE';
+
     private const ABU_GARIS = 'FFE3E8E3';
 
     private const ABU_TEKS = 'FF6B7280';
@@ -48,6 +51,21 @@ trait GayaTabelSoyaCore
      * @return list<int>
      */
     protected function kolomAngka(): array
+    {
+        return [];
+    }
+
+    /**
+     * Nomor baris DATA yang berisi total (1 = baris pertama sesudah header).
+     *
+     * Baris total yang tampil sama persis dengan baris data di atasnya membuat
+     * angkanya ikut terbaca sebagai transaksi, dan orang yang menjumlahkan
+     * kolom sendiri akan menghitungnya dua kali. Sheet yang punya baris total
+     * menimpa method ini supaya barisnya kelihatan beda.
+     *
+     * @return list<int>
+     */
+    protected function barisTotal(): array
     {
         return [];
     }
@@ -150,6 +168,32 @@ trait GayaTabelSoyaCore
             $sheet->getStyle($huruf.($barisHeader + 1).':'.$huruf.$barisTerakhir)
                 ->applyFromArray(['alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT]])
                 ->getNumberFormat()->setFormatCode('#,##0');
+        }
+
+        $this->gayaBarisTotal($sheet, $barisHeader, $barisTerakhir, $kolomTerakhir);
+    }
+
+    /**
+     * Baris total dibedakan lewat huruf tebal, latar sendiri, dan garis atas.
+     * Diterapkan PALING AKHIR supaya menang dari baris belang; kalau tidak,
+     * baris total yang kebetulan jatuh di nomor genap tetap berwarna sama
+     * dengan baris data biasa.
+     */
+    private function gayaBarisTotal(Worksheet $sheet, int $barisHeader, int $barisTerakhir, string $kolomTerakhir): void
+    {
+        foreach ($this->barisTotal() as $nomor) {
+            $baris = $barisHeader + $nomor;
+            if ($baris > $barisTerakhir) {
+                continue;
+            }
+
+            $sheet->getStyle('A'.$baris.':'.$kolomTerakhir.$baris)->applyFromArray([
+                'font' => ['bold' => true],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::HIJAU_TOTAL]],
+                'borders' => [
+                    'top' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => self::HIJAU_TUA]],
+                ],
+            ]);
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Exports\Sheets;
 
+use App\Services\LaporanQuery;
 use App\Services\SwitchQuery;
 use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -31,7 +32,11 @@ class SwitchSheet implements FromArray, WithTitle, WithEvents
         return [4, 5, 6, 7, 9];
     }
 
-    public function __construct(private readonly SwitchQuery $query = new SwitchQuery) {}
+    public function __construct(
+        private readonly ?string $start = null,
+        private readonly ?string $end = null,
+        private readonly SwitchQuery $query = new SwitchQuery(new LaporanQuery),
+    ) {}
 
     public function title(): string
     {
@@ -43,15 +48,15 @@ class SwitchSheet implements FromArray, WithTitle, WithEvents
      */
     public function array(): array
     {
-        $periode = $this->query->periode();
+        $periode = $this->query->periode($this->start, $this->end);
 
         $rows = [
-            ['Catatan: seluruh periode data '.($periode ?? '-').', tidak difilter tanggal. Khusus minuman, dessert dan cookies tidak dihitung.'],
+            ['Catatan: periode '.($periode ?? '-').', mengikuti rentang tanggal unduhan. Khusus minuman, dessert dan cookies tidak dihitung.'],
             [],
             ['Nama Pelanggan', 'Rasa Favorit', 'Ukuran Saat Ini', 'Beli Reguler (pcs)', 'Beli Large (pcs)', 'Beli Botol (pcs)', 'Total Transaksi', 'Qty per Kunjungan', 'Total Belanja (Rp)', 'Rekomendasi'],
         ];
 
-        foreach ($this->query->semua() as $r) {
+        foreach ($this->query->semua($this->start, $this->end) as $r) {
             $rows[] = [
                 $r['nama_pelanggan'], $r['rasa_favorit'], $r['ukuran_saat_ini'],
                 $r['beli_reguler'], $r['beli_large'], $r['beli_botol'],

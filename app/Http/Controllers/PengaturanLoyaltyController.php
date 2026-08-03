@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
+use App\Http\Requests\StoreKatalogRedeemRequest;
 use App\Http\Requests\UpdateKatalogRedeemRequest;
 use App\Http\Requests\UpdatePengaturanLoyaltyRequest;
 use App\Models\KatalogRedeem;
+use App\Models\Menu;
 use App\Models\PengaturanLoyalty;
+use App\Models\Transaksi;
 use App\Services\LoyaltyService;
 use App\Support\LoyaltyRedemptionCatalog;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 class PengaturanLoyaltyController extends Controller
 {
@@ -45,6 +49,112 @@ class PengaturanLoyaltyController extends Controller
             )),
             'meta' => ['rupiah_per_poin' => $rate],
         ]);
+    }
+
+    /**
+     * Reward baru buatan manager.
+     *
+     * Sampai sekarang delapan jenis di {@see LoyaltyRedemptionCatalog::defaults()}
+     * adalah semuanya yang pernah bisa ada, dan menambah satu reward promo
+     * berarti menunggu deploy. Barisnya disimpan lengkap (label, tipe, dan
+     * struktur hadiahnya), bukan sebagai override, karena tidak ada definisi di
+     * kode yang bisa ditimpanya.
+     */
+    public function storeKatalog(StoreKatalogRedeemRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $diskon = $data['tipe'] === 'diskon';
+
+        $menu = $diskon ? null : Menu::with('kategori')->find($data['menu_id']);
+
+        // DUA PAGAR YANG MENUTUP CELAH SAMA: reward yang tersimpan rapi tapi
+        // gagal justru saat pelanggan menukarkannya di depan kasir.
+        // LoyaltyService::cariMenuGratis() mencari hadiah dengan syarat
+        // `is_active = true` DAN nama kategorinya cocok, jadi menu yang tidak
+        // memenuhi keduanya tidak akan pernah bisa jadi hadiah. Dropdown di
+        // halaman Loyalty sudah menyaringnya, tapi pagarnya tetap di sini juga:
+        // yang menentukan boleh atau tidak bukan tampilan.
+        if (! $diskon && $menu?->kategori === null) {
+            throw new ApiException(
+                'menu_tanpa_kategori',
+                'Menu itu belum punya kategori, jadi hadiahnya tidak bisa ditemukan lagi saat ditukarkan. Lengkapi kategorinya di halaman Menu dulu.',
+                422,
+            );
+        }
+
+        if (! $diskon && $menu?->is_active === false) {
+            throw new ApiException(
+                'menu_nonaktif',
+                "Menu '{$menu->nama}' sedang nonaktif, jadi hadiahnya tidak bisa ditemukan saat ditukarkan. Aktifkan dulu menunya di halaman Menu.",
+                422,
+            );
+        }
+
+        $baris = KatalogRedeem::create([
+            'kode' => $this->kodeUnik($data['label']),
+            'is_custom' => true,
+            'label' => $data['label'],
+            'tipe' => $data['tipe'],
+            'poin' => $data['poin'],
+            'is_active' => true,
+            'persen' => $diskon ? $data['persen'] : null,
+            'maks_potongan' => $diskon ? $data['maks_potongan'] : null,
+            'min_subtotal' => $diskon ? ($data['min_subtotal'] ?? 0) : null,
+            'kategori' => $menu?->kategori->nama,
+            'menu' => $menu?->nama,
+            'ukuran' => $menu === null ? null : $this->ejaanUkuran((string) $menu->ukuran),
+            'updated_by' => $request->user()->id,
+        ]);
+
+        return response()->json([
+            'data' => $this->payloadItem(
+                LoyaltyRedemptionCatalog::find($baris->kode),
+                PengaturanLoyalty::rupiahPerPoin(),
+            ),
+        ], 201);
+    }
+
+    /**
+     * Hapus permanen reward buatan manager.
+     *
+     * DUA PENOLAKAN YANG SENGAJA BERBEDA PESANNYA:
+     *
+     * 1. Reward bawaan tidak bisa dihapus. Logika redeem-nya ada di PHP dan
+     *    tidak ikut hilang bersama barisnya, jadi "menghapus" cuma akan
+     *    memunculkannya lagi dengan setelan bawaan pada request berikutnya.
+     *    Yang dimaksud manager hampir selalu menonaktifkan.
+     * 2. Reward yang pernah ditukarkan tidak bisa dihapus. `transaksi.kode_redeem`
+     *    menyimpan kodenya, dan menghapus definisinya membuat riwayat penukaran
+     *    lama kehilangan artinya tanpa error apa pun. Diarahkan ke nonaktifkan,
+     *    aturan yang sama dengan akun kasir yang sudah punya transaksi.
+     */
+    public function destroyKatalog(string $kode): JsonResponse
+    {
+        if (LoyaltyRedemptionCatalog::bawaan($kode)) {
+            throw new ApiException(
+                'reward_bawaan',
+                'Reward bawaan tidak bisa dihapus, hanya bisa dinonaktifkan supaya riwayat penukarannya tetap terbaca.',
+                422,
+            );
+        }
+
+        $baris = KatalogRedeem::query()->where('kode', $kode)->where('is_custom', true)->first();
+
+        if ($baris === null) {
+            throw new ApiException('reward_tidak_ditemukan', "Reward '{$kode}' tidak ada di katalog.", 404);
+        }
+
+        if (Transaksi::query()->where('kode_redeem', $kode)->exists()) {
+            throw new ApiException(
+                'reward_sudah_dipakai',
+                "Reward '{$baris->label}' sudah pernah ditukarkan pelanggan, jadi tidak bisa dihapus. Nonaktifkan saja supaya riwayat penukarannya tetap terbaca.",
+                422,
+            );
+        }
+
+        $baris->delete();
+
+        return response()->json(['message' => "Reward '{$baris->label}' dihapus."]);
     }
 
     public function updateKatalog(UpdateKatalogRedeemRequest $request, string $kode): JsonResponse
@@ -92,6 +202,51 @@ class PengaturanLoyaltyController extends Controller
     }
 
     /**
+     * Kode dibuat dari labelnya, tidak diketik manager.
+     *
+     * Kode ikut tersimpan di `transaksi.kode_redeem` dan terbaca di riwayat,
+     * jadi lebih baik diturunkan dari nama yang sudah dia tulis daripada jadi
+     * satu isian lagi yang harus dipikirkan dan bisa bentrok. Akhiran angka
+     * dipakai kalau namanya menghasilkan kode yang sudah ada.
+     */
+    private function kodeUnik(string $label): string
+    {
+        $dasar = Str::slug($label, '_') ?: 'reward';
+        $dipakai = LoyaltyRedemptionCatalog::kodeTersedia();
+
+        if (! in_array($dasar, $dipakai, true)) {
+            return $dasar;
+        }
+
+        $urutan = 2;
+        while (in_array($dasar.'_'.$urutan, $dipakai, true)) {
+            $urutan++;
+        }
+
+        return $dasar.'_'.$urutan;
+    }
+
+    /**
+     * Ejaan ukuran yang diterima saat mencari menu hadiah, urut preferensi.
+     *
+     * "Reguler" dan "Regular" dianggap ejaan yang sama, mengikuti katalog
+     * bawaan. Data menu memakai keduanya, dan reward yang cuma menerima satu
+     * ejaan akan gagal ditukarkan pada menu yang mengeja versi satunya.
+     *
+     * @return list<string>
+     */
+    private function ejaanUkuran(string $ukuran): array
+    {
+        $alias = match (mb_strtolower($ukuran)) {
+            'reguler' => 'Regular',
+            'regular' => 'Reguler',
+            default => null,
+        };
+
+        return $alias === null ? [$ukuran] : [$ukuran, $alias];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function payloadPengaturan(PengaturanLoyalty $pengaturan): array
@@ -126,6 +281,10 @@ class PengaturanLoyaltyController extends Controller
             'kode' => $item['kode'],
             'label' => $item['label'],
             'tipe' => $item['tipe'],
+            // Frontend memakainya untuk memutuskan tombol Hapus: reward bawaan
+            // hanya bisa dinonaktifkan, yang kustom boleh dihapus permanen.
+            'bawaan' => $item['bawaan'],
+            'ukuran' => $item['tipe'] === 'gratis_menu' ? array_values($item['ukuran']) : null,
             'poin' => $item['poin'],
             'poin_default' => $item['poin_default'],
             'is_active' => $item['is_active'],

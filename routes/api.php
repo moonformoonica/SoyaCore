@@ -76,6 +76,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('transaksi/{transaksi}/items/{item}', [TransaksiItemController::class, 'destroy']);
     Route::post('transaksi/{transaksi}/diskon', [TransaksiController::class, 'diskon']);
     Route::post('transaksi/{transaksi}/redeem-poin', [TransaksiController::class, 'redeemPoin']);
+    // Membatalkan redeem pada pesanan yang belum dibayar. Tanpa ini, satu-satunya
+    // jalan keluar dari salah pilih reward adalah membatalkan seluruh transaksi
+    // lalu mengetik ulang pesanannya di depan pelanggan.
+    Route::delete('transaksi/{transaksi}/redeem-poin', [TransaksiController::class, 'batalRedeem']);
     Route::post('transaksi/{transaksi}/bayar', [TransaksiController::class, 'bayar']);
     // alias sesuai penamaan M3, action yang sama dengan /bayar
     Route::post('transaksi/{transaksi}/tandai-lunas', [TransaksiController::class, 'bayar']);
@@ -124,6 +128,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('pengaturan/loyalty', [PengaturanLoyaltyController::class, 'update']);
         Route::patch('pengaturan/loyalty/katalog/{kode}', [PengaturanLoyaltyController::class, 'updateKatalog']);
 
+        // Menambah JENIS reward baru, bukan sekadar mengubah poin yang sudah
+        // ada. Sebelum ini delapan jenis di LoyaltyRedemptionCatalog::defaults()
+        // adalah semuanya yang pernah bisa ada, dan satu reward promo baru
+        // berarti menunggu deploy.
+        //
+        // DELETE hanya berlaku untuk reward buatan manager yang belum pernah
+        // ditukarkan. Yang bawaan dan yang sudah punya riwayat ditolak dan
+        // diarahkan ke nonaktifkan, supaya `transaksi.kode_redeem` lama tidak
+        // kehilangan artinya. Alasannya di PengaturanLoyaltyController.
+        Route::post('pengaturan/loyalty/katalog', [PengaturanLoyaltyController::class, 'storeKatalog']);
+        Route::delete('pengaturan/loyalty/katalog/{kode}', [PengaturanLoyaltyController::class, 'destroyKatalog']);
+
         // Info toko dipakai di header nota & laporan, jadi bukan preferensi
         // pribadi kasir, manager yang pegang.
         Route::patch('pengaturan/toko', [PengaturanTokoController::class, 'update']);
@@ -157,7 +173,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('laporan/kasir', [LaporanKasirController::class, 'index']);
         Route::get('pembatalan', [PembatalanController::class, 'semua']);
 
+        // Tiga unduhan Excel, satu per halaman yang punya tombol Unduh. Isinya
+        // mengikuti tabel di halaman asalnya, alasannya di ExportController.
+        //
+        // Export daftar transaksi sengaja bersarang di bawah `laporan/`, bukan
+        // `transaksi/export`. `GET transaksi/{transaksi}` sudah terdaftar lebih
+        // dulu lewat apiResource di luar grup ini, jadi `transaksi/export` akan
+        // dicocokkan sebagai id transaksi bernama "export" dan berakhir 404.
         Route::get('laporan/export', [ExportController::class, 'export']);
+        Route::get('laporan/kasir/export', [ExportController::class, 'kasir']);
+        Route::get('laporan/transaksi/export', [ExportController::class, 'transaksi']);
 
         // QRIS statis merchant & QR menu meja, keduanya menyentuh identitas
         // toko, jadi bukan wewenang kasir.

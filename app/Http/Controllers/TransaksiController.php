@@ -168,6 +168,21 @@ class TransaksiController extends Controller
         return new TransaksiResource($this->muat($transaksi));
     }
 
+    /**
+     * Membatalkan redeem pada pesanan yang BELUM dibayar: poin pelanggan
+     * dikembalikan utuh dan hadiahnya dicabut. Alasannya di
+     * {@see LoyaltyService::batalkanRedeem()}.
+     *
+     * Sebelum ini satu-satunya jalan keluar dari salah pilih reward adalah
+     * membatalkan seluruh transaksi lalu menyusunnya lagi dari nol.
+     */
+    public function batalRedeem(Transaksi $transaksi): TransaksiResource
+    {
+        $this->loyaltyService->batalkanRedeem($transaksi);
+
+        return new TransaksiResource($this->muat($transaksi->refresh()));
+    }
+
     public function bayar(BayarRequest $request, Transaksi $transaksi): TransaksiResource
     {
         $this->service->pastikanPending($transaksi);

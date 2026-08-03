@@ -102,10 +102,23 @@
         }
     }
 
+    /**
+     * Rentang tanggal + satu parameter tambahan, dalam satu query string.
+     *
+     * RFM dan Switch sama-sama butuh ini. Sebelumnya keduanya mengirim
+     * parameternya sendiri tanpa rentang tanggal sama sekali, jadi kartu segmen
+     * dan tabelnya diam saja sementara grafik di atasnya ikut berubah.
+     */
+    function qsRentangPlus(nama, nilai) {
+        const p = new URLSearchParams(rentangQS().replace(/^\?/, ''));
+        if (nilai) p.set(nama, nilai);
+        const qs = p.toString();
+        return qs ? '?' + qs : '';
+    }
+
     // ---- RFM ----
     async function loadRfm(segmen) {
-        const qs = segmen ? `?segmen=${encodeURIComponent(segmen)}` : '';
-        const res = await fetch(`${API_BASE}/dashboard/rfm${qs}`, fetchOptions());
+        const res = await fetch(`${API_BASE}/dashboard/rfm${qsRentangPlus('segmen', segmen)}`, fetchOptions());
 
         if (res.status === 401) throw new Error('Sesi habis, silakan login ulang.');
         if (res.status === 403) throw new Error('Akun ini tidak punya akses ke halaman Laporan (khusus manager).');
@@ -167,8 +180,7 @@
     }
 
     async function loadSwitch(keyword) {
-        const qs = keyword ? `?rekomendasi=${encodeURIComponent(keyword)}` : '';
-        const res = await fetch(`${API_BASE}/dashboard/switch${qs}`, fetchOptions());
+        const res = await fetch(`${API_BASE}/dashboard/switch${qsRentangPlus('rekomendasi', keyword)}`, fetchOptions());
         if (!res.ok) throw new Error('Gagal memuat data rekomendasi.');
         return res.json();
     }
@@ -276,8 +288,13 @@
         }
     }
 
+    // Seluruh panel halaman ini ikut rentang tanggal, bukan cuma grafik
+    // revenue. Panel yang tidak ikut membuat satu layar menampilkan dua periode
+    // sekaligus tanpa ada yang menjelaskan yang mana.
     function terapkanRentang() {
         initRevenueUkuran();
+        initRfm();
+        initSwitch();
         updatePeriodeLabel();
     }
     document.getElementById('exportStart').addEventListener('change', terapkanRentang);

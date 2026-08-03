@@ -247,8 +247,16 @@ Poin loyalty dalam window. `data.top_pelanggan` urut poin desc; params `limit`
 
 ## 7. GET /api/dashboard/rfm
 
-**Statis periode-penuh**, TANPA param tanggal. Filter opsional `?segmen=<nama>`.
-`ringkasan_segmen` dihitung dari seluruh snapshot (bukan hasil filter).
+Menerima `start`/`end` seperti endpoint lain; tanpa keduanya = seluruh data.
+Filter opsional `?segmen=<nama>`. `ringkasan_segmen` dihitung dari seluruh
+pelanggan **di rentang itu**, bukan dari hasil yang sudah tersaring segmen,
+supaya donut chart-nya tidak berubah jadi satu potong penuh begitu manager
+memilih satu segmen.
+
+`recency` memakai acuan hari setelah transaksi terakhir **di dalam rentang**,
+bukan ujung seluruh data. Kalau acuannya dipaku ke ujung data, memilih Juni saja
+membuat semua pelanggan Juni terlihat "tidak datang 60 hari" dan seluruhnya
+jatuh ke Butuh Perhatian, padahal di rentang itu mereka pelanggan aktif.
 
 ```json
 {
@@ -290,8 +298,8 @@ Tiga field baru di objek data:
 
 ## 8. GET /api/dashboard/switch
 
-**Statis periode-penuh**, TANPA param tanggal. Filter opsional substring
-`?rekomendasi=<teks>` (mis. `?rekomendasi=Large`).
+Menerima `start`/`end` seperti endpoint lain; tanpa keduanya = seluruh data.
+Filter opsional substring `?rekomendasi=<teks>` (mis. `?rekomendasi=Large`).
 
 ```json
 {
@@ -315,8 +323,8 @@ Download workbook `.xlsx` multi-sheet. Params sama: `grain`/`start`/`end`.
 
 - **Response:** `200` dengan `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
   dan `Content-Disposition: attachment`.
-- **Nama file:** `Laporan_SoyaCore_{grain}_{start}_{end}.xlsx`
-  (mis. `Laporan_SoyaCore_harian_2026-06-01_2026-07-30.xlsx`).
+- **Nama file:** `Laporan_SoyaCore_{start} Hingga {end}.xlsx`
+  (mis. `Laporan_SoyaCore_2026-06-01 Hingga 2026-07-30.xlsx`).
 
 **Sheet (berurutan):**
 
@@ -326,8 +334,8 @@ Download workbook `.xlsx` multi-sheet. Params sama: `grain`/`start`/`end`.
 | Detail Transaksi | Baris `laporan_transaksi` (header Bahasa Indonesia) | window |
 | Revenue per Ukuran | Group by ukuran + catatan cakupan | window, **minuman saja** |
 | Time Series | Bucket sesuai grain | window |
-| RFM Pelanggan | Snapshot RFM + catatan periode tetap | statis periode-penuh |
-| Rekomendasi Switch | Snapshot switch + catatan periode tetap | statis periode-penuh |
+| RFM Pelanggan | RFM dihitung + catatan periode | window |
+| Rekomendasi Switch | Switch dihitung + catatan periode | window |
 
 Kolom uang berupa integer rupiah. Window kosong tetap menghasilkan `.xlsx` valid
 (sebagian besar kosong, hanya header).
@@ -340,6 +348,40 @@ otomatis (mis. `pandas.read_excel(..., skiprows=1)`).
 Sheet **RFM Pelanggan** memakai 12 kolom: Nama Pelanggan, Recency (hari),
 Kunjungan, Total Pcs, Monetary (Rp), Total Poin, Skor Frekuensi, R, F, M,
 RFM Total, Segmen.
+
+---
+
+## 9b. Dua export lain: per halaman, bukan serba-ada
+
+Endpoint di atas adalah unduhan halaman **Laporan** dan isinya memang
+keseluruhan. Halaman Laporan Kasir dan Transaksi punya tombol Unduh sendiri
+yang menghasilkan **satu sheet** berisi tabel halaman itu saja. Manager menekan
+Unduh sambil menatap satu tabel tertentu; file tujuh sheet memaksanya mencari
+lagi tabel yang tadi sudah ada di depan matanya.
+
+| Endpoint | Params | Sheet | Nama file |
+|---|---|---|---|
+| `GET /api/laporan/export` | `grain`, `start`, `end`, `kasir_user_id` | 7 sheet (lihat di atas) | `Laporan_SoyaCore_{start} Hingga {end}.xlsx` |
+| `GET /api/laporan/kasir/export` | sama dengan `GET /api/laporan/kasir` | `Laporan Kasir` | `Laporan Kasir_SoyaCore_{start} Hingga {end}.xlsx` |
+| `GET /api/laporan/transaksi/export` | sama dengan `GET /api/transaksi` | `Transaksi` | `Laporan Transaksi_SoyaCore_{start} Hingga {end}.xlsx` |
+
+Ketiganya manager-only. Dua yang terakhir memakai FormRequest yang **sama
+persis** dengan endpoint yang mengisi tabelnya di layar, jadi angka di Excel
+tidak bisa menyimpang dari angka di halaman, dan seluruh filter yang aktif ikut
+terbawa, bukan cuma rentang tanggalnya.
+
+Export transaksi mengabaikan `per_page`: yang diunduh adalah **seluruh** baris
+hasil filter, bukan halaman yang sedang dibuka. Batas per halaman ada supaya
+tabel HTML tetap ringan, sedangkan file Excel justru dipakai untuk yang tidak
+muat di layar.
+
+Batas tanggal yang tidak dikirim disimpulkan dari datanya sendiri saat menyusun
+nama file, sehingga unduhan tanpa filter tanggal tetap dinamai dengan tanggal
+sungguhan alih-alih `Awal Hingga Akhir`.
+
+Kolom Tunai/QRIS di sheet `Laporan Kasir` dipecah jadi jumlah transaksi dan
+nilai rupiah, berbeda dengan layar yang meringkasnya jadi `1× · Rp 41.600`.
+Gabungan itu akan jadi teks yang tidak bisa dijumlahkan di Excel.
 
 ---
 

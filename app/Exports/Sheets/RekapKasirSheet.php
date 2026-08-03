@@ -25,12 +25,34 @@ class RekapKasirSheet implements FromArray, WithHeadings, WithTitle, WithEvents
 {
     use GayaTabelSoyaCore;
 
+    /** @var list<array<string, mixed>>|null */
+    private ?array $baris = null;
+
     /**
      * @return list<int>
      */
     protected function kolomAngka(): array
     {
         return [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function barisTotal(): array
+    {
+        $nomor = [];
+
+        foreach ($this->baris() as $i => $baris) {
+            if (in_array($baris['kasir'], [
+                RekapKasirHarian::LABEL_TOTAL_TANGGAL,
+                RekapKasirHarian::LABEL_TOTAL_SEMUA,
+            ], true)) {
+                $nomor[] = $i + 1;
+            }
+        }
+
+        return $nomor;
     }
 
     public function __construct(
@@ -76,6 +98,17 @@ class RekapKasirSheet implements FromArray, WithHeadings, WithTitle, WithEvents
             $b['poin_ditukar'],
             $b['jumlah_pembatalan'],
             $b['nilai_dibatalkan'],
-        ], $this->rekap->baris($this->start, $this->end, $this->kasirUserId));
+        ], $this->baris());
+    }
+
+    /**
+     * Dihitung sekali lalu disimpan: `array()` dan `barisTotal()` sama-sama
+     * memerlukannya, dan rekap ini menyentuh tiga tabel sekaligus.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function baris(): array
+    {
+        return $this->baris ??= $this->rekap->baris($this->start, $this->end, $this->kasirUserId);
     }
 }

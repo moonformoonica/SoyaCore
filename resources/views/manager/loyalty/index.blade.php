@@ -48,6 +48,14 @@
             <h2>Katalog reward</h2>
             <p class="section-sub">Minimal penukaran 150 poin.</p>
         </div>
+
+        {{-- Tombol ini sebelumnya tidak pernah ada di markup, padahal
+             loyalty.js sudah mencarinya lewat id `btnAddReward`. Akibatnya form
+             tambah reward tidak punya satu pun jalan untuk dibuka. --}}
+        <button type="button" class="btn-add-reward" id="btnAddReward" data-role="manager">
+            <i class="fa-solid fa-plus"></i>
+            Tambah reward
+        </button>
     </div>
     <div class="rewards" id="lm-rewards"></div>
 
@@ -81,6 +89,25 @@
             <tbody id="lm-history"></tbody>
         </table>
         <div class="lm-history-footer" id="lm-history-footer"></div>
+    </div>
+
+    {{-- =========================
+            MODAL TAMBAH REWARD
+        =========================
+        Dulu form ini disisipkan sebagai kartu kesembilan di dalam grid katalog,
+        jadi ia ikut selebar satu kolom dan memanjang jauh ke bawah sampai
+        merusak tinggi barisnya. Sebagai modal, lebarnya ditentukan sendiri dan
+        katalog di belakangnya tidak berubah bentuk. --}}
+    <div class="rw-modal-backdrop" id="rewardModalBackdrop" data-role="manager">
+        <div class="rw-modal" role="dialog" aria-modal="true" aria-labelledby="rewardModalTitle">
+            <div class="rw-modal-head">
+                <h3 id="rewardModalTitle">Tambah reward</h3>
+                <button type="button" class="rw-modal-close" id="rewardModalClose" aria-label="Tutup">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="rw-modal-body" id="rewardModalBody"></div>
+        </div>
     </div>
 
     <div class="toast" id="lm-toast"></div>

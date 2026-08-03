@@ -57,6 +57,23 @@ body{
     background:#256428;
 }
 
+.download-btn:disabled{
+    background:#7FA982;
+    cursor:progress;
+}
+
+/* Pesan gagal unduh. Sebelumnya kegagalan hanya muncul di console, jadi
+   tombolnya terlihat seperti tidak melakukan apa-apa. */
+.trx-export-error{
+    margin:-10px 0 22px;
+    padding:10px 14px;
+    background:#FDECEC;
+    border:1px solid #F3C2C2;
+    border-radius:10px;
+    color:#A33A3A;
+    font-size:13px;
+}
+
 /* ===========================
         CARD
 =========================== */
@@ -300,6 +317,12 @@ body{
 }
 
 .table-card thead th{
+
+    /* Ikut mengecat latar hijau yang sama dengan `thead` induknya, bukan
+       menumpang latar itu saja. Sel yang transparan menyisakan garis putih
+       tipis di antara kolom begitu lebar tabel jatuh di angka pecahan piksel,
+       dan batang hijau headernya terlihat terpotong-potong. */
+    background:inherit;
 
     color:#2F6B3F;
 

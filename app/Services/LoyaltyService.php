@@ -8,6 +8,7 @@ use App\Models\Menu;
 use App\Models\PengaturanLoyalty;
 use App\Models\Transaksi;
 use App\Support\LoyaltyRedemptionCatalog;
+use App\Support\WaktuToko;
 use Illuminate\Support\Facades\DB;
 
 class LoyaltyService
@@ -152,6 +153,80 @@ class LoyaltyService
         return $transaksi;
     }
 
+    /**
+     * Membatalkan redeem pada pesanan yang BELUM dibayar.
+     *
+     * Sampai sekarang satu-satunya jalan keluar dari salah pilih reward adalah
+     * membatalkan seluruh transaksi lalu menyusunnya lagi dari nol, persis yang
+     * disarankan pesan error `transaksi_sudah_redeem`. Itu memaksa kasir
+     * mengetik ulang seluruh pesanan di depan pelanggan hanya karena salah
+     * menekan satu tombol reward.
+     *
+     * MENGEMBALIKAN KEADAAN KE SEBELUM REDEEM, tiga hal sekaligus, dan
+     * ketiganya harus jadi satu kesatuan:
+     *
+     * 1. Poin pelanggan dikembalikan utuh. Poin redeem terpotong sejak reward
+     *    dipilih, walau pesanannya masih pending, jadi membatalkan tanpa
+     *    mengembalikannya membuat pelanggan kehilangan poin tanpa mendapat apa
+     *    pun.
+     * 2. Hadiahnya dicabut: item reward dihapus untuk `gratis_menu`, potongan
+     *    dinolkan untuk `diskon`. Kalau tidak, pelanggan tetap membawa
+     *    hadiahnya sementara poinnya sudah kembali, dan tokonya yang rugi.
+     * 3. `kode_redeem`, `poin_ditukar`, dan `maks_potongan` dikosongkan,
+     *    sehingga transaksinya bebas dipakai redeem lain atau diskon manual.
+     *
+     * Masa berlaku poin ikut diperpanjang, alasan yang sama dengan
+     * {@see PembatalanService::kembalikanPoinRedeem()}: poin yang kembali
+     * karena koreksi tidak boleh langsung hangus gara-gara jam kedaluwarsa lama
+     * masih menempel.
+     */
+    public function batalkanRedeem(Transaksi $transaksi): Transaksi
+    {
+        // Sesudah dibayar, pembatalannya bukan urusan endpoint ini lagi:
+        // poin earn sudah diberikan dan laporan sudah diproyeksikan, jadi
+        // jalurnya lewat pembatalan/koreksi pesanan yang mencatat dokumennya.
+        $this->transaksiService->pastikanPending($transaksi);
+
+        if ($transaksi->kode_redeem === null) {
+            throw new ApiException(
+                'transaksi_tanpa_redeem',
+                'Transaksi ini tidak sedang memakai redeem poin, tidak ada yang perlu dibatalkan.',
+                422,
+            );
+        }
+
+        DB::transaction(function () use ($transaksi) {
+            $poin = (int) $transaksi->poin_ditukar;
+
+            if ($transaksi->customer_id !== null && $poin > 0) {
+                $loyalty = $this->loyaltyTerkunci($transaksi->customer_id);
+                $loyalty->poin += $poin;
+                $loyalty->poin_kedaluwarsa_pada = now()->addMonths(Loyalty::BULAN_KEDALUWARSA);
+                $loyalty->save();
+            }
+
+            $transaksi->detailTransaksi()->where('is_reward', true)->delete();
+
+            // Dikosongkan SEBELUM menghitung ulang total: `recalculateTotals()`
+            // membaca `maks_potongan` transaksi, dan plafon reward yang sudah
+            // digugurkan tidak boleh ikut menentukan potongan berikutnya.
+            $transaksi->forceFill([
+                'kode_redeem' => null,
+                'poin_ditukar' => 0,
+                'maks_potongan' => null,
+            ])->save();
+
+            // Potongan dari voucher diskon dinolkan di seluruh item. Tanpa ini
+            // `recalculateTotals()` justru mempertahankannya: ia menurunkan
+            // ulang diskon dari `diskon_persen` yang masih menempel di item.
+            $transaksi->detailTransaksi()->update(['diskon_persen' => 0, 'diskon_nilai' => 0]);
+
+            $this->transaksiService->recalculateTotals($transaksi);
+        });
+
+        return $transaksi->refresh();
+    }
+
     private function loyaltyTerkunci(int $customerId): Loyalty
     {
         Loyalty::firstOrCreate(['customer_id' => $customerId], ['poin' => 0]);
@@ -173,6 +248,42 @@ class LoyaltyService
         $menu = $this->cariMenuGratis($item);
 
         return $menu === null ? null : (int) $menu->harga;
+    }
+
+    /**
+     * Jumlah transaksi yang menukarkan reward dalam sebuah rentang.
+     *
+     * DIHITUNG DI SINI, BUKAN DI BROWSER. Kartu "Reward ditukar bulan ini"
+     * sebelumnya menjumlahkannya dari `GET /api/transaksi?status=lunas&per_page=200`
+     * lalu menyaring tanggalnya di JavaScript. Tiga hal yang lolos dari cara itu:
+     *
+     * 1. `status=lunas` membuang transaksi `batal_sebagian`. Pesanan yang
+     *    itemnya dibatalkan sebagian TAPI rewardnya tetap dipakai poinnya sudah
+     *    benar-benar terpotong, jadi penukarannya nyata dan harus terhitung.
+     * 2. `per_page` dipagari 200 baris. Daftar transaksi menggabungkan ratusan
+     *    baris impor CSV, jadi begitu penukaran tergeser keluar halaman pertama
+     *    ia hilang dari hitungan tanpa gejala apa pun.
+     * 3. Batas bulannya memakai jam browser. Seluruh angka lain di aplikasi ini
+     *    memotong hari menurut WIB, dan dua definisi "bulan ini" di satu layar
+     *    tidak akan pernah bisa dijelaskan.
+     *
+     * Transaksi yang dibatalkan PENUH tidak dihitung: poin redeem-nya sudah
+     * dikembalikan utuh ke pelanggan, jadi penukarannya tidak pernah jadi.
+     */
+    public function rewardDitukar(?string $mulai, ?string $selesai): int
+    {
+        $query = Transaksi::query()
+            ->where('poin_ditukar', '>', 0)
+            ->where('status', '!=', 'batal');
+
+        if ($mulai !== null) {
+            $query->where('created_at', '>=', WaktuToko::awalHari($mulai));
+        }
+        if ($selesai !== null) {
+            $query->where('created_at', '<=', WaktuToko::akhirHari($selesai));
+        }
+
+        return (int) $query->count();
     }
 
     /**

@@ -182,6 +182,16 @@
     background: none; color: #ABABAB; cursor: pointer; font-size: 12px;
 }
 .pes-cust-ganti-btn:hover { background: #ECECEC; color: #3F3F46; }
+.pes-cust-ganti-btn:disabled { opacity: .35; cursor: not-allowed; background: none; color: #ABABAB; }
+
+/* Tombol × berganti arti jadi "batalkan redeem" saat pesanan sedang memakai
+   reward. Diberi warna merah supaya tidak tertukar dengan "cari pelanggan
+   lain": yang satu melepas pilihan di layar, yang satu mengembalikan poin
+   pelanggan dan mencabut hadiahnya. */
+.pes-cust-ganti-btn.is-batal-redeem {
+    background: #FDECEC; color: #B3261E;
+}
+.pes-cust-ganti-btn.is-batal-redeem:hover { background: #F8D7D7; color: #8C1D18; }
 
 /* Tombol Loyalty di kartu pelanggan */
 .pes-loyalty-btn {

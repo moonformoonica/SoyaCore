@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\LaporanRequest;
 use App\Models\LaporanTransaksi;
 use App\Services\LaporanQuery;
+use App\Services\LoyaltyService;
 use App\Services\RfmQuery;
 use App\Services\SwitchQuery;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -85,12 +85,20 @@ class DashboardController extends Controller
         );
     }
 
-    public function loyalty(LaporanRequest $request): JsonResponse
+    public function loyalty(LaporanRequest $request, LoyaltyService $loyaltyService): JsonResponse
     {
         [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
         $ada = $this->query->adaData($start, $end);
 
-        return $this->envelope($request->grain(), $start, $end, $ada, $this->query->loyalty($start, $end, $request->limitOr(10)));
+        $data = $this->query->loyalty($start, $end, $request->limitOr(10));
+
+        // Poin yang DIDAPAT pelanggan dibaca dari proyeksi `laporan_transaksi`,
+        // sedangkan penukaran hanya tercatat di `transaksi.poin_ditukar`, jadi
+        // angka ini datang dari sumber lain dan ditempelkan di sini. Rentangnya
+        // sama supaya keduanya menjawab periode yang sama.
+        $data['reward_ditukar'] = $loyaltyService->rewardDitukar($start, $end);
+
+        return $this->envelope($request->grain(), $start, $end, $ada, $data);
     }
 
     /**
@@ -100,15 +108,23 @@ class DashboardController extends Controller
      * dan recency pelanggan lama tidak pernah bertambah. Rinciannya di
      * {@see RfmQuery}.
      */
-    public function rfm(Request $request): JsonResponse
+    public function rfm(LaporanRequest $request): JsonResponse
     {
-        $segmen = $request->query('segmen');
+        // Ikut rentang tanggal halaman Laporan. Sebelumnya seluruh RFM dihitung
+        // dari SELURUH isi `laporan_transaksi` apa pun tanggal yang dipasang,
+        // jadi kartu segmen, donut, dan tabelnya diam saja sementara grafik di
+        // atasnya berubah. Dua angka di satu layar yang menjawab periode
+        // berbeda tanpa ada yang menjelaskan.
+        [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
 
-        $semua = $this->rfm->semua();
+        $segmen = $request->validated()['segmen'] ?? null;
 
-        // Ringkasan segmen dihitung dari SELURUH pelanggan, bukan dari hasil
-        // yang sudah tersaring. Kalau ikut tersaring, donut chart-nya berubah
-        // jadi satu potong penuh begitu manager memilih satu segmen.
+        $semua = $this->rfm->semua($start, $end);
+
+        // Ringkasan segmen dihitung dari SELURUH pelanggan di rentang itu, bukan
+        // dari hasil yang sudah tersaring segmen. Kalau ikut tersaring, donut
+        // chart-nya berubah jadi satu potong penuh begitu manager memilih satu
+        // segmen.
         $ringkasanSegmen = $this->rfm->ringkasanSegmen($semua);
 
         $data = $segmen === null || $segmen === ''
@@ -116,7 +132,8 @@ class DashboardController extends Controller
             : array_values(array_filter($semua, fn ($b) => $b['segmen'] === $segmen));
 
         return response()->json([
-            'periode_label' => $this->rfm->periode() ?? self::PERIODE_LABEL,
+            'periode_label' => $this->rfm->periode($start, $end) ?? self::PERIODE_LABEL,
+            'data_tersedia' => $semua !== [],
             'ringkasan_segmen' => $ringkasanSegmen,
             'data' => $data,
         ]);
@@ -126,11 +143,14 @@ class DashboardController extends Controller
      * DIHITUNG dari `laporan_transaksi`, tidak lagi dibaca dari snapshot
      * `laporan_switch`. Alasan dan batasannya di {@see SwitchQuery}.
      */
-    public function switch(Request $request): JsonResponse
+    public function switch(LaporanRequest $request): JsonResponse
     {
-        $rekomendasi = trim((string) $request->query('rekomendasi'));
+        // Ikut rentang tanggal halaman Laporan, alasannya sama dengan rfm().
+        [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
 
-        $data = $this->switch->semua();
+        $rekomendasi = trim((string) ($request->validated()['rekomendasi'] ?? ''));
+
+        $data = $this->switch->semua($start, $end);
 
         if ($rekomendasi !== '') {
             // Pencarian bebas huruf besar-kecil, sama seperti perilaku
@@ -143,7 +163,7 @@ class DashboardController extends Controller
         }
 
         return response()->json([
-            'periode_label' => $this->switch->periode() ?? self::PERIODE_LABEL,
+            'periode_label' => $this->switch->periode($start, $end) ?? self::PERIODE_LABEL,
             'data' => $data,
         ]);
     }

@@ -14,7 +14,9 @@ Semua endpoint di bawah prefix `/api` dan butuh header
 | `GET /api/pengaturan/loyalty` | kasir, manager | Rate poin yang berlaku |
 | `PATCH /api/pengaturan/loyalty` | manager | Ubah rate poin |
 | `GET /api/pengaturan/loyalty/katalog` | kasir, manager | Katalog redeem efektif |
+| `POST /api/pengaturan/loyalty/katalog` | manager | Tambah **jenis** reward baru |
 | `PATCH /api/pengaturan/loyalty/katalog/{kode}` | manager | Ubah poin / aktifkan-nonaktifkan reward |
+| `DELETE /api/pengaturan/loyalty/katalog/{kode}` | manager | Hapus reward kustom yang belum pernah dipakai |
 
 Baca dibuka untuk kasir karena UI kasir memang butuh: rate untuk menampilkan
 estimasi poin, katalog untuk merender tombol redeem (dan menyembunyikan reward
@@ -100,16 +102,86 @@ Katalog terbentuk dari dua lapis:
 
 | Lapis | Isi | Bisa diubah manager? |
 |---|---|---|
-| `LoyaltyRedemptionCatalog::defaults()` (kode) | `label`, `tipe`, `persen`, mapping menu gratis, preferensi ukuran | ❌ |
+| `LoyaltyRedemptionCatalog::defaults()` (kode) | `label`, `tipe`, `persen`, mapping menu gratis, preferensi ukuran **delapan reward bawaan** | ❌ |
 | Tabel `katalog_redeem` | `poin`, `is_active`, `maks_potongan`, `min_subtotal` | ✅ lewat endpoint |
 
-Yang menentukan **perilaku** redeem sengaja tetap di kode, mapping menu gratis
-dan persen diskon tidak aman diketik bebas lewat API. Yang jadi keputusan
-bisnis harian (harga poin dan reward mana yang sedang jalan) dibuka.
+Struktur **reward bawaan** sengaja tetap di kode: mengganti mapping menu gratis
+atau persen diskon delapan reward itu lewat API akan mengubah arti data redeem
+yang sudah tercatat.
 
-Baris `katalog_redeem` **hanya dibuat saat sebuah kode benar-benar diedit**.
-Kode tanpa baris memakai nilai bawaan, jadi tabel kosong = perilaku persis sama
-seperti sebelum fitur ini ada.
+Baris `katalog_redeem` untuk kode bawaan **hanya dibuat saat kode itu
+benar-benar diedit**. Kode tanpa baris memakai nilai bawaan, jadi tabel kosong =
+perilaku persis sama seperti sebelum fitur ini ada.
+
+### Reward buatan manager (kustom)
+
+Manager juga bisa membuat **jenis reward baru** lewat
+`POST /api/pengaturan/loyalty/katalog`, tanpa deploy. Barisnya disimpan di tabel
+yang sama dengan `is_custom = true`, tapi berdiri sendiri: tidak ada definisi di
+kode yang bisa ditimpanya, jadi seluruh strukturnya (`label`, `tipe`, `persen`,
+`kategori`, `menu`, `ukuran`) ada di kolomnya.
+
+Field `bawaan` di response katalog membedakan keduanya, dan itu yang menentukan
+apa yang boleh dilakukan:
+
+| | `bawaan: true` | `bawaan: false` |
+|---|---|---|
+| Ubah poin / plafon (PATCH) | ✅ | ✅ |
+| Nonaktifkan (`is_active: false`) | ✅ | ✅ |
+| Hapus permanen (DELETE) | ❌ 422 `reward_bawaan` | ✅ selama belum pernah ditukarkan |
+
+Dua penolakan DELETE yang sengaja beda pesannya:
+
+1. **Reward bawaan** tidak bisa dihapus. Logika redeem-nya ada di PHP dan tidak
+   ikut hilang bersama barisnya, jadi "menghapus" cuma memunculkannya lagi
+   dengan setelan bawaan pada request berikutnya. Yang dimaksud manager hampir
+   selalu menonaktifkan.
+2. **Reward yang pernah ditukarkan** tidak bisa dihapus (422
+   `reward_sudah_dipakai`). `transaksi.kode_redeem` menyimpan kodenya, dan
+   menghapus definisinya membuat riwayat penukaran lama kehilangan artinya tanpa
+   error apa pun. Aturan yang sama dengan akun kasir yang sudah punya transaksi.
+
+Dua hal yang dijaga saat membuat reward kustom:
+
+- **Kode dibuat server dari labelnya** (`Diskon 15% Ramadan` →
+  `diskon_15_ramadan`), bukan diketik manager. Kode ikut tersimpan di
+  `transaksi.kode_redeem` dan terbaca di riwayat, jadi lebih baik diturunkan
+  dari nama yang sudah ditulis daripada jadi satu isian lagi yang bisa bentrok.
+  Label yang menghasilkan kode yang sudah ada dapat akhiran angka
+  (`promo_kilat_2`).
+- **Menu hadiah dipilih lewat `menu_id`**, bukan diketik namanya. `LoyaltyService`
+  mencari menu hadiah berdasarkan nama menu + nama kategori, jadi satu salah
+  ketik menghasilkan reward yang tampil rapi di katalog tapi gagal justru saat
+  pelanggan menukarkannya di depan kasir. Nama dan kategorinya disalin dari
+  baris menu yang benar-benar ada, dan ejaan `Reguler`/`Regular` sama-sama
+  diterima seperti katalog bawaan.
+
+`maks_potongan` **wajib** untuk voucher diskon kustom. Diskon persen tanpa
+plafon berarti satu pesanan besar bisa memotong berapa pun, dan itu risiko yang
+tidak pernah dipilih siapa-siapa secara sadar.
+
+### POST /api/pengaturan/loyalty/katalog
+
+Manager-only. Body untuk voucher diskon:
+
+```json
+{ "label": "Diskon 15% Ramadan", "tipe": "diskon", "poin": 150,
+  "persen": 15, "maks_potongan": 7500, "min_subtotal": 30000 }
+```
+
+Body untuk reward gratis menu:
+
+```json
+{ "label": "Gratis Berry Blast", "tipe": "gratis_menu", "poin": 440, "menu_id": 12 }
+```
+
+Response `201` berisi item katalog yang sudah jadi, termasuk `kode` hasil
+generate. `min_subtotal` opsional (default 0); `persen` + `maks_potongan` wajib
+untuk `diskon`, `menu_id` wajib untuk `gratis_menu`.
+
+### DELETE /api/pengaturan/loyalty/katalog/{kode}
+
+Manager-only. Lihat tabel di atas untuk kapan ditolak.
 
 ### GET /api/pengaturan/loyalty/katalog
 
@@ -173,9 +245,11 @@ Reward yang `is_active: false` ditolak saat kasir mencoba redeem dengan kode
 error tersendiri (`kode_redeem_nonaktif`, bukan `kode_redeem_invalid`) supaya
 kasir tahu ini reward yang memang sedang dimatikan, bukan salah ketik.
 
-Kode yang tersedia: `diskon_10`, `diskon_20`, `diskon_30`, `diskon_50`,
+Kode bawaan: `diskon_10`, `diskon_20`, `diskon_30`, `diskon_50`,
 `gratis_original`, `gratis_coffee_kopi`, `gratis_honey_lemon`,
-`gratis_mango_monggo`.
+`gratis_mango_monggo`. Kode reward kustom ikut sah di endpoint ini begitu
+dibuat, kalau tidak, reward yang baru saja dibuat manager langsung ditolak saat
+dia mencoba mengubah poinnya.
 
 ---
 

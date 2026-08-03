@@ -283,24 +283,19 @@ async function muatStatistikKasir() {
         });
     }
 
-    async function muatTabel() {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            tbody.innerHTML = '<tr><td colspan="10" class="trx-state">Sesi berakhir, silakan login ulang.</td></tr>';
-            return;
-        }
+    /**
+     * Seluruh filter yang sedang aktif, tanpa paginasi.
+     *
+     * Dipakai bersama daftar di layar dan unduhan Excel. Sengaja satu tempat:
+     * kalau keduanya menyusun parameternya sendiri, cukup satu filter yang
+     * terlewat untuk membuat file yang diunduh berisi baris yang tidak pernah
+     * terlihat di layar, tanpa ada error yang memberi tahu.
+     */
+    function filterAktif() {
+        const params = {};
 
         const mulai = document.getElementById('trxTanggalMulai')?.value || '';
         const selesai = document.getElementById('trxTanggalSelesai')?.value || '';
-        if (mulai && selesai && mulai > selesai) {
-            tbody.innerHTML = '<tr><td colspan="10" class="trx-state">'
-                + 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = '<tr><td colspan="10" class="trx-state">Memuat transaksi...</td></tr>';
-
-        const params = { page: String(halaman), per_page: '15' };
         if (mulai) params.tanggal_mulai = mulai;
         if (selesai) params.tanggal_selesai = selesai;
 
@@ -324,6 +319,33 @@ async function muatStatistikKasir() {
 
         const kasirId = nilaiFilter('kasir');
         if (kasirId) params.user_id = kasirId;
+
+        return params;
+    }
+
+    /** Rentang tanggal terbalik ditolak backend 422, dicegat lebih dulu di sini. */
+    function rentangTerbalik() {
+        const mulai = document.getElementById('trxTanggalMulai')?.value || '';
+        const selesai = document.getElementById('trxTanggalSelesai')?.value || '';
+        return Boolean(mulai && selesai && mulai > selesai);
+    }
+
+    async function muatTabel() {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            tbody.innerHTML = '<tr><td colspan="10" class="trx-state">Sesi berakhir, silakan login ulang.</td></tr>';
+            return;
+        }
+
+        if (rentangTerbalik()) {
+            tbody.innerHTML = '<tr><td colspan="10" class="trx-state">'
+                + 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '<tr><td colspan="10" class="trx-state">Memuat transaksi...</td></tr>';
+
+        const params = { page: String(halaman), per_page: '15', ...filterAktif() };
 
         try {
             const res = await fetch('/api/transaksi?' + new URLSearchParams(params), {
@@ -422,6 +444,75 @@ async function muatStatistikKasir() {
         document.getElementById('trxTanggalSelesai').value = '';
         terapkanFilter();
     });
+    // =========================
+    // Unduh Excel. Tombolnya sebelumnya tidak punya listener sama sekali,
+    // jadi diklik berapa kali pun tidak terjadi apa-apa.
+    //
+    // Isinya tabel halaman ini, mengikuti SELURUH filter yang sedang aktif,
+    // bukan cuma rentang tanggal. Seluruh baris hasil filter ikut, bukan 15
+    // baris halaman yang sedang dibuka.
+    // =========================
+    const unduhBtn = document.getElementById('trxUnduhBtn');
+    const exportErrorEl = document.getElementById('trxExportError');
+
+    function tampilkanErrorExport(pesan) {
+        if (!exportErrorEl) return;
+        exportErrorEl.textContent = pesan;
+        exportErrorEl.style.display = pesan ? '' : 'none';
+    }
+
+    unduhBtn?.addEventListener('click', async function () {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            tampilkanErrorExport('Sesi berakhir, silakan login ulang.');
+            return;
+        }
+
+        if (rentangTerbalik()) {
+            tampilkanErrorExport('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
+            return;
+        }
+
+        tampilkanErrorExport('');
+        unduhBtn.disabled = true;
+        unduhBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyiapkan...';
+
+        try {
+            const qs = new URLSearchParams(filterAktif()).toString();
+            const res = await fetch('/api/laporan/transaksi/export' + (qs ? '?' + qs : ''), {
+                headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
+            });
+
+            if (!res.ok) {
+                // Body-nya JSON hanya saat gagal, saat sukses isinya biner xlsx.
+                const json = await res.json().catch(() => ({}));
+                throw new Error(json.message
+                    || (res.status === 403
+                        ? 'Unduhan laporan hanya untuk akun manager.'
+                        : 'Gagal mengunduh laporan (' + res.status + ').'));
+            }
+
+            const blob = await res.blob();
+            const disposition = res.headers.get('Content-Disposition') || '';
+            const cocok = disposition.match(/filename="?([^"]+)"?/);
+            const namaFile = cocok ? cocok[1] : 'Laporan Transaksi_SoyaCore.xlsx';
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = namaFile;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            tampilkanErrorExport(e.message || 'Gagal mengunduh laporan.');
+        } finally {
+            unduhBtn.disabled = false;
+            unduhBtn.innerHTML = '<i class="fa-solid fa-download"></i> Unduh';
+        }
+    });
+
     window.muatTabelTransaksi = muatTabel;
 
     muatDaftarKasir();

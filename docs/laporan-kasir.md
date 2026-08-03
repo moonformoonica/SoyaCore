@@ -241,7 +241,16 @@ toko, angka yang tidak tersaring di dalam file yang judulnya menyebut satu nama
 kasir. Karena itu keduanya **dikeluarkan** saat `kasir_user_id` dikirim.
 
 Nama kasir juga masuk ke nama file:
-`Laporan_SoyaCore_harian_2026-07-01_2026-07-31_adrian.xlsx`.
+`Laporan_SoyaCore_2026-07-01 Hingga 2026-07-31_adrian.xlsx`.
+
+### Unduhan halaman Laporan Kasir sendiri
+
+Halaman Laporan Kasir punya tombol Unduh terpisah
+(`GET /api/laporan/kasir/export`) yang menghasilkan **satu sheet** berisi tabel
+halaman itu saja, memakai rentang tanggal yang sedang ditampilkan. Sumber
+datanya `LaporanKasirQuery` yang sama dengan endpoint tabelnya, jadi angka di
+Excel tidak bisa berbeda dari angka di layar, dan baris TOTAL ikut terunduh.
+Nama filenya `Laporan Kasir_SoyaCore_{start} Hingga {end}.xlsx`.
 
 ---
 

@@ -13,12 +13,14 @@
             <p>Riwayat seluruh transaksi penjualan GresSOY</p>
         </div>
 
-        <button class="download-btn" data-role="manager">
+        <button type="button" class="download-btn" id="trxUnduhBtn" data-role="manager">
             <i class="fa-solid fa-download"></i>
             Unduh
         </button>
 
     </div>
+
+    <p class="trx-export-error" id="trxExportError" data-role="manager" style="display:none;"></p>
 
     {{-- =========================
             CARD STATISTIK

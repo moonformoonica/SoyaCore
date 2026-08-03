@@ -137,26 +137,73 @@ class LoyaltyRedemptionCatalog
      */
     public static function all(): array
     {
-        $override = KatalogRedeem::query()->get()->keyBy('kode');
+        $baris = KatalogRedeem::query()->get()->keyBy('kode');
 
         $katalog = [];
 
         foreach (self::defaults() as $kode => $item) {
-            $baris = $override->get($kode);
+            $override = $baris->get($kode);
 
             $katalog[$kode] = [
                 ...$item,
                 'kode' => $kode,
-                'poin' => $baris?->poin ?? $item['poin'],
+                'bawaan' => true,
+                'poin' => $override?->poin ?? $item['poin'],
                 'poin_default' => $item['poin'],
-                'is_active' => $baris?->is_active ?? true,
-                'maks_potongan' => $baris?->maks_potongan ?? $item['maks_potongan'] ?? null,
-                'min_subtotal' => $baris?->min_subtotal ?? $item['min_subtotal'] ?? 0,
-                'diubah_pada' => $baris?->updated_at?->toIso8601String(),
+                'is_active' => $override?->is_active ?? true,
+                'maks_potongan' => $override?->maks_potongan ?? $item['maks_potongan'] ?? null,
+                'min_subtotal' => $override?->min_subtotal ?? $item['min_subtotal'] ?? 0,
+                'diubah_pada' => $override?->updated_at?->toIso8601String(),
             ];
         }
 
+        // Reward buatan manager. Barisnya berdiri sendiri: tidak ada padanan di
+        // defaults(), jadi seluruh strukturnya dibaca dari kolom tabel.
+        foreach ($baris->where('is_custom', true) as $kode => $row) {
+            $katalog[$kode] = self::dariBaris($row);
+        }
+
         return $katalog;
+    }
+
+    /**
+     * Item katalog dari satu baris reward kustom.
+     *
+     * `poin_default` diisi poinnya sendiri, bukan null: halaman pengaturan
+     * memakai kolom itu sebagai pembanding "nilai bawaan", dan reward yang
+     * memang lahir dari angka manager tidak punya bawaan lain selain itu.
+     *
+     * @return array<string, mixed>
+     */
+    private static function dariBaris(KatalogRedeem $row): array
+    {
+        return [
+            'kode' => $row->kode,
+            'bawaan' => false,
+            'label' => (string) $row->label,
+            'tipe' => (string) $row->tipe,
+            'persen' => $row->persen,
+            'kategori' => $row->kategori,
+            'menu' => $row->menu,
+            'ukuran' => $row->ukuran ?? [],
+            'poin' => (int) $row->poin,
+            'poin_default' => (int) $row->poin,
+            'is_active' => (bool) $row->is_active,
+            'maks_potongan' => $row->maks_potongan,
+            'min_subtotal' => $row->min_subtotal ?? 0,
+            'diubah_pada' => $row->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Kode ini didefinisikan di kode program, bukan dibuat manager. Dipakai
+     * memutuskan mana yang boleh dihapus permanen: reward bawaan hanya bisa
+     * dinonaktifkan, karena logika redeem-nya ada di PHP dan tidak ikut hilang
+     * bersama barisnya.
+     */
+    public static function bawaan(string $kode): bool
+    {
+        return array_key_exists($kode, self::defaults());
     }
 
     /**
@@ -174,10 +221,13 @@ class LoyaltyRedemptionCatalog
     /**
      * Daftar kode yang sah, dipakai validasi request pengaturan.
      *
+     * Reward kustom ikut, kalau tidak, reward yang baru saja dibuat manager
+     * langsung ditolak saat dia mencoba mengubah poinnya.
+     *
      * @return list<string>
      */
     public static function kodeTersedia(): array
     {
-        return array_keys(self::defaults());
+        return array_keys(self::all());
     }
 }

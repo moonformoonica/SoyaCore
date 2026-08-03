@@ -47,15 +47,18 @@
   const MIN_REDEEM_POINTS = 1;
 
   /* ================= STATE ================= */
+  // Isi awal sebelum katalog asli datang dari backend, dan penampung kalau
+  // request-nya gagal. `tipe` dan `bawaan` ikut ditulis karena kartu di layar
+  // membacanya, bukan lagi REWARD_CATALOG di berkas ini.
   let rewards = [
-    { key: 'diskon_10', label: 'Diskon 10%', points: 100, minPurchase: 25000, maxDiscount: 5000 },
-    { key: 'diskon_20', label: 'Diskon 20%', points: 200, minPurchase: 25000, maxDiscount: 10000 },
-    { key: 'diskon_30', label: 'Diskon 30%', points: 300, minPurchase: 25000, maxDiscount: 15000 },
-    { key: 'diskon_50', label: 'Diskon 50% (Khusus)', points: 500, minPurchase: 25000, maxDiscount: 25000 },
-    { key: 'gratis_original', label: 'Gratis Original', points: 350 },
-    { key: 'gratis_coffee_kopi', label: 'Gratis Coffee Kopi', points: 450 },
-    { key: 'gratis_honey_lemon', label: 'Gratis Honey Lemon', points: 400 },
-    { key: 'gratis_mango_monggo', label: 'Gratis Mango Monggo', points: 400 },
+    { key: 'diskon_10', label: 'Diskon 10%', tipe: 'diskon', bawaan: true, points: 100, minPurchase: 25000, maxDiscount: 5000 },
+    { key: 'diskon_20', label: 'Diskon 20%', tipe: 'diskon', bawaan: true, points: 200, minPurchase: 25000, maxDiscount: 10000 },
+    { key: 'diskon_30', label: 'Diskon 30%', tipe: 'diskon', bawaan: true, points: 300, minPurchase: 25000, maxDiscount: 15000 },
+    { key: 'diskon_50', label: 'Diskon 50% (Khusus)', tipe: 'diskon', bawaan: true, points: 500, minPurchase: 25000, maxDiscount: 25000 },
+    { key: 'gratis_original', label: 'Gratis Original', tipe: 'gratis_menu', bawaan: true, sizes: ['Hot', 'Reguler'], points: 350 },
+    { key: 'gratis_coffee_kopi', label: 'Gratis Coffee Kopi', tipe: 'gratis_menu', bawaan: true, sizes: ['Hot', 'Reguler'], points: 450 },
+    { key: 'gratis_honey_lemon', label: 'Gratis Honey Lemon', tipe: 'gratis_menu', bawaan: true, sizes: ['Reguler'], points: 400 },
+    { key: 'gratis_mango_monggo', label: 'Gratis Mango Monggo', tipe: 'gratis_menu', bawaan: true, sizes: ['Reguler'], points: 400 },
   ];
 
   let historyAll = [];              
@@ -67,7 +70,9 @@
   let redeemedThisMonth = null;
   let newMembers = 0;
   let editingRewardKey = null;
-  let addingReward = false;
+  // Terbuka atau tidaknya form tambah reward ditandai kelas `.open` pada
+  // backdrop modal, bukan variabel di sini. Satu penanda saja supaya keduanya
+  // tidak bisa berbeda pendapat.
 
   function apiHeaders() {
     const token = localStorage.getItem('auth_token');
@@ -125,10 +130,21 @@
     const token = localStorage.getItem('auth_token');
     if (token) {
       const headers = { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token };
+
+      // Batas bulan menurut WIB, dihitung dari tanggal hari ini di zona toko.
+      // Sebelumnya rentangnya ditentukan `new Date()` milik browser, dan
+      // "bulan ini" versi jam laptop bisa berbeda dari "bulan ini" yang dipakai
+      // seluruh angka lain di aplikasi.
+      const kini = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+      const dua = (n) => String(n).padStart(2, '0');
+      const awalBulan = `${kini.getFullYear()}-${dua(kini.getMonth() + 1)}-01`;
+      const akhirBulan = `${kini.getFullYear()}-${dua(kini.getMonth() + 1)}-${dua(new Date(kini.getFullYear(), kini.getMonth() + 1, 0).getDate())}`;
+
       try {
-        const [rfmRes, liveRes] = await Promise.all([
+        const [rfmRes, liveRes, redeemRes] = await Promise.all([
           fetch('/api/dashboard/rfm', { headers }),
           fetch('/api/transaksi?status=lunas&per_page=200', { headers }),
+          fetch(`/api/dashboard/loyalty?start=${awalBulan}&end=${akhirBulan}`, { headers }),
         ]);
 
         if (rfmRes.ok) {
@@ -142,13 +158,14 @@
           const rows = (await liveRes.json()).data || [];
           // Poin dari transaksi live ditambahkan ke total CSV.
           activePoints += rows.reduce((s, t) => s + Number(t.point_earned || 0), 0);
-          // Reward ditukar bulan berjalan (dari transaksi live).
-          const now = new Date();
-          redeemedThisMonth = rows.filter(function (t) {
-            if (!t.poin_ditukar || t.poin_ditukar <= 0) return false;
-            const d = new Date(t.created_at);
-            return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-          }).length;
+        }
+
+        // Reward ditukar bulan berjalan. Dihitung backend, bukan disaring dari
+        // daftar transaksi di browser: daftar itu dipagari `per_page` dan
+        // menyaring `status=lunas`, jadi penukaran bisa hilang dari hitungan
+        // tanpa gejala apa pun. Alasan lengkapnya di LoyaltyService::rewardDitukar().
+        if (redeemRes.ok) {
+          redeemedThisMonth = Number((await redeemRes.json()).data?.reward_ditukar ?? 0);
         }
       } catch (e) {
       }
@@ -157,16 +174,62 @@
   }
 
   /* ================= RENDER: REWARDS ================= */
-  function rewardTags(catalogItem, minPurchase, maxDiscount) {
+
+  /**
+   * Deskripsi kartu reward.
+   *
+   * REWARD_CATALOG cuma memuat delapan jenis bawaan dan dipakai sebagai sumber
+   * kalimat yang enak dibaca. Reward buatan manager tidak ada di sana, jadi
+   * deskripsinya disusun dari datanya sendiri. Sebelumnya kartu yang keys-nya
+   * tidak ada di REWARD_CATALOG di-`return ''`, artinya reward baru apa pun
+   * hilang tanpa jejak dari halaman ini.
+   */
+  function rewardDesc(r) {
+    const bawaan = REWARD_CATALOG[r.key];
+    if (bawaan) return bawaan.desc;
+
+    if (r.tipe === 'diskon') {
+      return `Potongan ${r.persen}% dari subtotal, dengan plafon potongan.`;
+    }
+    return r.menu ? `Tukar poin dengan ${r.menu}.` : 'Tukar poin dengan menu hadiah.';
+  }
+
+  /**
+   * Ukuran untuk ditampilkan, tanpa ejaan kembar.
+   *
+   * `ukuran` dari backend berisi semua EJAAN yang diterima saat mencari menu
+   * hadiah, dan "Reguler"/"Regular" sengaja dimuat keduanya di sana. Itu benar
+   * untuk pencocokan, tapi salah untuk dibaca: kartunya jadi bertuliskan
+   * "Ukuran: Reguler / Regular / Hot", seolah Reguler dan Regular dua pilihan
+   * berbeda.
+   */
+  function ukuranTampil(sizes) {
+    const terlihat = [];
+    const sudah = new Set();
+
+    (sizes || []).forEach((u) => {
+      // "Regular" dinormalkan ke "Reguler" hanya untuk keperluan menyaring
+      // kembar; ejaan yang ditampilkan tetap yang pertama muncul.
+      const kunci = u.toLowerCase() === 'regular' ? 'reguler' : u.toLowerCase();
+      if (sudah.has(kunci)) return;
+      sudah.add(kunci);
+      terlihat.push(u);
+    });
+
+    return terlihat;
+  }
+
+  function rewardTags(r) {
     const tags = [];
-    if (catalogItem.sizes) {
-      tags.push(`<span class="reward-tag">Ukuran: ${catalogItem.sizes.join(' / ')}</span>`);
+    const ukuran = ukuranTampil(r.sizes);
+    if (ukuran.length) {
+      tags.push(`<span class="reward-tag">Ukuran: ${escapeHtml(ukuran.join(' / '))}</span>`);
     }
-    if (catalogItem.needsMinPurchase && minPurchase) {
-      tags.push(`<span class="reward-tag">Min. belanja ${fmtRp(minPurchase)}</span>`);
+    if (r.tipe === 'diskon' && r.minPurchase) {
+      tags.push(`<span class="reward-tag">Min. belanja ${fmtRp(r.minPurchase)}</span>`);
     }
-    if (catalogItem.hasMaxDiscount && maxDiscount) {
-      tags.push(`<span class="reward-tag">Maks. potongan ${fmtRp(maxDiscount)}</span>`);
+    if (r.tipe === 'diskon' && r.maxDiscount) {
+      tags.push(`<span class="reward-tag">Maks. potongan ${fmtRp(r.maxDiscount)}</span>`);
     }
     return tags.join('');
   }
@@ -178,17 +241,16 @@
     const kasir = isKasir();
 
     el.innerHTML = rewards.map(r => {
-      const c = REWARD_CATALOG[r.key];
-      if (!c) return '';
-      const nama = r.label || c.name;
+      const nama = r.label || REWARD_CATALOG[r.key]?.name || r.key;
+      const diskon = r.tipe === 'diskon';
 
       if (kasir) {
         return `
         <div class="reward-card">
           <h4>${escapeHtml(nama)}</h4>
-          <p>${escapeHtml(c.desc)}</p>
+          <p>${escapeHtml(rewardDesc(r))}</p>
           <span class="reward-points">${r.points} poin</span>
-          <div class="reward-tags">${rewardTags(c, r.minPurchase, r.maxDiscount)}</div>
+          <div class="reward-tags">${rewardTags(r)}</div>
         </div>`;
       }
 
@@ -199,11 +261,9 @@
             <label>${escapeHtml(nama)}</label>
             <label>Poin dibutuhkan</label>
             <input type="number" id="edit-points-${r.key}" value="${r.points}">
-            ${c.needsMinPurchase ? `
+            ${diskon ? `
               <label>Minimal pembelian (Rp)</label>
               <input type="number" id="edit-min-${r.key}" value="${r.minPurchase || 0}">
-            ` : ''}
-            ${c.hasMaxDiscount ? `
               <label>Maksimal potongan (Rp)</label>
               <input type="number" id="edit-maks-${r.key}" value="${r.maxDiscount || 0}">
               <p class="hint">Persennya berlaku penuh sampai potongan menyentuh angka ini.</p>
@@ -216,58 +276,49 @@
         </div>`;
       }
 
+      // Judul dan tombol aksi satu baris flex, bukan tombol yang ditempel
+      // absolut di pojok. Dengan absolut, judul panjang seperti
+      // "Diskon 50% (Khusus)" tumbuh sampai menyentuh tombolnya, dan seberapa
+      // rapat jaraknya jadi bergantung panjang teks tiap kartu.
       return `
       <div class="reward-card">
-        <div class="reward-actions">
-          <button data-edit-reward="${r.key}" title="Edit poin"><i class="fa-regular fa-pen-to-square"></i></button>
-          <button data-remove-reward="${r.key}" title="Hapus"><i class="fa-regular fa-trash-can"></i></button>
+        <div class="reward-head">
+          <h4>${escapeHtml(nama)}</h4>
+          <div class="reward-actions">
+            <button data-edit-reward="${r.key}" title="Edit poin"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button data-remove-reward="${r.key}"
+              title="${r.bawaan ? 'Nonaktifkan reward bawaan' : 'Hapus reward'}"><i class="fa-regular fa-trash-can"></i></button>
+          </div>
         </div>
-        <h4>${escapeHtml(nama)}</h4>
-        <p>${escapeHtml(c.desc)}</p>
+        <p>${escapeHtml(rewardDesc(r))}</p>
         <span class="reward-points">${r.points} poin</span>
-        <div class="reward-tags">${rewardTags(c, r.minPurchase, r.maxDiscount)}</div>
+        <div class="reward-tags">${rewardTags(r)}</div>
       </div>`;
     }).join('');
 
-    if (addingReward) {
-      const available = Object.keys(REWARD_CATALOG).filter(k => !rewards.some(r => r.key === k));
-      el.insertAdjacentHTML('beforeend', `
-      <div class="reward-form-card">
-        <label>Jenis reward</label>
-        <select id="new-reward-key">
-          ${available.length
-            ? available.map(k => `<option value="${k}">${escapeHtml(REWARD_CATALOG[k].name)} (${k})</option>`).join('')
-            : `<option value="">Semua jenis sudah aktif</option>`}
-        </select>
-        <label>Poin dibutuhkan</label>
-        <input type="number" id="new-reward-points" placeholder="min. ${MIN_REDEEM_POINTS}">
-        <label id="new-reward-min-label" style="display:none">Minimal pembelian (Rp)</label>
-        <input type="number" id="new-reward-min" style="display:none" placeholder="cth. 50000">
-        <p class="hint">Nama, ikon, dan ukuran minuman sudah ditentukan per jenis reward.</p>
-        <div class="actions">
-          <button class="cancel-btn" id="cancelNewReward">Batal</button>
-          <button class="save-btn" id="saveNewReward">Tambah</button>
-        </div>
-      </div>`);
-
-      const sel = document.getElementById('new-reward-key');
-      const minLabel = document.getElementById('new-reward-min-label');
-      const minInput = document.getElementById('new-reward-min');
-      function syncMinField() {
-        const c = REWARD_CATALOG[sel.value];
-        const show = !!(c && c.needsMinPurchase);
-        minLabel.style.display = show ? 'block' : 'none';
-        minInput.style.display = show ? 'block' : 'none';
-      }
-      if (sel) { sel.addEventListener('change', syncMinField); syncMinField(); }
-    }
+    // Reward BAWAAN cuma dinonaktifkan, tidak dihapus: logika redeem-nya ada di
+    // PHP dan tidak ikut hilang, jadi "menghapus" hanya akan memunculkannya
+    // lagi dengan setelan bawaan. Reward buatan manager dihapus betulan.
     el.querySelectorAll('[data-remove-reward]').forEach(b => b.addEventListener('click', async () => {
       const key = b.dataset.removeReward;
+      const r = rewards.find(x => x.key === key);
+      const nama = r?.label || key;
+
+      const konfirmasi = r?.bawaan
+        ? `Nonaktifkan reward "${nama}"? Pelanggan tidak bisa menukarkannya lagi, tapi riwayat penukaran lama tetap terbaca.`
+        : `Hapus reward "${nama}" permanen?`;
+      if (!confirm(konfirmasi)) return;
+
       b.disabled = true;
       try {
-        await patchKatalog(key, { is_active: false });
-        rewards = rewards.filter(r => r.key !== key);
-        toast('Reward dinonaktifkan.');
+        if (r?.bawaan) {
+          await patchKatalog(key, { is_active: false });
+          toast(`Reward "${nama}" dinonaktifkan.`);
+        } else {
+          await hapusKatalog(key);
+          toast(`Reward "${nama}" dihapus.`);
+        }
+        rewards = rewards.filter(x => x.key !== key);
         renderRewards();
       } catch (err) { toast(err.message); b.disabled = false; }
     }));
@@ -280,7 +331,7 @@
     el.querySelectorAll('[data-save-reward]').forEach(b => b.addEventListener('click', async () => {
       const key = b.dataset.saveReward;
       const r = rewards.find(x => x.key === key);
-      const c = REWARD_CATALOG[key];
+      const nama = r?.label || REWARD_CATALOG[key]?.name || key;
       const points = Number(document.getElementById(`edit-points-${key}`).value);
       if (!points || points < MIN_REDEEM_POINTS) {
         toast(`Poin minimal ${MIN_REDEEM_POINTS}.`); return;
@@ -299,45 +350,259 @@
         r.minPurchase = item.min_subtotal ?? r.minPurchase;
         r.maxDiscount = item.maks_potongan ?? r.maxDiscount;
         editingRewardKey = null;
-        toast(`Reward "${c.name}" diperbarui.`);
+        toast(`Reward "${nama}" diperbarui.`);
         renderRewards();
       } catch (err) { toast(err.message); b.disabled = false; }
     }));
 
-    const cancelNew = document.getElementById('cancelNewReward');
-    if (cancelNew) cancelNew.addEventListener('click', () => { addingReward = false; renderRewards(); });
+  }
+
+  /* ================= MODAL TAMBAH REWARD ================= */
+
+  /**
+   * Form reward baru, dirender ke dalam modal.
+   *
+   * Dulu form ini disisipkan sebagai kartu kesembilan di grid katalog: lebarnya
+   * ikut satu kolom, isinya memanjang jauh ke bawah, dan tinggi baris grid-nya
+   * jadi ikut melar. Sebagai modal, lebarnya ditentukan sendiri dan katalog di
+   * belakangnya tidak berubah bentuk sama sekali.
+   *
+   * Tiap field dibungkus `.rw-field` (label DAN input di dalamnya). Sebelumnya
+   * label ditaruh sebagai saudara sejajar input di dalam wadah flex-column,
+   * jadi begitu ada blok bersyarat seperti bagian diskon, seluruh isinya jadi
+   * satu item flex dan label-nya mengalir menyamping di sebelah input.
+   */
+  function bukaModalReward() {
+    const backdrop = document.getElementById('rewardModalBackdrop');
+    const body = document.getElementById('rewardModalBody');
+    if (!backdrop || !body) return;
+
+    body.innerHTML = `
+      <div class="rw-field">
+        <label for="new-reward-label">Nama reward</label>
+        <input type="text" id="new-reward-label" maxlength="60" placeholder="cth. Diskon 15% Ramadan">
+      </div>
+
+      <div class="rw-row">
+        <div class="rw-field">
+          <label for="new-reward-tipe">Jenis</label>
+          <select id="new-reward-tipe">
+            <option value="diskon">Voucher diskon</option>
+            <option value="gratis_menu">Gratis menu</option>
+          </select>
+        </div>
+        <div class="rw-field">
+          <label for="new-reward-points">Poin dibutuhkan</label>
+          <input type="number" id="new-reward-points" placeholder="min. ${MIN_REDEEM_POINTS}">
+        </div>
+      </div>
+
+      <div class="rw-group" id="new-reward-diskon">
+        <div class="rw-row">
+          <div class="rw-field">
+            <label for="new-reward-persen">Persen diskon</label>
+            <input type="number" id="new-reward-persen" placeholder="cth. 15">
+          </div>
+          <div class="rw-field">
+            <label for="new-reward-maks">Maksimal potongan (Rp)</label>
+            <input type="number" id="new-reward-maks" placeholder="cth. 7500">
+          </div>
+        </div>
+        <div class="rw-field">
+          <label for="new-reward-min">Minimal pembelian (Rp)</label>
+          <input type="number" id="new-reward-min" placeholder="cth. 25000">
+        </div>
+      </div>
+
+      <div class="rw-group" id="new-reward-menu-wrap" hidden>
+        <div class="rw-field">
+          <label for="new-reward-kategori">Kategori</label>
+          <select id="new-reward-kategori"><option value="">Memuat…</option></select>
+        </div>
+        <div class="rw-field">
+          <label for="new-reward-menu">Menu yang digratiskan</label>
+          <input type="search" id="new-reward-cari" placeholder="Cari menu…" disabled>
+          <select id="new-reward-menu" size="6" disabled></select>
+        </div>
+      </div>
+
+      <p class="rw-hint" id="new-reward-hint"></p>
+
+      <div class="rw-actions">
+        <button type="button" class="rw-btn-batal" id="cancelNewReward">Batal</button>
+        <button type="button" class="rw-btn-simpan" id="saveNewReward">Tambah reward</button>
+      </div>`;
+
+    const tipeSel = document.getElementById('new-reward-tipe');
+    const blokDiskon = document.getElementById('new-reward-diskon');
+    const blokMenu = document.getElementById('new-reward-menu-wrap');
+    const hint = document.getElementById('new-reward-hint');
+
+    function syncTipe() {
+      const diskon = tipeSel.value === 'diskon';
+      blokDiskon.hidden = !diskon;
+      blokMenu.hidden = diskon;
+      hint.textContent = diskon
+        ? 'Plafon potongan wajib diisi. Tanpa itu, satu pesanan besar bisa memotong berapa pun.'
+        : 'Menu dipilih dari daftar menu, bukan diketik, supaya hadiahnya pasti ketemu saat ditukarkan.';
+    }
+    tipeSel.addEventListener('change', syncTipe);
+    syncTipe();
+
+    isiPilihanMenu();
+    pasangAksiModal();
+
+    backdrop.classList.add('open');
+    document.getElementById('new-reward-label').focus();
+  }
+
+  function tutupModalReward() {
+    document.getElementById('rewardModalBackdrop')?.classList.remove('open');
+  }
+
+  function pasangAksiModal() {
+    document.getElementById('cancelNewReward').addEventListener('click', tutupModalReward);
+
     const saveNew = document.getElementById('saveNewReward');
-    // Tambah reward = aktifkan tipe (PATCH is_active:true, poin).
-    if (saveNew) saveNew.addEventListener('click', async () => {
-      const key = document.getElementById('new-reward-key').value;
-      const c = REWARD_CATALOG[key];
-      if (!key || !c) { toast('Pilih jenis reward dulu.'); return; }
+    saveNew.addEventListener('click', async () => {
+      const label = document.getElementById('new-reward-label').value.trim();
+      const tipe = document.getElementById('new-reward-tipe').value;
       const points = Number(document.getElementById('new-reward-points').value);
+
+      // Dicegat di sini juga, bukan cuma di backend, supaya manager tidak perlu
+      // menunggu satu putaran request untuk tahu isiannya kurang.
+      if (!label) { toast('Nama reward wajib diisi.'); return; }
       if (!points || points < MIN_REDEEM_POINTS) {
         toast(`Poin minimal ${MIN_REDEEM_POINTS}.`); return;
       }
-      const body = { is_active: true, poin: points };
-      const newMin = document.getElementById('new-reward-min');
-      if (c.needsMinPurchase && newMin && newMin.value !== '') {
-        body.min_subtotal = Number(newMin.value) || 0;
+
+      const body = { label, tipe, poin: points };
+
+      if (tipe === 'diskon') {
+        body.persen = Number(document.getElementById('new-reward-persen').value);
+        body.maks_potongan = Number(document.getElementById('new-reward-maks').value);
+        body.min_subtotal = Number(document.getElementById('new-reward-min').value) || 0;
+
+        if (!body.persen) { toast('Persen diskon wajib diisi.'); return; }
+        if (!body.maks_potongan) { toast('Maksimal potongan wajib diisi.'); return; }
+      } else {
+        if (!document.getElementById('new-reward-kategori').value) {
+          toast('Pilih kategori menunya dulu.'); return;
+        }
+        body.menu_id = Number(document.getElementById('new-reward-menu').value);
+        if (!body.menu_id) { toast('Pilih menu yang digratiskan.'); return; }
       }
 
       saveNew.disabled = true;
       try {
-        const item = await patchKatalog(key, body);
-        if (!rewards.find(r => r.key === key)) {
-          rewards.push({
-            key,
-            points: item.poin ?? points,
-            minPurchase: item.min_subtotal || 0,
-            maxDiscount: item.maks_potongan || 0,
-          });
-        }
-        addingReward = false;
-        toast(`Reward "${c.name}" diaktifkan.`);
-        renderRewards();
+        const res = await fetch('/api/pengaturan/loyalty/katalog', {
+          method: 'POST', headers: apiHeaders(), body: JSON.stringify(body),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.message || 'Gagal menambah reward.');
+
+        tutupModalReward();
+        toast(`Reward "${label}" ditambahkan.`);
+        // Muat ulang dari backend, bukan menempelkan tebakan ke state lokal:
+        // kode reward dibuat di server dari labelnya, dan hanya server yang
+        // tahu apakah kodenya dapat akhiran angka karena bentrok.
+        await loadKatalog();
       } catch (err) { toast(err.message); saveNew.disabled = false; }
     });
+  }
+
+  /**
+   * Pilihan menu hadiah, DUA LANGKAH: kategori dulu, baru menunya.
+   *
+   * Satu dropdown berisi seluruh menu tidak terpakai di sini. Katalognya 93
+   * baris, dan daftar sepanjang itu terbuka menutupi hampir seluruh layar lalu
+   * harus digulir untuk mencari satu nama. Dipecah per kategori, yang dibuka
+   * sekali cuma 6 baris, lalu paling banyak 26.
+   *
+   * DUA SARINGAN, keduanya menutup celah yang sama: reward yang tampil rapi di
+   * katalog tapi gagal justru saat pelanggan menukarkannya di depan kasir.
+   * `LoyaltyService::cariMenuGratis()` mencari hadiah dengan syarat
+   * `is_active = true` DAN kategorinya cocok, jadi menu nonaktif dan menu tanpa
+   * kategori tidak pernah bisa jadi hadiah.
+   *
+   * `kategori` di response `/api/menu-internal` berupa STRING nama kategori,
+   * bukan objek. Salah baca inilah yang sempat membuang seluruh 93 menu dan
+   * menyisakan "Belum ada menu berkategori".
+   */
+  async function isiPilihanMenu() {
+    const selKategori = document.getElementById('new-reward-kategori');
+    const selMenu = document.getElementById('new-reward-menu');
+    const inputCari = document.getElementById('new-reward-cari');
+    if (!selKategori || !selMenu || !inputCari) return;
+
+    const perKategori = new Map();
+
+    try {
+      const res = await fetch('/api/menu-internal', { headers: apiHeaders() });
+      if (!res.ok) throw new Error();
+
+      ((await res.json()).data || [])
+        .filter(m => m.kategori && m.is_active !== false)
+        .forEach((m) => {
+          if (!perKategori.has(m.kategori)) perKategori.set(m.kategori, []);
+          perKategori.get(m.kategori).push(m);
+        });
+    } catch (e) {
+      selKategori.innerHTML = '<option value="">Gagal memuat menu</option>';
+      return;
+    }
+
+    if (perKategori.size === 0) {
+      selKategori.innerHTML = '<option value="">Belum ada menu aktif berkategori</option>';
+      return;
+    }
+
+    const kategori = [...perKategori.keys()].sort((a, b) => a.localeCompare(b, 'id'));
+    selKategori.innerHTML = '<option value="">Pilih kategori…</option>'
+      + kategori.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)} (${perKategori.get(k).length})</option>`).join('');
+
+    /** Isi daftar menu dari kategori terpilih, disaring kata kunci pencarian. */
+    function isiDaftar() {
+      const daftar = perKategori.get(selKategori.value);
+
+      // Kosongkan pilihan menu tiap ganti kategori. Kalau nilainya dibiarkan,
+      // menu dari kategori sebelumnya masih terpilih diam-diam sementara
+      // labelnya sudah berubah.
+      if (!daftar) {
+        selMenu.innerHTML = '<option value="" disabled>Pilih kategori dulu</option>';
+        selMenu.disabled = true;
+        inputCari.disabled = true;
+        inputCari.value = '';
+        return;
+      }
+
+      const kunci = inputCari.value.trim().toLowerCase();
+      const cocok = daftar
+        .filter(m => !kunci || (m.nama + ' ' + (m.ukuran || '')).toLowerCase().includes(kunci))
+        .sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
+
+      selMenu.innerHTML = cocok.length
+        ? cocok.map((m) => {
+          const ukuran = m.ukuran ? ` (${m.ukuran})` : '';
+          return `<option value="${m.id}">${escapeHtml(m.nama + ukuran)}</option>`;
+        }).join('')
+        : '<option value="" disabled>Tidak ada menu yang cocok</option>';
+
+      selMenu.disabled = false;
+      inputCari.disabled = false;
+      // Tidak ada yang terpilih otomatis. Menu yang tersorot tanpa pernah
+      // diklik gampang terkirim tanpa sadar, dan hadiahnya jadi bukan yang
+      // dimaksud manager.
+      selMenu.selectedIndex = -1;
+    }
+
+    selKategori.addEventListener('change', function () {
+      inputCari.value = '';
+      isiDaftar();
+    });
+    inputCari.addEventListener('input', isiDaftar);
+
+    isiDaftar();
   }
 
   /* PATCH satu kode reward (poin dan/atau is_active). */
@@ -350,6 +615,17 @@
     return json.data || {};
   }
 
+  /* Hapus permanen satu reward buatan manager. */
+  async function hapusKatalog(kode) {
+    const res = await fetch(`/api/pengaturan/loyalty/katalog/${encodeURIComponent(kode)}`, {
+      method: 'DELETE', headers: apiHeaders(),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || 'Gagal menghapus reward.');
+    }
+  }
+
   /* Muat katalog reward (poin & status aktif) dari backend, ganti data dummy. */
   async function loadKatalog() {
     let gagalMuatKatalog = false;
@@ -359,9 +635,18 @@
         const res = await fetch('/api/pengaturan/loyalty/katalog', { headers: apiHeaders() });
         if (res.ok) {
           const items = (await res.json()).data || [];
+          // Seluruh isi kartu diambil dari backend, termasuk `tipe`, `ukuran`,
+          // dan `bawaan`. Dulu sebagian dibaca dari REWARD_CATALOG di berkas
+          // ini, yang cuma memuat delapan jenis bawaan, sehingga reward buatan
+          // manager tidak akan pernah bisa dirender.
           rewards = items.filter(i => i.is_active).map(i => ({
             key: i.kode,
             label: i.label,
+            tipe: i.tipe,
+            persen: i.persen,
+            menu: i.menu_gratis,
+            sizes: i.ukuran || null,
+            bawaan: i.bawaan !== false,
             points: i.poin,
             minPurchase: i.min_subtotal || 0,
             maxDiscount: i.maks_potongan || 0,
@@ -594,7 +879,17 @@
     const btnSaveRule = document.getElementById('btnSaveRule');
     bindSortDropdown();
 
-    if (btnAddReward) btnAddReward.addEventListener('click', () => { addingReward = true; renderRewards(); });
+    if (btnAddReward) btnAddReward.addEventListener('click', bukaModalReward);
+
+    // Tutup lewat tombol silang, klik latar, dan Escape. Modal yang cuma bisa
+    // ditutup satu cara terasa macet begitu isinya salah ketik dan orangnya
+    // cuma ingin membatalkan.
+    const backdrop = document.getElementById('rewardModalBackdrop');
+    document.getElementById('rewardModalClose')?.addEventListener('click', tutupModalReward);
+    backdrop?.addEventListener('click', (e) => { if (e.target === backdrop) tutupModalReward(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && backdrop?.classList.contains('open')) tutupModalReward();
+    });
     if (btnSaveRule) btnSaveRule.addEventListener('click', async () => {
       const input = document.getElementById('rpPerPoint');
       const val = Number(input.value);

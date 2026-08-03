@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Pembatalan;
 use App\Models\Transaksi;
 use App\Support\WaktuToko;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 
 /**
  * Laporan perbandingan antar akun kasir.
@@ -72,17 +74,56 @@ class LaporanKasirQuery
     }
 
     /**
+     * Rentang yang benar-benar terwakili laporan ini. Batas yang tidak dikirim
+     * disimpulkan dari transaksi yang ikut terhitung, memakai aturan atribusi
+     * yang sama dengan {@see self::transaksiTerhitung()}.
+     *
+     * Dipakai menyusun nama file export. Tanpa ini, unduhan tanpa filter
+     * tanggal menghasilkan nama "Awal Hingga Akhir" yang tidak memberi tahu
+     * apa pun setelah beberapa file menumpuk di folder Downloads.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    public function resolveRentang(?string $mulai, ?string $selesai): array
+    {
+        if ($mulai !== null && $selesai !== null) {
+            return [$mulai, $selesai];
+        }
+
+        $query = $this->basisTerhitung($mulai, $selesai);
+
+        return [
+            $mulai ?? $this->tanggalWib($query->clone()->min('waktu_lunas')),
+            $selesai ?? $this->tanggalWib($query->clone()->max('waktu_lunas')),
+        ];
+    }
+
+    /**
      * @return Collection<int, Transaksi>
      */
     private function transaksiTerhitung(?string $mulai, ?string $selesai): Collection
     {
-        $query = Transaksi::query()
+        return $this->basisTerhitung($mulai, $selesai)
             ->with('dibayarOleh:id,nama')
             ->withSum('detailTransaksi as qty_kotor', 'qty')
             ->withSum('detailTransaksi as diskon_kotor', 'diskon_nilai')
             ->withSum('pembatalan as nilai_dibatalkan_kotor', 'nilai_dibatalkan')
             ->withSum('pembatalan as poin_ditarik_kotor', 'poin_ditarik')
             ->withSum('pembatalanItem as qty_dibatalkan_kotor', 'qty')
+            ->get();
+    }
+
+    /**
+     * Aturan 2, 3, dan 4 dari catatan class ini, tanpa agregat apa pun.
+     * Dipakai bersama oleh laporannya dan {@see self::resolveRentang()} supaya
+     * rentang pada nama file tidak bisa mencakup transaksi yang isinya justru
+     * tidak dihitung.
+     *
+     * @return Builder<Transaksi>
+     */
+    private function basisTerhitung(?string $mulai, ?string $selesai): Builder
+    {
+        $query = Transaksi::query()
             ->whereNotNull('waktu_lunas')
             ->whereIn('status', ['lunas', 'batal_sebagian']);
 
@@ -93,7 +134,16 @@ class LaporanKasirQuery
             $query->where('waktu_lunas', '<=', WaktuToko::akhirHari($selesai));
         }
 
-        return $query->get();
+        return $query;
+    }
+
+    /**
+     * `min()`/`max()` mengembalikan string mentah dari database (zona aplikasi),
+     * bukan objek Carbon, jadi harus diurai dulu sebelum dijadikan tanggal WIB.
+     */
+    private function tanggalWib(mixed $waktu): ?string
+    {
+        return $waktu === null ? null : WaktuToko::tanggal(Carbon::parse($waktu));
     }
 
     /**

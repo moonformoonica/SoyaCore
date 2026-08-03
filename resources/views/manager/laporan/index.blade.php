@@ -58,10 +58,15 @@
             <canvas id="revenueUkuranChart"></canvas>
         </div>
 
-        <div class="panel">
+        <div class="panel panel-chart">
             <h3>Segmentasi Pelanggan (RFM)</h3>
-            <div class="panel-sub">Snapshot satu periode penuh, tidak berubah per tanggal</div>
-            <canvas id="rfmDonut"></canvas>
+            <div class="panel-sub">Mengikuti rentang tanggal di atas</div>
+            {{-- Tinggi panel ini ditentukan panel tabel di sebelahnya, bukan oleh
+                 donutnya sendiri. Tanpa pembungkus ini donut menempel ke atas dan
+                 menyisakan ruang kosong besar di bawah. --}}
+            <div class="panel-chart-body">
+                <canvas id="rfmDonut"></canvas>
+            </div>
         </div>
 
         <div class="panel">

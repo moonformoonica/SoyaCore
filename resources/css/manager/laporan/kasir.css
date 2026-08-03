@@ -36,5 +36,10 @@
     background: #FDECEA; color: #B3261E; padding: 10px 14px;
     border-radius: 10px; margin-bottom: 18px; font-size: 13px; display: none;
 }
+/* Date range + tombol Unduh berdampingan di kanan header. Dibungkus supaya
+   `.page-header` yang space-between tetap melihat satu blok di sisi kanan,
+   bukan dua yang saling mendorong. */
+.lk-header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
 .lk-sub { color: #6B7280; font-size: 13px; margin: 0 0 18px; }
 .lk-sub strong { color: #2E7D32; }

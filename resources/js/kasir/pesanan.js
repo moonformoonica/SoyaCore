@@ -269,13 +269,40 @@
     function lockCustomerFields() {
         document.getElementById('custSearch').disabled = true;
         document.getElementById('custAddBtn').disabled = true;
-        document.getElementById('custGantiBtn').disabled = true;
         document.getElementById('custNama').disabled = true;
         document.getElementById('custNoWa').disabled = true;
         document.getElementById('custLockedNote').style.display = 'block';
 
         // Transaksinya sudah jalan, jadi tidak ada lagi yang "wajib diisi".
         tampilkanTandaWajib(false);
+
+        segarkanTombolSilang();
+    }
+
+    /**
+     * Tombol × punya DUA arti, tergantung keadaan pesanannya:
+     *
+     * - Belum ada transaksi   : lepas pelanggan yang barusan dipilih.
+     * - Sudah redeem          : batalkan redeem-nya, poin pelanggan kembali.
+     * - Sudah jalan, tanpa redeem : mati. Pelanggan terkunci ke transaksi yang
+     *   sudah berjalan, dan menggantinya di tengah jalan akan memindahkan
+     *   pesanan ke orang lain.
+     *
+     * Arti keduanya ditulis di `title` supaya tidak tertukar. Sebelum ini
+     * tombolnya selalu mati begitu pesanan dimulai, sehingga salah pilih reward
+     * tidak punya jalan keluar selain membatalkan seluruh transaksi.
+     */
+    function segarkanTombolSilang() {
+        const btn = document.getElementById('custGantiBtn');
+        if (!btn) return;
+
+        const adaRedeem = Boolean(currentTransaksi && currentTransaksi.kode_redeem);
+
+        btn.classList.toggle('is-batal-redeem', adaRedeem);
+        btn.disabled = Boolean(currentTransaksi) && !adaRedeem;
+        btn.title = adaRedeem
+            ? 'Batalkan redeem poin, poin pelanggan dikembalikan'
+            : 'Cari pelanggan lain';
     }
 
     function tampilkanTandaWajib(tampil) {
@@ -300,6 +327,7 @@
         tampilkanTandaWajib(true);
         bersihkanHasil();
         tampilkanFormKosong();
+        segarkanTombolSilang();
     }
 
     // ==================================================================
@@ -429,13 +457,75 @@
     document.getElementById('custNoWa').addEventListener('input', function () {
         this.value = this.value.replace(/\D/g, '').slice(0, 12);
     });
-    document.getElementById('custGantiBtn').addEventListener('click', function () {
+    document.getElementById('custGantiBtn').addEventListener('click', async function () {
+        // Pesanan yang sedang memakai redeem: tombol ini membatalkan redeem-nya,
+        // bukan melepas pelanggannya. Lihat segarkanTombolSilang().
+        if (currentTransaksi && currentTransaksi.kode_redeem) {
+            await batalkanRedeem();
+            return;
+        }
+
         selectedCustomer = null;
         document.getElementById('custSearch').value = '';
         bersihkanHasil();
         tampilkanFormKosong();
         document.getElementById('custSearch').focus();
     });
+
+    /**
+     * Membatalkan redeem pesanan berjalan: poin pelanggan kembali utuh dan
+     * hadiahnya dicabut dari keranjang.
+     *
+     * Saldo poin diambil ulang dari response transaksi, bukan ditambah sendiri
+     * di sini. Backend yang tahu berapa persisnya yang dikembalikan, dan
+     * menebaknya di layar berarti angka poin di kartu pelanggan bisa berbeda
+     * dari saldo sebenarnya tanpa ada yang memberi tahu.
+     */
+    async function batalkanRedeem() {
+        if (!confirm('Batalkan redeem poin pesanan ini? Poin pelanggan akan dikembalikan dan hadiahnya dicabut dari pesanan.')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/transaksi/${currentTransaksi.id}/redeem-poin`, fetchOptions({
+                method: 'DELETE',
+            }));
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(json.message || 'Gagal membatalkan redeem poin.');
+
+            currentTransaksi = json.data;
+
+            if (selectedCustomer) {
+                await segarkanPoinPelanggan();
+            }
+
+            renderCart();
+            renderMenuGrid();
+            segarkanTombolSilang();
+            showSuccess('Redeem dibatalkan, poin pelanggan sudah dikembalikan.');
+        } catch (err) {
+            showError(err.message);
+        }
+    }
+
+    /** Ambil ulang saldo poin pelanggan dari server, bukan menghitungnya di layar. */
+    async function segarkanPoinPelanggan() {
+        try {
+            const res = await fetch(
+                `${API_BASE}/customers/cari?no_wa=${encodeURIComponent(selectedCustomer.no_wa)}`,
+                fetchOptions(),
+            );
+            if (!res.ok) return;
+
+            const data = (await res.json()).data;
+            const cocok = Array.isArray(data) ? data[0] : data;
+            if (cocok && cocok.poin !== undefined) {
+                selectedCustomer.poin = cocok.poin;
+                tampilkanPelangganKetemu(selectedCustomer);
+            }
+        } catch (e) {
+        }
+    }
 
     async function tambahItem(menuId, sugar = null, ice = null) {
         try {
@@ -751,7 +841,10 @@
             tutupRedeem();
             renderCart();
             renderMenuGrid();
-            showSuccess('Redeem berhasil diterapkan ke pesanan.');
+            // Tombol × berganti arti jadi "batalkan redeem" begitu rewardnya
+            // menempel, jalan keluar kalau kasir salah pilih.
+            segarkanTombolSilang();
+            showSuccess('Redeem berhasil diterapkan ke pesanan. Salah pilih? Tekan tombol × di kartu pelanggan.');
         } catch (err) {
             catatanRedeem(err.message, true);
             segarkanOpsiRedeem();

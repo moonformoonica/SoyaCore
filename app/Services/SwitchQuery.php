@@ -62,13 +62,20 @@ class SwitchQuery
     ];
 
     /**
+     * Jendela tanggalnya lewat {@see LaporanQuery::base()}, definisi yang sama
+     * dipakai seluruh agregasi lain di halaman Laporan.
+     */
+    public function __construct(private readonly LaporanQuery $laporan) {}
+
+    /**
+     * @param  ?string  $start  Batas rentang, `null` = tidak dibatasi di sisi itu.
      * @return list<array<string, mixed>> Terurut total belanja menurun lalu nama.
      */
-    public function semua(): array
+    public function semua(?string $start = null, ?string $end = null): array
     {
         $hasil = [];
 
-        foreach ($this->agregat() as $b) {
+        foreach ($this->agregat($start, $end) as $b) {
             $reguler = $b['reguler'];
             $large = $b['large'];
             $botol = $b['botol'];
@@ -119,11 +126,11 @@ class SwitchQuery
      *
      * @return list<array<string, mixed>>
      */
-    private function agregat(): array
+    private function agregat(?string $start, ?string $end): array
     {
         $baris = [];
 
-        foreach (LaporanTransaksi::query()->cursor() as $row) {
+        foreach ($this->laporan->base($start, $end)->cursor() as $row) {
             $nama = trim((string) $row->nama_pelanggan);
             if ($nama === '') {
                 continue;
@@ -217,10 +224,12 @@ class SwitchQuery
     }
 
     /** Rentang tanggal data yang dihitung, untuk label periode di UI. */
-    public function periode(): ?string
+    public function periode(?string $start = null, ?string $end = null): ?string
     {
-        $awal = LaporanTransaksi::query()->min('tanggal');
-        $akhir = LaporanTransaksi::query()->max('tanggal');
+        $base = $this->laporan->base($start, $end);
+
+        $awal = $base->clone()->min('tanggal');
+        $akhir = $base->clone()->max('tanggal');
 
         if ($awal === null) {
             return null;

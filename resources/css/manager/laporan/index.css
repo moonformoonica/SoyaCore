@@ -43,6 +43,18 @@
 
 .panel-full { grid-column: 1 / -1; }
 
+/* Donut RFM ditaruh di tengah sisa ruang panel. Panel ini setinggi panel
+   tabel di sebelahnya, jadi kalau donutnya dibiarkan mengalir normal ia
+   nangkring di atas dengan ruang kosong menganga di bawahnya.
+   `min-height: 0` supaya pembungkusnya boleh menyusut di bawah tinggi
+   canvas, kalau tidak flex item malah mendorong panelnya jadi lebih tinggi. */
+.panel-chart { display: flex; flex-direction: column; }
+.panel-chart-body {
+    flex: 1; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.panel-chart-body > canvas { max-width: 100%; }
+
 .lap-filters { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
 .lap-search {
     flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px;
@@ -56,10 +68,35 @@
 }
 
 .table-scroll { width: 100%; overflow-x: auto; max-height: 360px; overflow-y: auto; }
-.lap-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+
+/* HEADER HIJAU HARUS SATU BATANG UTUH, TANPA GARIS PUTIH DI ANTARA KOLOM.
+   Lebar kolom tabel ini jatuh di angka pecahan piksel, jadi tepi tiap sel
+   header dibulatkan sendiri-sendiri oleh browser dan menyisakan celah selebar
+   kurang dari satu piksel yang tembus ke latar putih panel. Tiga hal dipasang
+   berlapis karena masing-masing menutup celah itu pada keadaan yang berbeda:
+
+   1. `border-spacing: 0` menghapus jarak antar sel yang dibawa mode
+      `separate`. Mode `separate` sendiri dipakai karena header ini
+      `position: sticky`, dan pada `collapse` garis batas dimiliki tabelnya,
+      bukan selnya.
+   2. Latar hijau di `thead` mengisi celah selama tabel belum digulir.
+   3. `box-shadow` selebar 1px ke kanan pada tiap sel menutup celah saat header
+      sudah menempel dan terlepas dari `thead`-nya. Ini yang benar-benar
+      menghilangkan garisnya; dua yang di atas tidak cukup sendirian. Memakai
+      bayangan, bukan `border`, supaya lebar kolomnya tidak ikut bergeser, dan
+      hanya ke kanan supaya tidak ada 1px hijau yang menjulur keluar tabel. */
+.lap-table {
+    width: 100%; font-size: 13px; min-width: 520px;
+    border-collapse: separate; border-spacing: 0;
+}
+.lap-table thead { background: #2F6B3F; }
 .lap-table thead th {
     background: #2F6B3F; color: #fff; text-align: left; padding: 10px 12px;
     font-weight: 500; white-space: nowrap; position: sticky; top: 0;
+    border: none;
+}
+.lap-table thead th:not(:last-child) {
+    box-shadow: 1px 0 0 0 #2F6B3F;
 }
 /* Rata kiri, mengikuti header-nya. Sebelumnya sel di sini ter-center karena
    `tbody td { text-align:center }` dari manager/transaksi.css bocor app-wide,

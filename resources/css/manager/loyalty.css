@@ -51,6 +51,14 @@
   font-family:'Inter',sans-serif; font-weight:700; font-size:19px; margin:0; color:#212B36;
 }
 .loyalty-manager .section-sub{margin:6px 0 0; font-size:13px; color:var(--lm-ink-soft);}
+
+.loyalty-manager .btn-add-reward{
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
+  border:none; border-radius:10px; padding:10px 16px;
+  background:#2E7D32; color:#fff; font-family:'Inter',sans-serif;
+  font-size:13px; font-weight:600; cursor:pointer; transition:.25s;
+}
+.loyalty-manager .btn-add-reward:hover{background:#256428;}
 .loyalty-manager .custom-select{position:relative;}
 
 .loyalty-manager .custom-select-trigger{
@@ -125,28 +133,148 @@
   font-size:10.5px; font-weight:600; padding:4px 9px; border-radius:999px;
   background:var(--lm-bg); color:var(--lm-ink-soft); border:1px solid var(--lm-line);
 }
-.loyalty-manager .reward-actions{position:absolute; top:16px; right:16px; display:flex; gap:6px;}
+/* Judul dan tombol aksi berbagi satu baris, bukan tombol yang ditempel absolut
+   di pojok kartu. Versi absolut membuat jarak tombol ke teks bergantung panjang
+   judulnya: kartu "Diskon 10%" longgar, "Diskon 50% (Khusus)" nyaris menempel.
+   Dengan flex, `gap` yang menentukan jaraknya dan besarnya sama di semua kartu
+   berapa pun panjang judulnya.
+
+   JARAK KE BAWAH DIHITUNG DARI TOMBOL, BUKAN DARI JUDUL. Tombolnya 26px,
+   judulnya cuma 20px, jadi baris ini selalu setinggi tombol dan tombol itulah
+   tetangga terdekat deskripsi di bawahnya. `margin-bottom` sekecil jarak
+   antar-teks biasa membuat deskripsi menempel persis di bawah tombol. */
+.loyalty-manager .reward-head{
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:20px; margin-bottom:14px;
+}
+.loyalty-manager .reward-head h4{margin:0; line-height:1.5;}
+/* `flex-shrink:0` supaya tombolnya tidak ikut mengecil dan gepeng saat
+   judulnya panjang; yang mengalah judulnya, dan itu boleh membungkus. */
+.loyalty-manager .reward-actions{display:flex; gap:6px; flex-shrink:0;}
 .loyalty-manager .reward-actions button{
   width:26px; height:26px; border-radius:7px; border:1px solid var(--lm-line);
   background:var(--lm-white); cursor:pointer; display:flex; align-items:center; justify-content:center; color:#666; font-size:12px;
 }
 .loyalty-manager .reward-actions button:hover{background:var(--lm-bg);}
 
-.loyalty-manager .reward-form-card{
-  background:var(--lm-white); border:1.5px dashed #C7CBD1; border-radius:var(--lm-radius);
-  padding:20px; display:flex; flex-direction:column; gap:10px;
-}
-.loyalty-manager .reward-form-card label{font-size:11px; font-weight:600; color:var(--lm-ink-soft);}
-.loyalty-manager .reward-form-card input,
-.loyalty-manager .reward-form-card select,
-.loyalty-manager .reward-form-card textarea{
-  border:1px solid var(--lm-line); border-radius:8px; padding:8px 10px; font-family:'Inter'; font-size:13px;
-}
-.loyalty-manager .reward-form-card .hint{font-size:11.5px; color:var(--lm-ink-soft); margin:0;}
-.loyalty-manager .reward-form-card .actions{display:flex; gap:8px; margin-top:2px;}
-.loyalty-manager .reward-form-card .actions button{flex:1; border:none; border-radius:8px; padding:9px 0; font-weight:700; font-size:13px; cursor:pointer;}
+/* `.reward-form-card` sudah tidak ada lagi: form tambah reward pindah ke modal
+   di bawah. `.save-btn` dan `.cancel-btn` tetap dipakai form edit inline. */
 .loyalty-manager .save-btn{background:#1E2328; color:#fff;}
 .loyalty-manager .cancel-btn{background:var(--lm-bg); color:#1E2328;}
+
+/* ---------- MODAL TAMBAH REWARD ---------- */
+
+/* Form ini dulu disisipkan sebagai kartu kesembilan di grid katalog, jadi
+   lebarnya ikut satu kolom dan isinya memanjang jauh ke bawah sampai tinggi
+   baris grid-nya ikut melar. Sebagai modal, lebarnya ditentukan sendiri dan
+   katalog di belakangnya tidak berubah bentuk. */
+.rw-modal-backdrop{
+  display:none; position:fixed; inset:0; z-index:120;
+  background:rgba(17,24,39,.5);
+  align-items:center; justify-content:center; padding:20px;
+}
+.rw-modal-backdrop.open{display:flex;}
+
+.rw-modal{
+  background:#fff; border-radius:16px; width:100%; max-width:460px;
+  max-height:88vh; overflow-y:auto;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
+  font-family:'Inter',sans-serif;
+}
+
+.rw-modal-head{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:18px 22px; border-bottom:1px solid var(--lm-line);
+}
+.rw-modal-head h3{margin:0; font-size:16px; font-weight:700; color:#212B36;}
+.rw-modal-close{
+  flex-shrink:0; width:30px; height:30px; border-radius:8px;
+  border:1px solid var(--lm-line); background:#fff;
+  cursor:pointer; color:#6B7280; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+}
+.rw-modal-close:hover{background:var(--lm-bg); color:#212B36;}
+
+/* Jarak antar field diatur di sini, satu tempat, bukan margin per elemen.
+   Dengan begitu blok bersyarat (bagian diskon / bagian menu) ikut berjarak
+   sama tanpa perlu aturan sendiri. */
+.rw-modal-body{display:flex; flex-direction:column; gap:16px; padding:22px;}
+.rw-group{display:flex; flex-direction:column; gap:16px;}
+
+/* Blok bersyarat disembunyikan lewat atribut `hidden`, dan aturan ini yang
+   membuatnya benar-benar bekerja: `.rw-field`/`.rw-group` memasang `display:flex`
+   yang mengalahkan `display:none` bawaan browser untuk `[hidden]`. Selektornya
+   sengaja `.rw-modal-body [hidden]` (dua kelas) supaya lebih kuat dari keduanya,
+   dan blok diskon dipilihkan KELAS, bukan id: selektor ber-id akan lebih kuat
+   lagi dan field diskon tetap terlihat saat jenisnya Gratis menu. */
+.rw-modal-body [hidden]{display:none;}
+
+/* Label DAN input dibungkus satu `.rw-field`. Sebelumnya keduanya saudara
+   sejajar di dalam wadah flex-column, jadi begitu ada blok bersyarat isinya
+   jatuh jadi satu item flex dan label-nya mengalir menyamping di sebelah
+   input, persis yang bikin form ini terlihat berantakan. */
+.rw-field{display:flex; flex-direction:column; gap:6px; min-width:0;}
+.rw-field label{
+  font-size:11.5px; font-weight:600; color:var(--lm-ink-soft);
+  text-transform:uppercase; letter-spacing:.03em;
+}
+.rw-field input,
+.rw-field select{
+  width:100%; box-sizing:border-box;
+  border:1px solid var(--lm-line); border-radius:9px; padding:10px 12px;
+  font-family:'Inter',sans-serif; font-size:13.5px; color:#212B36; background:#fff;
+}
+.rw-field input:focus,
+.rw-field select:focus{outline:none; border-color:#2E7D32; box-shadow:0 0 0 3px rgba(46,125,50,.12);}
+.rw-field input::placeholder{color:#B6BBC2;}
+
+/* Pilihan menu baru hidup setelah kategorinya dipilih. Ditandai jelas supaya
+   tidak terbaca sebagai dropdown rusak. */
+.rw-field select:disabled,
+.rw-field input:disabled{background:var(--lm-bg); color:#9AA0A6; cursor:not-allowed;}
+
+/* DAFTAR, BUKAN DROPDOWN, untuk pilihan menu.
+   Popup `select` bawaan tingginya ditentukan browser dan tidak bisa dibatasi
+   CSS, jadi kategori berisi 24 menu tetap membentang sampai menembus tepi
+   layar. Dengan atribut `size`, isinya jadi daftar yang menyatu di dalam modal:
+   tingginya kita yang tentukan, sisanya digulir di dalam kotaknya sendiri, dan
+   secara struktural tidak mungkin lagi keluar layar. */
+.rw-field select[size]{
+  height:auto; max-height:190px; overflow-y:auto; padding:5px;
+}
+.rw-field select[size] option{
+  padding:7px 9px; border-radius:6px; font-size:13.5px;
+}
+.rw-field select[size] option:checked{background:#2E7D32; color:#fff;}
+
+/* Kotak cari menyatu dengan daftarnya jadi satu kelompok, bukan dua isian
+   yang tidak berhubungan. */
+.rw-field input[type="search"]{margin-bottom:-2px;}
+
+/* Dua field yang saling berkaitan disandingkan supaya form tidak jadi satu
+   kolom panjang yang harus digulir. */
+.rw-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+
+.rw-hint{
+  margin:0; padding:10px 12px; border-radius:9px;
+  background:var(--lm-bg); color:var(--lm-ink-soft);
+  font-size:12px; line-height:1.5;
+}
+
+.rw-actions{display:flex; gap:10px; padding-top:2px;}
+.rw-actions button{
+  flex:1; border:none; border-radius:9px; padding:11px 0;
+  font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600; cursor:pointer;
+}
+.rw-btn-batal{background:var(--lm-bg); color:#212B36;}
+.rw-btn-batal:hover{background:#E7ECE7;}
+.rw-btn-simpan{background:#2E7D32; color:#fff;}
+.rw-btn-simpan:hover{background:#256428;}
+.rw-btn-simpan:disabled{background:#7FA982; cursor:progress;}
+
+@media (max-width:480px){
+  .rw-row{grid-template-columns:1fr;}
+}
 
 /* inline edit form embedded in an existing reward-card */
 .loyalty-manager .reward-card .edit-form{
@@ -214,7 +342,11 @@
 }
 .loyalty-manager table{width:100%; border-collapse:collapse;}
 .loyalty-manager thead{background:#7FB77E;}
+/* `background:inherit` supaya tiap sel ikut mengecat hijau `thead`-nya. Sel
+   yang transparan menyisakan garis putih tipis di antara kolom saat lebar
+   tabel jatuh di angka pecahan piksel. */
 .loyalty-manager th{
+  background:inherit;
   text-align:center; padding:18px; font-size:15px; font-weight:600; color:#2F6B3F;
 }
 .loyalty-manager td{padding:7px 18px; text-align:center; font-size:14px; border-bottom:1px solid #F0F0F0;}
