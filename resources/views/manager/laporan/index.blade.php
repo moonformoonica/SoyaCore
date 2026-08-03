@@ -110,16 +110,6 @@
             <h3>Rekomendasi Switch / Upsell</h3>
             <div class="panel-sub">Pola pembelian pelanggan &amp; saran upsell ukuran/produk</div>
 
-            <div class="lap-filters">
-                <div class="lap-search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <input type="text" id="switchSearch" placeholder="Cari rekomendasi (misal 'upsize', 'coba rasa')">
-                </div>
-            </div>
-
             <div class="table-scroll">
                 <table class="lap-table lap-table--switch">
                     <thead>

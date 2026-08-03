@@ -42,12 +42,6 @@
 .panel .panel-sub { font-size: 11px; color: #ABABAB; margin-bottom: 12px; }
 
 .panel-full { grid-column: 1 / -1; }
-
-/* Donut RFM ditaruh di tengah sisa ruang panel. Panel ini setinggi panel
-   tabel di sebelahnya, jadi kalau donutnya dibiarkan mengalir normal ia
-   nangkring di atas dengan ruang kosong menganga di bawahnya.
-   `min-height: 0` supaya pembungkusnya boleh menyusut di bawah tinggi
-   canvas, kalau tidak flex item malah mendorong panelnya jadi lebih tinggi. */
 .panel-chart { display: flex; flex-direction: column; }
 .panel-chart-body {
     flex: 1; min-height: 0;
@@ -68,23 +62,6 @@
 }
 
 .table-scroll { width: 100%; overflow-x: auto; max-height: 360px; overflow-y: auto; }
-
-/* HEADER HIJAU HARUS SATU BATANG UTUH, TANPA GARIS PUTIH DI ANTARA KOLOM.
-   Lebar kolom tabel ini jatuh di angka pecahan piksel, jadi tepi tiap sel
-   header dibulatkan sendiri-sendiri oleh browser dan menyisakan celah selebar
-   kurang dari satu piksel yang tembus ke latar putih panel. Tiga hal dipasang
-   berlapis karena masing-masing menutup celah itu pada keadaan yang berbeda:
-
-   1. `border-spacing: 0` menghapus jarak antar sel yang dibawa mode
-      `separate`. Mode `separate` sendiri dipakai karena header ini
-      `position: sticky`, dan pada `collapse` garis batas dimiliki tabelnya,
-      bukan selnya.
-   2. Latar hijau di `thead` mengisi celah selama tabel belum digulir.
-   3. `box-shadow` selebar 1px ke kanan pada tiap sel menutup celah saat header
-      sudah menempel dan terlepas dari `thead`-nya. Ini yang benar-benar
-      menghilangkan garisnya; dua yang di atas tidak cukup sendirian. Memakai
-      bayangan, bukan `border`, supaya lebar kolomnya tidak ikut bergeser, dan
-      hanya ke kanan supaya tidak ada 1px hijau yang menjulur keluar tabel. */
 .lap-table {
     width: 100%; font-size: 13px; min-width: 520px;
     border-collapse: separate; border-spacing: 0;
@@ -98,19 +75,11 @@
 .lap-table thead th:not(:last-child) {
     box-shadow: 1px 0 0 0 #2F6B3F;
 }
-/* Rata kiri, mengikuti header-nya. Sebelumnya sel di sini ter-center karena
-   `tbody td { text-align:center }` dari manager/transaksi.css bocor app-wide,
-   jadi header rata kiri sementara isinya di tengah. Aturan itu sudah dibatasi
-   ke `.table-card`, dan sekarang keduanya sejajar. */
 .lap-table tbody td {
     text-align: left; padding: 9px 12px;
     border-bottom: 1px solid #F2F2F2; white-space: nowrap;
 }
 .lap-table tbody tr:hover { background: #FAFAFA; }
-
-/* KOLOM ANGKA RATA TENGAH, kolom teks rata kiri.
-   Header ikut dirata-tengahkan supaya menempel pada kolomnya sendiri, bukan
-   menggantung di atas kolom sebelah. */
 .lap-table--rfm th:nth-child(2), .lap-table--rfm td:nth-child(2),
 .lap-table--rfm th:nth-child(3), .lap-table--rfm td:nth-child(3),
 .lap-table--rfm th:nth-child(4), .lap-table--rfm td:nth-child(4),
@@ -123,16 +92,12 @@
     text-align: center;
 }
 
-/* Kolom terakhir Switch berisi kalimat saran yang panjang. Dibiarkan rata kiri
-   dan boleh membungkus, karena satu baris sangat panjang memaksa manager
-   menggeser tabel jauh ke kanan cuma untuk membaca satu kolom. */
 .lap-table--switch td:last-child {
     text-align: left;
     white-space: normal;
     min-width: 260px;
 }
 
-/* Angka memakai lebar digit seragam supaya kolomnya benar-benar berbaris. */
 .lap-table td { font-variant-numeric: tabular-nums; }
 
 .segmen-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }

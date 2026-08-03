@@ -33,7 +33,6 @@
             : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
-    // Metode bayar dikirim backend sebagai objek {cash:{jumlah,total}, qris:{...}}.
     function selMetode(rincian, kunci) {
         const d = (rincian || {})[kunci] || {};
         return angka(d.jumlah || 0) + '× · ' + rupiah(d.total || 0);
@@ -133,11 +132,6 @@
         }
     }
 
-    // =========================
-    // Unduh Excel. Isinya tabel halaman ini saja (satu sheet "Laporan Kasir"),
-    // memakai rentang tanggal yang sama dengan yang sedang ditampilkan, jadi
-    // angka di file tidak bisa berbeda dari angka di layar.
-    // =========================
     const unduhBtn = document.getElementById('lkUnduhBtn');
 
     unduhBtn?.addEventListener('click', async function () {
@@ -163,7 +157,6 @@
             const res = await fetch(API + '/export' + (qs ? '?' + qs : ''), fetchOptions());
 
             if (!res.ok) {
-                // Body-nya JSON hanya saat gagal, saat sukses isinya biner xlsx.
                 const json = await res.json().catch(() => ({}));
                 throw new Error(json.message
                     || (res.status === 403

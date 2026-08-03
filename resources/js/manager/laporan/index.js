@@ -76,7 +76,6 @@
             const selesai = fmtTanggal(p.end);
             el.textContent = mulai && selesai ? `${mulai} – ${selesai}` : '—';
         } catch (e) {
-            // biarkan label sebelumnya kalau koneksi bermasalah
         }
     }
 
@@ -102,13 +101,6 @@
         }
     }
 
-    /**
-     * Rentang tanggal + satu parameter tambahan, dalam satu query string.
-     *
-     * RFM dan Switch sama-sama butuh ini. Sebelumnya keduanya mengirim
-     * parameternya sendiri tanpa rentang tanggal sama sekali, jadi kartu segmen
-     * dan tabelnya diam saja sementara grafik di atasnya ikut berubah.
-     */
     function qsRentangPlus(nama, nilai) {
         const p = new URLSearchParams(rentangQS().replace(/^\?/, ''));
         if (nilai) p.set(nama, nilai);
@@ -223,7 +215,7 @@
 
     async function initSwitch() {
         try {
-            const keyword = document.getElementById('switchSearch').value.trim();
+            const keyword = '';
             const json = await loadSwitch(keyword);
             switchData = json.data || [];
             renderSwitchTable();
@@ -257,15 +249,6 @@
         });
     });
     document.getElementById('rfmSearch').addEventListener('input', debounce(renderRfmTable, 250));
-    document.getElementById('switchSearch').addEventListener('input', debounce(initSwitch, 400));
-    // Daftar akun kasir untuk dropdown export.
-    //
-    // Sumbernya `/api/users`, BUKAN `/api/laporan/kasir`. Yang kedua hanya
-    // memuat akun yang punya transaksi di rentangnya, jadi kasir yang baru
-    // dibuat, atau yang sedang libur sepanjang rentang itu, tidak pernah
-    // muncul sebagai pilihan, dan manager mengira akunnya gagal dibuat.
-    // Memilih kasir yang kebetulan nihil transaksi menghasilkan export kosong,
-    // dan itu jawaban yang benar.
     async function muatDaftarKasir() {
         const sel = document.getElementById('exportKasir');
         if (!sel) return;
@@ -278,9 +261,6 @@
                 .forEach((u) => {
                     const opt = document.createElement('option');
                     opt.value = u.id;
-                    // Kasir nonaktif tetap dipilih: laporan bulan lalu masih
-                    // berisi transaksinya, dan itu justru yang dicari saat
-                    // seseorang sudah berhenti kerja.
                     opt.textContent = u.is_active ? u.nama : `${u.nama} (nonaktif)`;
                     sel.appendChild(opt);
                 });
@@ -288,9 +268,6 @@
         }
     }
 
-    // Seluruh panel halaman ini ikut rentang tanggal, bukan cuma grafik
-    // revenue. Panel yang tidak ikut membuat satu layar menampilkan dua periode
-    // sekaligus tanpa ada yang menjelaskan yang mana.
     function terapkanRentang() {
         initRevenueUkuran();
         initRfm();
