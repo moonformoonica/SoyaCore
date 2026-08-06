@@ -169,7 +169,6 @@ body{
 
 .user-profile .avatar img[hidden]{ display:none; }
 
-/* Inisial nama, dipakai selama akun belum mengunggah fotonya sendiri. */
 .user-profile .avatar-inisial{
   width:100%;
   height:100%;
@@ -219,9 +218,7 @@ body{
   stroke:var(--icon-white);
   flex-shrink:0;
 }
-/* ============================================================
-   Dipindahkan dari <style> inline di components/header.blade.php.
-   ============================================================ */
+
 .user-menu { position: relative; }
 
 .user-profile {

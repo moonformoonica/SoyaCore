@@ -77,14 +77,6 @@
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
-
-                {{-- Tampil sejak halaman dibuka, TIDAK lagi disembunyikan.
-                     Sebelumnya form ini baru muncul setelah kasir menekan
-                     "+ Tambah" dan ditolak dengan pita merah "Isi nama
-                     pelanggan dulu", jadi setiap pesanan pelanggan baru selalu
-                     diawali satu error. Nama dan nomor memang wajib untuk
-                     membuat transaksi, jadi tempat mengisinya harus terlihat
-                     lebih dulu, bukan sesudah gagal. --}}
                 <div id="custNewForm" class="pes-cust-new">
                     <span class="pes-cust-new-label">Pelanggan baru <span class="pes-wajib">wajib diisi</span></span>
                     <input type="text" id="custNama" class="pes-input" placeholder="Nama pelanggan" autocomplete="off">

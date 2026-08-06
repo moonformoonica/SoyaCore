@@ -62,8 +62,6 @@ body{
     cursor:progress;
 }
 
-/* Pesan gagal unduh. Sebelumnya kegagalan hanya muncul di console, jadi
-   tombolnya terlihat seperti tidak melakukan apa-apa. */
 .trx-export-error{
     margin:-10px 0 22px;
     padding:10px 14px;
@@ -294,13 +292,6 @@ body{
 
 }
 
-/* DIBATASI KE `.table-card`, JANGAN DIKEMBALIKAN JADI SELECTOR TELANJANG.
-   Berkas ini ikut ter-import `app.css`, yang dimuat di SETIAP halaman. Waktu
-   aturan di bawah masih ditulis sebagai `table`, `thead`, dan `tbody td` polos,
-   ia mewarnai hijau dan meng-center-kan isi seluruh tabel di aplikasi, termasuk
-   tabel Akun Kasir di halaman Pengaturan yang tidak ada hubungannya dengan
-   halaman Transaksi. Tabel yang memang memakai gaya ini semuanya berada di
-   dalam `.table-card`: Transaksi, Loyalty, dan Laporan Kasir. */
 .table-card table{
 
     width:100%;
@@ -317,23 +308,12 @@ body{
 }
 
 .table-card thead th{
-
-    /* Ikut mengecat latar hijau yang sama dengan `thead` induknya, bukan
-       menumpang latar itu saja. Sel yang transparan menyisakan garis putih
-       tipis di antara kolom begitu lebar tabel jatuh di angka pecahan piksel,
-       dan batang hijau headernya terlihat terpotong-potong. */
     background:inherit;
-
     color:#2F6B3F;
-
     font-size:15px;
-
     font-weight:600;
-
     padding:18px;
-
     text-align:center;
-
 }
 
 .table-card tbody td{
@@ -514,8 +494,6 @@ body{
 
     }
 
-    /* Di layar sempit baris filter jadi menumpuk ke bawah, jadi rentang
-       tanggal tidak lagi perlu didorong ke kanan. */
     .trx-date-range{
 
         margin-left:0;
@@ -638,9 +616,6 @@ body{
 }
 
 .detail-item-table td{
-    /* Sejajar dengan header-nya yang juga rata kiri. Tabel ini berada di dalam
-       modal, di luar `.table-card`, jadi ia tidak lagi ikut aturan rata tengah
-       halaman Transaksi. */
     text-align:left;
     padding:10px;
     font-size:13px;
@@ -676,7 +651,6 @@ body{
 
 }
 
-/* Status "Proses" (pending): oranye, teks lebih gelap dari background */
 .status.process{
 
     background:#FFEFCF;
@@ -685,7 +659,6 @@ body{
 
 }
 
-/* ===== Aksi selesaikan pesanan di dalam modal detail ===== */
 .detail-aksi{
     border-top:1px solid #E5E7EB;
     margin-top:18px;
@@ -773,7 +746,6 @@ body{
     cursor:not-allowed;
 }
 
-/* ===== Tabel transaksi: state kosong/loading + penanda self-order ===== */
 .trx-state{
     text-align:center;
     padding:34px 12px;
@@ -792,7 +764,7 @@ body{
     margin-left:5px;
     vertical-align:middle;
 }
-/* ===== Rentang tanggal (pola sama dengan Dashboard & Laporan) ===== */
+
 .trx-date-range{
     display:flex;
     align-items:center;
@@ -834,9 +806,6 @@ body{
     color:#3F51B5;
 }
 
-/* Transaksi hasil impor CSV Juni-Juli. Warnanya sengaja netral abu, bukan warna
-   merek: baris ini bukan penjualan yang lewat SoyaCore dan tidak bisa
-   ditindaklanjuti, jadi tidak boleh terlihat sederajat dengan transaksi hidup. */
 .trx-tag-historis{
     background:#F1F2F4;
     color:#5B6470;
@@ -846,8 +815,6 @@ body{
     color:#6B7280;
 }
 
-/* Tombol Detail pada baris historis memang tidak punya sasaran. Dibuat jelas
-   mati, bukan sekadar tidak bereaksi saat diklik. */
 .trx-historis .detail-btn:disabled{
     opacity:.35;
     cursor:not-allowed;
@@ -860,7 +827,6 @@ body{
     line-height:1.4;
 }
 
-/* ===== Pembatalan / koreksi pesanan (modal detail) ===== */
 .koreksi-field{ margin-bottom:14px; }
 .koreksi-field label{
     display:block; font-size:12.5px; font-weight:600; color:#374151; margin-bottom:6px;
@@ -894,7 +860,6 @@ body{
 .koreksi-item .ki-nama{ font-size:13.5px; color:#212B36; font-weight:500; }
 .koreksi-item .ki-takaran{ font-size:11.5px; color:#2F6B3F; }
 
-/* Stepper +/- untuk jumlah yang dibatalkan. */
 .koreksi-item .ki-stepper{
     display:flex; align-items:center; gap:4px; flex-shrink:0;
     border:1px solid #E5E7EB; border-radius:9px; padding:3px; background:#fff;
@@ -923,11 +888,7 @@ body{
     margin-top:10px; background:#F4F8F2; border-radius:9px;
     padding:10px 12px; font-size:13px; color:#2F6B3F;
 }
-/* Susunan baris filter: kotak cari & dropdown menumpuk dari KIRI, rentang
-   tanggal sendirian di KANAN.
-   `justify-content:space-between` bawaan diganti `flex-start` karena sejak
-   pembungkus `.filter-right` dibongkar isinya jadi tiga kelompok, dengan
-   space-between ketiganya akan terserak merata, bukan mengumpul di kiri. */
+
 .filter-bar{
     flex-wrap:wrap;
     gap:12px;
@@ -935,10 +896,6 @@ body{
     align-items:center;
 }
 
-/* Baris kedua: dropdown menumpuk dari kiri, rentang tanggal terdorong ke
-   kanan lewat margin-left:auto di bawah. */
 .filter-dropdowns{ flex-wrap:wrap; justify-content:flex-start; }
 
-/* Didorong ke kanan lewat margin, bukan lewat urutan: dengan begini rentang
-   tanggal tetap menempel di kanan walau dropdown-nya membungkus ke bawah. */
 .trx-date-range{ margin-left:auto; }

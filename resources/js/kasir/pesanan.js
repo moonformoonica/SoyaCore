@@ -361,15 +361,6 @@
         document.getElementById('custNama').value = '';
     }
 
-    /**
-     * Keadaan baku: belum ada pelanggan terpilih, jadi form isian yang tampil.
-     *
-     * Dulu fungsi ini menyembunyikan KEDUANYA, sehingga bagian Pelanggan
-     * kosong melompong sampai kasir menabrak error saat menambah item. Isian
-     * yang sudah diketik SENGAJA tidak dibersihkan di sini: fungsi ini juga
-     * dipanggil saat kotak cari dikosongkan, dan menghapus nama yang barusan
-     * diketik kasir di momen itu adalah kejutan yang tidak diminta.
-     */
     function tampilkanFormKosong() {
         document.getElementById('custFoundCard').style.display = 'none';
         document.getElementById('custNewForm').style.display = 'block';
@@ -458,8 +449,6 @@
         this.value = this.value.replace(/\D/g, '').slice(0, 12);
     });
     document.getElementById('custGantiBtn').addEventListener('click', async function () {
-        // Pesanan yang sedang memakai redeem: tombol ini membatalkan redeem-nya,
-        // bukan melepas pelanggannya. Lihat segarkanTombolSilang().
         if (currentTransaksi && currentTransaksi.kode_redeem) {
             await batalkanRedeem();
             return;
@@ -472,15 +461,6 @@
         document.getElementById('custSearch').focus();
     });
 
-    /**
-     * Membatalkan redeem pesanan berjalan: poin pelanggan kembali utuh dan
-     * hadiahnya dicabut dari keranjang.
-     *
-     * Saldo poin diambil ulang dari response transaksi, bukan ditambah sendiri
-     * di sini. Backend yang tahu berapa persisnya yang dikembalikan, dan
-     * menebaknya di layar berarti angka poin di kartu pelanggan bisa berbeda
-     * dari saldo sebenarnya tanpa ada yang memberi tahu.
-     */
     async function batalkanRedeem() {
         if (!confirm('Batalkan redeem poin pesanan ini? Poin pelanggan akan dikembalikan dan hadiahnya dicabut dari pesanan.')) {
             return;
@@ -508,7 +488,6 @@
         }
     }
 
-    /** Ambil ulang saldo poin pelanggan dari server, bukan menghitungnya di layar. */
     async function segarkanPoinPelanggan() {
         try {
             const res = await fetch(
@@ -609,8 +588,6 @@
         } else {
             list.innerHTML = items.map(function (i) {
                 const label = i.ukuran ? `${i.nama} (${i.ukuran})` : i.nama;
-                // Label takaran datang siap pakai dari backend ("Less Sugar"),
-                // jangan memetakan kode 'less' sendiri.
                 const takaran = [i.level_sugar_label, i.level_ice_label].filter(Boolean).join(' · ');
                 return `<div class="pes-cart-item">
                     <div class="ci-info">
@@ -750,7 +727,6 @@
         try {
             await fetch(`${API_BASE}/transaksi/${currentTransaksi.id}/batal`, fetchOptions({ method: 'POST' }));
         } catch (err) {
-            // diabaikan, tetap reset UI di sisi client
         }
         resetPesananBaru();
     });
@@ -764,7 +740,6 @@
         unlockCustomerFields();
         renderCart();
         renderMenuGrid();
-        // Transaksi tadi sudah lunas/batal, segarkan antrean self-order.
         loadPesananMasuk();
     }
 
@@ -841,8 +816,6 @@
             tutupRedeem();
             renderCart();
             renderMenuGrid();
-            // Tombol × berganti arti jadi "batalkan redeem" begitu rewardnya
-            // menempel, jalan keluar kalau kasir salah pilih.
             segarkanTombolSilang();
             showSuccess('Redeem berhasil diterapkan ke pesanan. Salah pilih? Tekan tombol × di kartu pelanggan.');
         } catch (err) {
@@ -892,7 +865,6 @@
             pesananMasuk = (json.data || []).filter(isSelfOrder);
             renderPesananMasuk();
         } catch (err) {
-            // offline sesaat / token kedaluwarsa, biarkan daftar lama tampil
         }
     }
 
@@ -901,7 +873,6 @@
         const row = document.getElementById('pesMasukRow');
         if (!wrap || !row) return;
 
-        // Sembunyikan blok kalau tidak ada antrean, biar tidak makan tempat.
         if (pesananMasuk.length === 0) {
             wrap.style.display = 'none';
             return;
@@ -945,7 +916,6 @@
         const trx = pesananMasuk.find(t => t.id === id);
         if (!trx) return;
 
-        // Jangan sampai keranjang yang sedang disusun kasir hilang diam-diam.
         if (currentTransaksi && currentTransaksi.id !== id && currentTransaksi.items.length > 0) {
             if (!confirm('Ada pesanan lain yang sedang disusun. Tinggalkan dan proses pesanan ini?')) return;
         }
@@ -956,7 +926,6 @@
             b.classList.toggle('active', metodeBayar !== null && b.dataset.metode === metodeBayar);
         });
 
-        // Tampilkan pelanggan self-order (beserta poin, dipakai untuk redeem).
         if (trx.customer) {
             selectedCustomer = { nama: trx.customer.nama, no_wa: trx.customer.no_wa, poin: 0 };
             try {

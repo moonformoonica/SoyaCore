@@ -712,12 +712,6 @@ body {
     font-size: 15px;
 }
 
-/* Action bar yang menempel di dasar layar.
-   Margin negatifnya melawan padding `.done-box` (56px 26px 40px) supaya bar-nya
-   melebar penuh sampai tepi kolom, bukan menyisakan celah di kiri-kanan.
-   `env(safe-area-inset-bottom)` menjaga tombol tetap di atas home indicator
-   iPhone dan bilah navigasi Android, yang kalau diabaikan menutupi separuh
-   tombol di HP-HP itu. */
 .scan-done .done-actions {
     position: sticky;
     bottom: 0;
@@ -750,6 +744,19 @@ body {
 @keyframes scan-pop {
     0% { transform: scale(0.85); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
+}
+
+.scan-done .done-check.is-success {
+    background: #2e7d32;
+}
+
+.scan-done .done-check.is-success #doneIconSuccess {
+    animation: doneCheckPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes doneCheckPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
 }
 
 /* ============================================================
@@ -889,9 +896,6 @@ body {
    Dipindahkan dari <style> inline di scan/index.blade.php.
    ============================================================ */
 
-/* Atribut [hidden] HARUS menang atas aturan display apa pun di berkas ini.
-   Tanpa !important, ikon jam pasir dan centang pernah tampil menumpuk karena
-   selector lain men-set display:block/flex dan mengalahkan bawaan [hidden]. */
 [hidden] { display: none !important; }
 
 .hourglass-icon { animation: hourglassFlip 3s ease-in-out infinite; }
@@ -901,7 +905,6 @@ body {
     100%      { transform: rotate(360deg); }
 }
 
-/* Pasir atas mengecil & pasir bawah membesar, lalu reset saat jamnya terbalik. */
 .sand-top { transform-origin: 12px 4px; animation: sandTopShrink 3s ease-in-out infinite; }
 @keyframes sandTopShrink {
     0%        { transform: scaleY(1); }
@@ -916,7 +919,6 @@ body {
     40%, 100% { transform: scaleY(.15); }
 }
 
-/* Butiran yang jatuh di tengah, muncul-hilang biar terkesan menetes. */
 .sand-drip { opacity: 0; animation: sandDrip .5s linear infinite; }
 @keyframes sandDrip {
     0%, 100% { opacity: 0; }

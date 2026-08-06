@@ -11,12 +11,6 @@
 .filter-form button { background: #1f7a4d; color: #fff; cursor: pointer; }
 .filter-sd { color: #fff; font-size: 13px; padding: 0 2px; }
 
-/* Tiga kartu terpisah, bukan satu balok panjang.
-   Sebelumnya `.cards` dan `.card` memakai warna latar yang sama persis dengan
-   `gap: 1px`, jadi ketiganya menempel jadi satu blok yang cuma dibelah garis
-   rambut, dan tidak punya shadow sama sekali sementara `.panel` di bawahnya
-   punya. Gap dan shadow-nya kini disamakan dengan `.panel` supaya seluruh
-   dashboard terbaca sebagai satu bahasa visual. */
 .cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -39,8 +33,6 @@
     font-weight: 700;
     color: #14532d;
     margin-top: 4px;
-    /* Angka rupiah bisa panjang; tanpa ini kartunya melebar dan grid-nya
-       kehilangan lebar yang sama rata. */
     overflow-wrap: anywhere;
 }
 .dash-content { min-width: 0; width: 100%; overflow-x: hidden; }
@@ -55,10 +47,6 @@
 .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .dash-table th, .dash-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; }
 
-/* Header tabel ini dulu ikut kecipratan `thead { background:#7FB77E }` dari
-   manager/transaksi.css, yang dimuat app-wide. Sekarang aturan itu sudah
-   dibatasi ke `.table-card`, jadi gayanya ditulis eksplisit di sini, bukan
-   menumpang gaya halaman lain. */
 .dash-table thead th {
     font-size: 11.5px;
     font-weight: 600;
@@ -70,8 +58,6 @@
     white-space: nowrap;
 }
 
-/* Kolom 1 (#) dan 2 (nama) rata kiri, kolom angka rata tengah mengikuti
-   headernya. */
 .dash-table th:nth-child(n+3),
 .dash-table td:nth-child(n+3) { text-align: center; }
 .dash-table td { font-variant-numeric: tabular-nums; }
@@ -127,8 +113,6 @@
         grid-template-columns: 1fr;
     }
     .dash-header h1 { font-size: 16px; }
-    /* Tiga kartu berdampingan jadi terlalu sempit untuk angka rupiah di layar
-       tablet, jadi dipecah dua kolom dulu sebelum turun ke satu. */
     .cards { grid-template-columns: repeat(2, 1fr); }
     .card { padding: 14px 16px; }
     .card .value { font-size: 20px; }

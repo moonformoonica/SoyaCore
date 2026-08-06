@@ -417,23 +417,34 @@
     };
 
     function setDoneWaiting(metode) {
-        $('doneIconWaiting').hidden = false;
-        $('doneIconSuccess').hidden = true;
-        $('doneCheck').classList.remove('is-success');
-        $('doneTitle').textContent = 'Menunggu Pembayaran';
-        $('doneSub').textContent = SUB_MENUNGGU[metode]
-            ?? 'Lakukan pembayaran dan pesananmu akan segera diproses';
-    }
+    console.log('[SoyaScan] setDoneWaiting dipanggil, metode:', metode);
+    const iw = $('doneIconWaiting');
+    const is = $('doneIconSuccess');
+    iw.hidden = false;
+    iw.style.setProperty('display', 'block', 'important');
+    is.hidden = true;
+    is.style.setProperty('display', 'none', 'important');
+    $('doneCheck').classList.remove('is-success');
+    $('doneTitle').textContent = 'Menunggu Pembayaran';
+    $('doneSub').textContent = SUB_MENUNGGU[metode]
+        ?? 'Lakukan pembayaran dan pesananmu akan segera diproses';
+    console.log('[SoyaScan] setelah setDoneWaiting -> waiting display:', getComputedStyle(iw).display, '| success display:', getComputedStyle(is).display);
+}
 
-    function setDoneSuccess() {
-        $('doneIconWaiting').hidden = true;
-        $('doneIconSuccess').hidden = false;
-        $('doneCheck').classList.add('is-success');
-        $('doneTitle').textContent = 'Pesanan Berhasil! 🎉';
-        $('doneSub').textContent = 'Pesananmu sudah masuk ke kasir';
-        // Sudah dibayar, QRIS-nya tidak relevan lagi.
-        $('doneQris').hidden = true;
-    }
+function setDoneSuccess() {
+    console.log('[SoyaScan] setDoneSuccess dipanggil');
+    const iw = $('doneIconWaiting');
+    const is = $('doneIconSuccess');
+    iw.hidden = true;
+    iw.style.setProperty('display', 'none', 'important');
+    is.hidden = false;
+    is.style.setProperty('display', 'block', 'important');
+    $('doneCheck').classList.add('is-success');
+    $('doneTitle').textContent = 'Pesanan Berhasil! 🎉';
+    $('doneSub').textContent = 'Pesananmu sudah masuk ke kasir';
+    $('doneQris').hidden = true;
+    console.log('[SoyaScan] setelah setDoneSuccess -> waiting display:', getComputedStyle(iw).display, '| success display:', getComputedStyle(is).display);
+}
 
     function tampilkanRincian(items) {
         const wrap = $('doneItems');
@@ -537,18 +548,21 @@
 
         const check = async () => {
             if (Date.now() > statusPollDeadline) {
+                console.log('[SoyaScan] polling timeout, berhenti');
                 stopStatusPolling();
                 return;
             }
             try {
                 const res = await fetch(statusEndpoint(kode), { headers: { 'Accept': 'application/json' } });
-                if (!res.ok) return;
+                if (!res.ok) { console.log('[SoyaScan] poll gagal, HTTP', res.status); return; }
                 const json = await res.json();
+                
                 if (isPaidStatus(json)) {
                     setDoneSuccess();
                     stopStatusPolling();
                 }
             } catch (e) {
+                console.error('[SoyaScan] Error occurred while polling status:', e);
             }
         };
 

@@ -93,13 +93,6 @@
 .ak-table-wrap { overflow-x: auto; }
 .ak-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
 
-/* `background` dan `text-align` ditulis eksplisit, jangan dihapus dengan alasan
-   "kan defaultnya begitu". Tabel ini sempat mewarisi `thead { background:
-   #7FB77E }` dan `tbody td { text-align:center }` dari manager/transaksi.css
-   yang waktu itu memakai selector telanjang dan ikut dimuat app-wide, jadi
-   header-nya jadi bar hijau dan nama kasir ter-center sendiri. Sumbernya sudah
-   dibatasi ke `.table-card`, dan baris-baris ini yang menjaga kalau ada gaya
-   global lain menyusup lagi. */
 .ak-table thead { background: transparent; }
 .ak-table th {
   text-align: left; font-size: 12px; font-weight: 600; color: #6B7280;
@@ -114,13 +107,8 @@
 .ak-table .ak-aksi-head { text-align: right; }
 .ak-nama { font-weight: 600; }
 .ak-email { color: #6B7280; }
-/* Ditulis `.ak-table .ak-state`, bukan `.ak-state` saja: `.ak-table td` di atas
-   sudah memaksa rata kiri, dan selector satu kelas akan kalah dari situ
-   sehingga teks "Memuat akun…" mendarat di pojok kiri, bukan di tengah. */
 .ak-table .ak-state { text-align: center; color: #9CA3AF; padding: 26px 14px; }
 
-/* Baris akun nonaktif diredupkan supaya bedanya terbaca sekilas, tanpa
-   menyembunyikannya, riwayatnya masih dipakai laporan. */
 .ak-table tr.ak-nonaktif td { color: #9CA3AF; }
 .ak-table tr.ak-nonaktif .ak-nama { color: #6B7280; }
 
