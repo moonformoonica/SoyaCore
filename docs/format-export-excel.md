@@ -6,10 +6,15 @@
 
 > ⚠️ **Dokumen ini adalah rancangan awal 2 sheet dan sudah tertinggal dari
 > implementasinya.** File export yang benar-benar dihasilkan sekarang berisi
-> 7 sheet (`Ringkasan`, `Rekap Kasir`, `Detail Transaksi`, `Revenue per Ukuran`,
-> `Time Series`, `RFM Pelanggan`, `Rekomendasi Switch`), dan turun jadi 5 sheet
-> saat difilter satu kasir. Acuan yang berlaku untuk sheet per-kasir ada di
-> [`laporan-kasir.md`](laporan-kasir.md) §6.
+> **8 sheet** (`Ringkasan`, `Rekap Kasir`, `Detail Transaksi`,
+> `Revenue per Ukuran`, `Time Series`, `RFM Pelanggan`, `Segmen & Treatment`,
+> `Rekomendasi Switch`), dan turun jadi 5 sheet saat difilter satu kasir.
+>
+> Acuan yang berlaku:
+> [`kontrak-dashboard-v1.md`](kontrak-dashboard-v1.md) §9 untuk daftar sheet dan
+> baris header tiap sheet, [`laporan-kasir.md`](laporan-kasir.md) §6 untuk sheet
+> per-kasir, dan [`segmen-treatment.md`](segmen-treatment.md) untuk isi sheet
+> Segmen & Treatment.
 
 Export terdiri dari **2 sheet** dalam satu file Excel, sesuai Diagram Laporan Excel.
 

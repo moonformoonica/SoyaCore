@@ -254,6 +254,11 @@ class LaporanQuery
                 'jumlah_transaksi' => (int) $r->jumlah_transaksi,
             ],
             $sembunyikanTidakDiketahui,
+            // Impor CSV menulis `250 ml`, katalog menu menulis `250ml`. Tanpa
+            // penyeragaman ini keduanya tampil sebagai dua batang terpisah, dan
+            // pertanyaan "ukuran berapa ml yang paling sering keluar" terjawab
+            // salah, satu ukuran terbelah jadi dua potongan kecil.
+            GolonganUkuran::labelBaku(...),
         );
 
         $hasil = [];
@@ -669,6 +674,13 @@ class LaporanQuery
      *
      * @param  Collection<int, Model>  $rows
      * @param  callable(mixed): array<string, int>  $angka
+     * @param  ?callable(?string): ?string  $normalisasi  Menyeragamkan ejaan
+     *                                                    sebelum dikelompokkan.
+     *                                                    `null` = pakai apa
+     *                                                    adanya, dipakai kolom
+     *                                                    yang sudah dinormalkan
+     *                                                    saat ditulis (mis.
+     *                                                    `platform`).
      * @return array<string, array<string, int>>
      */
     private function gabungBucketTidakDiketahui(
@@ -676,11 +688,17 @@ class LaporanQuery
         string $kolom,
         callable $angka,
         bool $sembunyikan,
+        ?callable $normalisasi = null,
     ): array {
         $buckets = [];
 
         foreach ($rows as $row) {
             $nilai = $row->{$kolom};
+
+            if ($normalisasi !== null) {
+                $nilai = $normalisasi($nilai);
+            }
+
             $kosong = $nilai === null || trim((string) $nilai) === '';
 
             // Dibuang SEBELUM diakumulasi, supaya ia juga tidak ikut

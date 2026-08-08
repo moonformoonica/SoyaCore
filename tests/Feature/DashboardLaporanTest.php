@@ -8,6 +8,7 @@ use App\Models\LaporanTransaksi;
 use App\Models\User;
 use App\Services\LaporanQuery;
 use App\Services\RekapKasirHarian;
+use App\Support\GolonganUkuran;
 use Database\Seeders\LaporanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -92,8 +93,12 @@ class DashboardLaporanTest extends TestCase
         // ukuran yang paling sering keluar terbaca di baris pertama tiap
         // golongan. Yang ingin dijaga test ini adalah ANGKAnya tetap sama
         // dengan fixture, bukan urutan tampilnya.
+        // Kunci fixture ikut diseragamkan: fixture memakai ejaan CSV (`250 ml`)
+        // sementara API kini memakai ejaan katalog menu (`250ml`), supaya satu
+        // ukuran tidak tampil sebagai dua batang terpisah di chart. Yang
+        // dibandingkan tetap angkanya.
         $expected = LaporanRevenueUkuran::get()
-            ->mapWithKeys(fn ($r) => [$r->ukuran => [
+            ->mapWithKeys(fn ($r) => [GolonganUkuran::labelBaku($r->ukuran) => [
                 'jumlah_terjual' => $r->jumlah_terjual,
                 'total_revenue' => $r->total_revenue,
                 'jumlah_transaksi' => $r->jumlah_transaksi,

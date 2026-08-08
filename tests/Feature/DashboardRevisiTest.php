@@ -210,6 +210,38 @@ class DashboardRevisiTest extends TestCase
         }
     }
 
+    public function test_ejaan_ukuran_dengan_spasi_ikut_masuk_golongan_botol(): void
+    {
+        // Impor CSV menulis `250 ml`, katalog menu menulis `250ml`. Tanpa
+        // penyeragaman, 145 dari 148 baris botol jatuh ke golongan `lainnya`
+        // dan grafik melaporkan botol nyaris tidak pernah terjual, padahal yang
+        // salah cuma cara mengetiknya. Tidak ada error yang muncul.
+        $this->assertSame(GolonganUkuran::BOTOL, GolonganUkuran::dari('250 ml'));
+        $this->assertSame(GolonganUkuran::BOTOL, GolonganUkuran::dari('250ml'));
+        $this->assertSame(GolonganUkuran::BOTOL, GolonganUkuran::dari('1000 ML'));
+        $this->assertSame(GolonganUkuran::CUP, GolonganUkuran::dari('  Reguler '));
+
+        // Cup/Pack milik dessert tetap `lainnya`, jangan ikut terseret.
+        $this->assertSame(GolonganUkuran::LAINNYA, GolonganUkuran::dari('Cup'));
+        $this->assertSame(GolonganUkuran::LAINNYA, GolonganUkuran::dari('Pack'));
+    }
+
+    public function test_ukuran_beda_ejaan_digabung_jadi_satu_baris(): void
+    {
+        Sanctum::actingAs($this->manager());
+
+        $ukuran = array_column(
+            $this->getJson('/api/dashboard/revenue-ukuran')->assertOk()->json('data'),
+            'ukuran',
+        );
+
+        // Tidak boleh ada dua baris untuk ukuran yang sama, persis alasan yang
+        // sama dengan `QRIS`/`qris` di kolom platform.
+        $this->assertSame(count($ukuran), count(array_unique($ukuran)));
+        $this->assertNotContains('250 ml', $ukuran);
+        $this->assertContains('250ml', $ukuran);
+    }
+
     public function test_persen_dari_golongan_berjumlah_seratus_tiap_golongan(): void
     {
         Sanctum::actingAs($this->manager());

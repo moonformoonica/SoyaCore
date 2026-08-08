@@ -2,8 +2,18 @@
 
 > **Status: v1, locked, 6 Juli 2026. Direvisi ke v1.1, 17 Juli 2026 (M3),
 > v1.2, 31 Juli 2026 (konsep redeem poin v2), v1.3, 1 Agustus 2026
-> (revisi pembimbing), lalu v1.4, 1 Agustus 2026 (polling status pembayaran).**
+> (revisi pembimbing), v1.4, 1 Agustus 2026 (polling status pembayaran),
+> lalu v1.6, 8 Agustus 2026 (revisi dashboard, sugar untuk botol).**
 > Kontrak ini sudah disepakati tim dan bersifat mengikat untuk integrasi self-order.
+>
+> **Revisi v1.6, yang berubah untuk frontend:**
+>
+> 1. ⚠️ **Kemasan botol sekarang BISA memilih level sugar.** Sebelumnya botol
+>    menolak sugar dan ice sekaligus. Yang berubah hanya sugar, ice tetap
+>    ditolak untuk botol. Sesudah ini, satu-satunya golongan tanpa opsi gula
+>    adalah Dessert & Cookies (lihat §2, tabel ketersediaan).
+>    Frontend yang membaca flag `bisa_pilih_sugar` per menu tidak perlu diubah,
+>    nilainya ikut berubah sendiri.
 >
 > **Revisi v1.5, yang berubah untuk frontend:**
 >
@@ -118,7 +128,7 @@ Tanpa parameter.
           "ukuran": "500ml",
           "harga": 39000,
           "golongan_ukuran": "botol",
-          "bisa_pilih_sugar": false,
+          "bisa_pilih_sugar": true,
           "bisa_pilih_ice": false,
           "pemanis": {
             "jenis": "Gula Kelapa",
@@ -272,8 +282,17 @@ menu.
 |---|---|---|---|---|
 | `Hot` | cup | ✅ | ❌ | Minuman panas, es tidak relevan |
 | `Reguler`, `Large` | cup | ✅ | ✅ | Diracik per pesanan |
-| `250ml`, `500ml`, `1000ml` | botol | ❌ | ❌ | Kemasan botol diproduksi batch, bukan per pesanan |
+| `250ml`, `500ml`, `1000ml` | botol | ✅ | ❌ | Botol diisi saat dipesan sehingga takaran gula tetap bisa diatur; es tidak relevan untuk kemasan tertutup |
 | kosong (Dessert & Cookies) | lainnya | ❌ | ❌ | Bukan minuman |
+
+> **PERUBAHAN v1.6.** Kemasan botol sebelumnya menolak sugar **dan** ice.
+> Sekarang botol menerima sugar; **satu-satunya golongan tanpa opsi gula adalah
+> Dessert & Cookies.** Opsi ice tetap hanya untuk `Reguler` dan `Large`.
+>
+> Frontend yang menyembunyikan kedua pilihan sekaligus untuk botol harus
+> disesuaikan, tapi kalau sudah membaca flag `bisa_pilih_sugar` /
+> `bisa_pilih_ice` per menu seperti yang dianjurkan, tidak ada yang perlu
+> diubah, nilainya ikut berubah sendiri.
 
 Mengirim opsi yang tidak relevan **ditolak `422` `opsi_tidak_tersedia`**, tidak
 diabaikan diam-diam: data yang lolos lalu tersimpan membuat barista membaca
