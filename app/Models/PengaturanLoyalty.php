@@ -4,7 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $rupiah_per_poin Pembagi, bukan pengali: makin besar makin pelit.
+ * @property ?int $updated_by
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property-read ?User $updatedBy
+ */
 class PengaturanLoyalty extends Model
 {
     protected $table = 'pengaturan_loyalty';

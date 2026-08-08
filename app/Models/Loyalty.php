@@ -4,7 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $customer_id
+ * @property int $poin
+ * @property ?Carbon $poin_kedaluwarsa_pada Null = belum berlaku kedaluwarsa (saldo lama).
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property-read Customer $customer
+ */
 class Loyalty extends Model
 {
     protected $table = 'loyalty';

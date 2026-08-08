@@ -6,7 +6,35 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
+/**
+ * @property int $id
+ * @property ?int $customer_id
+ * @property ?int $user_id Kasir PEMBUAT pesanan, tidak pernah ditimpa saat bayar.
+ * @property ?int $dibayar_oleh Kasir yang menyelesaikan pembayaran.
+ * @property string $kode_pesanan
+ * @property int $total
+ * @property ?string $metode_bayar
+ * @property string $status
+ * @property string $sumber
+ * @property int $point_earned
+ * @property ?int $rupiah_per_poin
+ * @property ?string $kode_redeem
+ * @property ?int $poin_ditukar
+ * @property ?int $maks_potongan
+ * @property ?Carbon $waktu_lunas
+ * @property ?Carbon $loyalty_applied_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property-read ?Customer $customer
+ * @property-read ?User $user
+ * @property-read ?User $dibayarOleh
+ * @property-read Collection<int, DetailTransaksi> $detailTransaksi
+ * @property-read Collection<int, Pembatalan> $pembatalan
+ * @property-read Collection<int, PembatalanItem> $pembatalanItem
+ */
 class Transaksi extends Model
 {
     protected $table = 'transaksi';

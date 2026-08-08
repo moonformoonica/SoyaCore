@@ -5,10 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Dokumen pembatalan/koreksi satu pesanan. Bukan refund, tidak ada kas keluar.
  * Lihat docs/pembatalan-pesanan.md.
+ *
+ * @property int $id
+ * @property int $transaksi_id
+ * @property int $user_id Akun kasir yang MEMPROSES pembatalan, bukan pembuat penjualannya.
+ * @property string $alasan
+ * @property int $nilai_dibatalkan
+ * @property int $poin_ditarik
+ * @property int $poin_dikembalikan
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property-read Transaksi $transaksi
+ * @property-read User $user
+ * @property-read Collection<int, PembatalanItem> $items
  */
 class Pembatalan extends Model
 {

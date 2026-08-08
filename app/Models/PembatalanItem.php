@@ -4,7 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $pembatalan_id
+ * @property int $detail_transaksi_id
+ * @property int $qty
+ * @property int $nilai_dibatalkan
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property-read Pembatalan $pembatalan
+ * @property-read DetailTransaksi $detailTransaksi
+ */
 class PembatalanItem extends Model
 {
     protected $table = 'pembatalan_item';

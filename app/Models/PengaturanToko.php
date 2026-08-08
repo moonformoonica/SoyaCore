@@ -4,8 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @property int $id
+ * @property string $nama_toko
+ * @property ?string $no_telepon
+ * @property ?string $alamat
+ * @property ?string $jam_buka
+ * @property ?string $jam_tutup
+ * @property ?string $qris_gambar Path di disk `public`, bukan URL.
+ * @property ?int $updated_by
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property-read ?User $updatedBy
+ */
 class PengaturanToko extends Model
 {
     protected $table = 'pengaturan_toko';
