@@ -10,7 +10,7 @@ class PengaturanToko extends Model
 {
     protected $table = 'pengaturan_toko';
 
-    public const DEFAULT_NAMA_TOKO = "GresSOY";
+    public const DEFAULT_NAMA_TOKO = 'GresSOY';
 
     public const DEFAULT_JAM_BUKA = '08:00';
 

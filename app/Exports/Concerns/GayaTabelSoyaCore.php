@@ -3,6 +3,7 @@
 namespace App\Exports\Concerns;
 
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -209,11 +210,11 @@ trait GayaTabelSoyaCore
 
     private function huruf(int $nomor): string
     {
-        return \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($nomor);
+        return Coordinate::stringFromColumnIndex($nomor);
     }
 
     private function indeks(string $huruf): int
     {
-        return \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($huruf);
+        return Coordinate::columnIndexFromString($huruf);
     }
 }

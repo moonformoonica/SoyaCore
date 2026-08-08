@@ -2,14 +2,14 @@
 
 namespace App\Exports\Sheets;
 
-use App\Services\LaporanQuery;
 use App\Exports\Concerns\GayaTabelSoyaCore;
+use App\Services\LaporanQuery;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class TimeSeriesSheet implements FromArray, WithHeadings, WithTitle, WithEvents
+class TimeSeriesSheet implements FromArray, WithEvents, WithHeadings, WithTitle
 {
     use GayaTabelSoyaCore;
 

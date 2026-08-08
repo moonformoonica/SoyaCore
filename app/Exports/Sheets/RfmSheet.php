@@ -2,9 +2,9 @@
 
 namespace App\Exports\Sheets;
 
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use App\Services\LaporanQuery;
 use App\Services\RfmQuery;
-use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -16,7 +16,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
  * pertanyaan sama dengan angka berbeda adalah cara tercepat kehilangan
  * kepercayaan pada laporannya.
  */
-class RfmSheet implements FromArray, WithTitle, WithEvents
+class RfmSheet implements FromArray, WithEvents, WithTitle
 {
     use GayaTabelSoyaCore;
 

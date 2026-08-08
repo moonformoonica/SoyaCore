@@ -281,15 +281,19 @@ class SoyaScanOpsiMenuTest extends TestCase
         ]))->assertStatus(422)->assertJsonPath('error', 'opsi_tidak_tersedia');
     }
 
-    public function test_kemasan_botol_menolak_sugar_dan_ice(): void
+    public function test_kemasan_botol_menerima_sugar_tapi_menolak_ice(): void
     {
-        foreach (['level_sugar' => 'less', 'level_ice' => 'no'] as $field => $nilai) {
-            $this->postJson('/api/order', $this->payloadOrder([
-                'items' => [['menu_id' => $this->botol500->id, 'qty' => 1, $field => $nilai]],
-            ]))
-                ->assertStatus(422)
-                ->assertJsonPath('error', 'opsi_tidak_tersedia');
-        }
+        // Botol diisi saat dipesan, jadi takaran gulanya tetap bisa diatur.
+        $this->postJson('/api/order', $this->payloadOrder([
+            'items' => [['menu_id' => $this->botol500->id, 'qty' => 1, 'level_sugar' => 'less']],
+        ]))->assertStatus(201);
+
+        // Es tidak relevan untuk kemasan tertutup.
+        $this->postJson('/api/order', $this->payloadOrder([
+            'items' => [['menu_id' => $this->botol500->id, 'qty' => 1, 'level_ice' => 'no']],
+        ]))
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'opsi_tidak_tersedia');
     }
 
     public function test_reguler_dan_large_menerima_keduanya(): void
@@ -353,7 +357,11 @@ class SoyaScanOpsiMenuTest extends TestCase
         $this->assertTrue($perUkuran['Reguler']['bisa_pilih_sugar']);
         $this->assertTrue($perUkuran['Reguler']['bisa_pilih_ice']);
 
-        $this->assertFalse($perUkuran['500ml']['bisa_pilih_sugar']);
+        // Botol: gula bisa diatur, es tidak. Kedua flag ini sengaja berdiri
+        // sendiri di OpsiMinuman; sebelumnya `bisaPilihIce()` menumpang
+        // `bisaPilihSugar()`, sehingga membuka sugar untuk botol diam-diam ikut
+        // membuka ice-nya.
+        $this->assertTrue($perUkuran['500ml']['bisa_pilih_sugar']);
         $this->assertFalse($perUkuran['500ml']['bisa_pilih_ice']);
     }
 
@@ -371,9 +379,14 @@ class SoyaScanOpsiMenuTest extends TestCase
             ->assertJsonPath('data.items.0.level_sugar_label', 'Less Gula Kelapa')
             ->assertJsonPath('data.items.0.level_ice_label', 'No Ice');
 
-        // Aturan ketersediaan berlaku sama untuk kasir.
+        // Aturan ketersediaan berlaku sama untuk kasir: botol boleh sugar,
+        // tapi tetap tidak boleh ice.
         $this->postJson("/api/transaksi/{$id}/items", [
             'menu_id' => $this->botol500->id, 'qty' => 1, 'level_sugar' => 'less',
+        ])->assertOk();
+
+        $this->postJson("/api/transaksi/{$id}/items", [
+            'menu_id' => $this->botol500->id, 'qty' => 1, 'level_ice' => 'less',
         ])->assertStatus(422)->assertJsonPath('error', 'opsi_tidak_tersedia');
     }
 

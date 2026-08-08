@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
-use App\Models\Kategori;
 use App\Models\KatalogRedeem;
+use App\Models\Kategori;
 use App\Models\Loyalty;
 use App\Models\Menu;
 use App\Models\Transaksi;

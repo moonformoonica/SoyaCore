@@ -7,6 +7,7 @@ use App\Exports\Sheets\RekapKasirSheet;
 use App\Exports\Sheets\RevenueUkuranSheet;
 use App\Exports\Sheets\RfmSheet;
 use App\Exports\Sheets\RingkasanSheet;
+use App\Exports\Sheets\SegmenTreatmentSheet;
 use App\Exports\Sheets\SwitchSheet;
 use App\Exports\Sheets\TimeSeriesSheet;
 use App\Services\LaporanQuery;
@@ -53,6 +54,10 @@ class LaporanExport implements WithMultipleSheets
             // sheet ini tetap memuat seluruh data, satu file berisi dua periode
             // dan Ringkasan tidak bisa dipakai menjelaskan angka di sini.
             $sheets[] = new RfmSheet($this->start, $this->end);
+            // Ditaruh tepat setelah RFM: sheet itu menjawab "siapa masuk segmen
+            // mana", sheet ini menjawab "lalu harus diapakan". Terpisah jauh,
+            // yang kedua tidak akan pernah dibuka.
+            $sheets[] = new SegmenTreatmentSheet($this->start, $this->end);
             $sheets[] = new SwitchSheet($this->start, $this->end);
         }
 

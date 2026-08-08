@@ -2,16 +2,16 @@
 
 namespace App\Exports\Sheets;
 
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use App\Models\LaporanTransaksi;
 use Illuminate\Database\Eloquent\Builder;
-use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class DetailTransaksiSheet implements FromQuery, WithHeadings, WithMapping, WithTitle, WithEvents
+class DetailTransaksiSheet implements FromQuery, WithEvents, WithHeadings, WithMapping, WithTitle
 {
     use GayaTabelSoyaCore;
 

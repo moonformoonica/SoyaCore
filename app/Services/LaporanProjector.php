@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\LaporanTransaksi;
 use App\Models\Transaksi;
+use App\Support\PlatformPembayaran;
 use App\Support\WaktuToko;
 
 /**
@@ -122,7 +123,12 @@ class LaporanProjector
 
             $baris[$this->prefix($transaksi).$detail->id] = [
                 'tanggal' => $tanggal,
-                'platform' => $transaksi->metode_bayar,
+                // Dinormalkan ke kosakata laporan (`cash` -> `Tunai`,
+                // `qris` -> `QRIS`). Menulis `metode_bayar` mentah membuat
+                // filter platform memecah metode bayar yang sama jadi dua
+                // entri, `QRIS` dari CSV dan `qris` dari POS. Rinciannya di
+                // {@see PlatformPembayaran}.
+                'platform' => PlatformPembayaran::dari($transaksi->metode_bayar),
                 'nama_pelanggan' => $transaksi->customer?->nama,
                 'no_wa' => $transaksi->customer?->no_wa,
                 'nama_produk' => $detail->menu?->nama ?? '(menu terhapus)',

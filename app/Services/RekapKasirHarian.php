@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\LaporanTransaksi;
 use App\Models\Pembatalan;
 use App\Models\Transaksi;
+use App\Support\PlatformPembayaran;
 use App\Support\WaktuToko;
 
 /**
@@ -31,6 +32,18 @@ class RekapKasirHarian
     public const LABEL_TOTAL_TANGGAL = 'TOTAL';
 
     public const LABEL_TOTAL_SEMUA = 'TOTAL KESELURUHAN';
+
+    /**
+     * Jembatan dari kosakata laporan (nilai kolom `platform`) ke nama kolom
+     * rekap ini, yang memakai kosakata POS. Nilai `platform` di luar peta
+     * (GrabFood, ShopeeFood, Transfer) memang tidak punya kolom sendiri.
+     *
+     * @var array<string, string>
+     */
+    private const KOLOM_METODE = [
+        PlatformPembayaran::TUNAI => 'cash',
+        PlatformPembayaran::QRIS => 'qris',
+    ];
 
     /**
      * Satu baris per kombinasi tanggal × kasir, diurutkan tanggal lalu nama,
@@ -124,12 +137,19 @@ class RekapKasirHarian
 
             // `platform` berisi metode bayar untuk baris POS, dan campuran
             // channel untuk baris CSV historis (Shopee/GoJek/…). Yang bukan
-            // cash/qris tidak masuk kedua kolom itu tapi tetap ada di Total
+            // tunai/QRIS tidak masuk kedua kolom itu tapi tetap ada di Total
             // Omzet, jadi keduanya tidak selalu berjumlah sama dengan total,
             // dan itu memang apa adanya datanya.
-            $metode = mb_strtolower((string) $row->platform);
-            if ($metode === 'cash' || $metode === 'qris') {
-                $rekap[$kunci][$metode] += (int) $row->total;
+            //
+            // Dicocokkan lewat PlatformPembayaran, BUKAN dibandingkan langsung
+            // dengan string 'cash'/'qris'. Kolom `platform` memakai kosakata
+            // laporan (`Tunai`, `QRIS`), sedangkan nama kolom rekap ini memakai
+            // kosakata POS (`cash`, `qris`). Perbandingan string mentah di sini
+            // pernah membuat kolom Cash diam-diam bernilai nol tanpa error apa
+            // pun begitu proyeksi mulai menormalkan `cash` menjadi `Tunai`.
+            $kolom = self::KOLOM_METODE[PlatformPembayaran::dari($row->platform)] ?? null;
+            if ($kolom !== null) {
+                $rekap[$kunci][$kolom] += (int) $row->total;
             }
 
             // Satu transaksi POS tersebar ke beberapa baris item, jadi

@@ -29,7 +29,7 @@ Route::view('/laporan', 'manager.laporan.index')->name('manager.laporan');
 
 Route::view('/laporan-kasir', 'manager.laporan.kasir')->name('manager.laporan.kasir');
 
-// Pengaturan 
+// Pengaturan
 Route::view('/pengaturan', 'pengaturan.index')->name('pengaturan');
 
 Route::view('/dashboard', 'dashboard.index')->name('dashboard');

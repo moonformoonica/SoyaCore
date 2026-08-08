@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Kategori;
 use App\Models\Loyalty;
 use App\Models\Menu;
+use App\Models\PengaturanToko;
 use App\Models\Transaksi;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -294,7 +295,7 @@ class OrderApiTest extends TestCase
 
     public function test_qris_toko_bisa_diambil_publik_tanpa_auth(): void
     {
-        \App\Models\PengaturanToko::create([
+        PengaturanToko::create([
             'nama_toko' => 'GresSOY',
             'no_telepon' => '08123456789',
             'alamat' => 'Jl. Rahasia Internal 1',
@@ -328,7 +329,7 @@ class OrderApiTest extends TestCase
             ->assertJsonPath('qris_url', null);
 
         // Manager baru mengunggah QRIS setelah pesanan itu masuk.
-        \App\Models\PengaturanToko::create([
+        PengaturanToko::create([
             'nama_toko' => 'GresSOY',
             'qris_gambar' => 'qris/statis.png',
         ]);

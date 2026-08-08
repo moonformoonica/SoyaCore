@@ -17,10 +17,12 @@ use App\Exceptions\ApiException;
  *
  * - `Hot` (cup)                 : sugar saja, es tidak relevan di minuman panas.
  * - `Reguler`, `Large` (cup)    : keduanya, karena diracik per pesanan.
- * - `250ml`–`1000ml` (botol)    : tidak ada. Kemasan botol diproduksi batch,
- *                                 bukan per pesanan, jadi pilihan pelanggan
- *                                 tidak bisa dipenuhi barista.
+ * - `250ml`–`1000ml` (botol)    : sugar saja. Takaran gula tetap bisa diatur
+ *                                 karena botol diisi saat dipesan, tapi es
+ *                                 tidak relevan untuk kemasan tertutup.
  * - Dessert & cookies (lainnya) : tidak ada. Bukan minuman.
+ *
+ * Satu-satunya golongan tanpa opsi gula adalah dessert & cookies.
  */
 class OpsiMinuman
 {
@@ -169,14 +171,30 @@ class OpsiMinuman
         return array_keys(self::ICE);
     }
 
+    /**
+     * Cup DAN botol sama-sama bisa. Yang tidak bisa hanya dessert & cookies,
+     * karena memang bukan minuman.
+     */
     public static function bisaPilihSugar(?string $ukuran): bool
     {
-        return GolonganUkuran::dari($ukuran) === GolonganUkuran::CUP;
+        $golongan = GolonganUkuran::dari($ukuran);
+
+        return $golongan === GolonganUkuran::CUP || $golongan === GolonganUkuran::BOTOL;
     }
 
+    /**
+     * Sengaja memeriksa golongan SENDIRI, tidak menumpang
+     * {@see self::bisaPilihSugar()}.
+     *
+     * Sebelumnya method ini memang menumpang, dan itu aman selama sugar hanya
+     * berlaku untuk cup. Begitu botol ikut boleh memilih sugar, menumpang
+     * membuat botol diam-diam ikut lolos ice, tanpa satu baris pun di sini
+     * berubah. Kedua aturan sekarang berdiri masing-masing supaya perubahan di
+     * satu sisi tidak merembet ke sisi lain.
+     */
     public static function bisaPilihIce(?string $ukuran): bool
     {
-        if (! self::bisaPilihSugar($ukuran)) {
+        if (GolonganUkuran::dari($ukuran) !== GolonganUkuran::CUP) {
             return false;
         }
 
@@ -200,7 +218,7 @@ class OpsiMinuman
         if ($sugar !== null && ! self::bisaPilihSugar($ukuran)) {
             throw new ApiException(
                 'opsi_tidak_tersedia',
-                "{$labelMenu} tidak bisa dipilih level sugar-nya, ".self::alasan($ukuran).'.',
+                "{$labelMenu} tidak bisa dipilih level sugar-nya, ".self::alasanSugar().'.',
                 422,
             );
         }
@@ -214,21 +232,23 @@ class OpsiMinuman
         }
     }
 
-    private static function alasan(?string $ukuran): string
+    /**
+     * Tanpa parameter ukuran karena sugar kini hanya ditolak pada satu keadaan:
+     * menunya bukan minuman. Cup dan botol dua-duanya boleh.
+     */
+    private static function alasanSugar(): string
     {
-        return match (GolonganUkuran::dari($ukuran)) {
-            GolonganUkuran::BOTOL => 'kemasan botol diproduksi batch, bukan diracik per pesanan',
-            default => 'menu ini bukan minuman yang diracik per pesanan',
-        };
+        return 'menu ini bukan minuman yang bisa diatur takarannya';
     }
 
     private static function alasanIce(?string $ukuran): string
     {
-        if (GolonganUkuran::dari($ukuran) === GolonganUkuran::CUP) {
-            return 'ini minuman panas, jadi es tidak relevan';
-        }
-
-        return self::alasan($ukuran);
+        return match (GolonganUkuran::dari($ukuran)) {
+            // Satu-satunya cup yang sampai ke sini adalah `Hot`, sisanya lolos.
+            GolonganUkuran::CUP => 'ini minuman panas, jadi es tidak relevan',
+            GolonganUkuran::BOTOL => 'kemasan botol tertutup, takaran esnya tidak bisa diatur',
+            default => self::alasanSugar(),
+        };
     }
 
     /**

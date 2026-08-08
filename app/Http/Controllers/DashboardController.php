@@ -8,6 +8,7 @@ use App\Services\LaporanQuery;
 use App\Services\LoyaltyService;
 use App\Services\RfmQuery;
 use App\Services\SwitchQuery;
+use App\Support\SegmenTreatment;
 use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
@@ -58,10 +59,16 @@ class DashboardController extends Controller
         [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
         $ada = $this->query->adaData($start, $end);
 
+        $sembunyikan = $request->sembunyikanTidakDiketahui();
+
         return $this->envelope(
             $request->grain(), $start, $end, $ada,
-            $this->query->revenueUkuran($start, $end, $request->sembunyikanTidakDiketahui()),
+            $this->query->revenueUkuran($start, $end, $sembunyikan),
             'Khusus minuman, dessert & cookies (Cup/Pack) tidak termasuk.',
+            // Subtotal per golongan beserta ukuran yang paling sering keluar di
+            // masing-masing, supaya bagian cup bisa menyebut angkanya tanpa
+            // frontend menjumlahkan ulang dan berisiko beda dengan `data`.
+            ['ringkasan_golongan' => $this->query->revenueGolongan($start, $end, $sembunyikan)],
         );
     }
 
@@ -69,7 +76,14 @@ class DashboardController extends Controller
     {
         [$start, $end] = $this->query->resolveWindow($request->startInput(), $request->endInput());
         $ada = $this->query->adaData($start, $end);
-        $data = $this->query->produkTerlaris($start, $end, $request->by(), $request->limitOr(10));
+        $data = $this->query->produkTerlaris(
+            $start,
+            $end,
+            $request->by(),
+            $request->limitOr(10),
+            $request->arah(),
+            $request->sertakanNol(),
+        );
 
         return $this->envelope($request->grain(), $start, $end, $ada, $data);
     }
@@ -135,6 +149,11 @@ class DashboardController extends Controller
             'periode_label' => $this->rfm->periode($start, $end) ?? self::PERIODE_LABEL,
             'data_tersedia' => $semua !== [],
             'ringkasan_segmen' => $ringkasanSegmen,
+            // Segmentasi yang tidak berujung tindakan sama saja dengan tidak
+            // ada. `ringkasan_segmen` menjawab "siapa masuk mana", blok ini
+            // menjawab "lalu harus diapakan", lengkap dengan kode reward yang
+            // benar-benar ada di katalog supaya bisa langsung dieksekusi kasir.
+            'segmen_treatment' => SegmenTreatment::denganJumlah($ringkasanSegmen),
             'data' => $data,
         ]);
     }
@@ -174,13 +193,18 @@ class DashboardController extends Controller
      * ke user (mis. revenue per ukuran yang khusus minuman).
      *
      * @param  array<string, mixed>|list<mixed>  $data
+     * @param  array<string, mixed>  $ekstra  Blok tambahan di samping `data`,
+     *                                        dipakai endpoint yang perlu
+     *                                        mengirim ringkasan berdampingan
+     *                                        dengan rinciannya.
      */
-    private function envelope(string $grain, ?string $start, ?string $end, bool $adaData, array $data, ?string $catatan = null): JsonResponse
+    private function envelope(string $grain, ?string $start, ?string $end, bool $adaData, array $data, ?string $catatan = null, array $ekstra = []): JsonResponse
     {
         return response()->json(array_filter([
             'periode' => ['grain' => $grain, 'start' => $start, 'end' => $end],
             'data_tersedia' => $adaData,
             'catatan' => $catatan,
+            ...$ekstra,
             'data' => $data,
         ], fn ($v) => $v !== null));
     }

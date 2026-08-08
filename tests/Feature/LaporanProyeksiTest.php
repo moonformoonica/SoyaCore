@@ -95,7 +95,11 @@ class LaporanProyeksiTest extends TestCase
         $this->assertStringStartsWith(LaporanTransaksi::PREFIX_POS, $baris->kode);
         $this->assertSame('Original', $baris->nama_produk);
         $this->assertSame('Reguler', $baris->ukuran);
-        $this->assertSame('cash', $baris->platform);
+        // Dinormalkan ke kosakata laporan. `metode_bayar` transaksinya tetap
+        // 'cash', tapi kolom `platform` memakai istilah yang sama dengan 345
+        // baris CSV historis, kalau tidak, filter platform di dashboard
+        // menampilkan 'Tunai' dan 'cash' sebagai dua entri berbeda.
+        $this->assertSame('Tunai', $baris->platform);
         $this->assertSame(40000, $baris->total);
     }
 

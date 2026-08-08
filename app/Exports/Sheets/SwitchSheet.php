@@ -2,9 +2,9 @@
 
 namespace App\Exports\Sheets;
 
+use App\Exports\Concerns\GayaTabelSoyaCore;
 use App\Services\LaporanQuery;
 use App\Services\SwitchQuery;
-use App\Exports\Concerns\GayaTabelSoyaCore;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -15,7 +15,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
  * menghitung ulang, dan dua tampilan angka yang berbeda untuk hal yang sama
  * adalah cara tercepat membuat manager berhenti memercayai keduanya.
  */
-class SwitchSheet implements FromArray, WithTitle, WithEvents
+class SwitchSheet implements FromArray, WithEvents, WithTitle
 {
     use GayaTabelSoyaCore;
 

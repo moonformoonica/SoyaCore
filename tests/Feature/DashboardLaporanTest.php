@@ -38,7 +38,7 @@ class DashboardLaporanTest extends TestCase
      */
     private const SHEET_LENGKAP = [
         'Ringkasan', 'Rekap Kasir', 'Detail Transaksi', 'Revenue per Ukuran',
-        'Time Series', 'RFM Pelanggan', 'Rekomendasi Switch',
+        'Time Series', 'RFM Pelanggan', 'Segmen & Treatment', 'Rekomendasi Switch',
     ];
 
     protected function setUp(): void
@@ -87,18 +87,34 @@ class DashboardLaporanTest extends TestCase
     {
         Sanctum::actingAs($this->manager());
 
-        $expected = LaporanRevenueUkuran::orderByDesc('total_revenue')->get()
-            ->map(fn ($r) => [
-                'ukuran' => $r->ukuran,
+        // Dibandingkan per ukuran, bukan sebagai daftar berurutan: urutan
+        // hasilnya kini golongan dulu (cup, botol) baru jumlah terjual, supaya
+        // ukuran yang paling sering keluar terbaca di baris pertama tiap
+        // golongan. Yang ingin dijaga test ini adalah ANGKAnya tetap sama
+        // dengan fixture, bukan urutan tampilnya.
+        $expected = LaporanRevenueUkuran::get()
+            ->mapWithKeys(fn ($r) => [$r->ukuran => [
                 'jumlah_terjual' => $r->jumlah_terjual,
                 'total_revenue' => $r->total_revenue,
                 'jumlah_transaksi' => $r->jumlah_transaksi,
                 'rata_rata_transaksi' => $r->rata_rata_transaksi,
-            ])->all();
+            ]])->all();
 
         $response = $this->getJson('/api/dashboard/revenue-ukuran')->assertOk();
 
-        $this->assertSame($expected, $response->json('data'));
+        $aktual = [];
+        foreach ($response->json('data') as $baris) {
+            $aktual[$baris['ukuran']] = [
+                'jumlah_terjual' => $baris['jumlah_terjual'],
+                'total_revenue' => $baris['total_revenue'],
+                'jumlah_transaksi' => $baris['jumlah_transaksi'],
+                'rata_rata_transaksi' => $baris['rata_rata_transaksi'],
+            ];
+        }
+
+        ksort($expected);
+        ksort($aktual);
+        $this->assertSame($expected, $aktual);
         $this->assertSame(self::MINUMAN_REVENUE, array_sum(array_column($response->json('data'), 'total_revenue')));
 
         // Cakupan minuman-saja harus dijelaskan ke frontend, bukan diam-diam.
@@ -186,8 +202,8 @@ class DashboardLaporanTest extends TestCase
 
         // Satu baris proyeksi POS, bentuk yang sama dengan yang ditulis
         // LaporanProjector saat kasir menandai lunas.
-        \App\Models\LaporanTransaksi::create([
-            'kode' => \App\Models\LaporanTransaksi::PREFIX_POS.'900-1',
+        LaporanTransaksi::create([
+            'kode' => LaporanTransaksi::PREFIX_POS.'900-1',
             'tanggal' => '2026-07-30',
             'platform' => 'cash',
             'nama_pelanggan' => 'Pelanggan Baru Sekali',
