@@ -82,13 +82,32 @@
     function renderRevenueUkuran(rows) {
         if (revenueUkuranChart) revenueUkuranChart.destroy();
         const ctx = document.getElementById('revenueUkuranChart');
+        // Samakan dengan chart "Jumlah Cup yang terjual" di dashboard:
+        // batang = jumlah terjual (pcs) per ukuran, urut terbanyak -> tersedikit.
+        rows = [...rows].sort((a, b) => Number(b.jumlah_terjual || 0) - Number(a.jumlah_terjual || 0));
         revenueUkuranChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: rows.map(r => r.ukuran),
-                datasets: [{ label: 'Total Revenue Ukuran', data: rows.map(r => r.total_revenue), backgroundColor: '#4285f4' }],
+                datasets: [{ label: 'Jumlah Terjual', data: rows.map(r => Number(r.jumlah_terjual || 0)), backgroundColor: '#8fd6ac' }],
             },
-            options: { plugins: { legend: { display: true, position: 'top', align: 'start' } } },
+            options: {
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (item) => {
+                                const r = rows[item.dataIndex];
+                                return [
+                                    `Terjual: ${Number(r.jumlah_terjual || 0).toLocaleString('id-ID')} pcs`,
+                                    `Revenue: ${rupiah(r.total_revenue)}`,
+                                ];
+                            },
+                        },
+                    },
+                },
+            },
         });
     }
 

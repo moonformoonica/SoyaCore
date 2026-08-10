@@ -66,12 +66,6 @@
 
     </div>
 
-    <p class="lk-sub">
-        Terurut dari omzet terbesar. Kolom <strong>Pembatalan</strong> dan
-        <strong>Nilai Dibatalkan</strong> menghitung yang diproses akun tersebut,
-        bukan yang terjadi pada penjualannya.
-    </p>
-
     {{-- =========================
             TABEL
     ========================== --}}

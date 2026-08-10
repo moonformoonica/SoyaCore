@@ -57,7 +57,7 @@
 
         <div class="grid" data-role="manager">
             <div class="panel">
-                <h3>Revenue per Ukuran</h3>
+                <h3>Jumlah Cup yang terjual</h3>
                 <canvas id="ukuranChart"></canvas>
             </div>
             <div class="panel">

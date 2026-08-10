@@ -627,8 +627,8 @@ body {
 
 /* lingkaran centang */
 .scan-done .done-check {
-    width: 116px;
-    height: 116px;
+    width: 132px;
+    height: 132px;
     border-radius: 50%;
     background: #F7C85C;
     color: #fff;
@@ -637,7 +637,10 @@ body {
     margin: 0 auto 26px;
 }
 
-.scan-done .done-check svg { width: 58px; height: 58px; }
+.scan-done .done-check svg { width: 68px; height: 68px; }
+
+/* Centang sukses dibikin lebih besar dari ikon lain. */
+.scan-done .done-check #doneIconSuccess { width: 84px; height: 84px; }
 
 .scan-done .done-title {
     margin: 0 0 6px;
@@ -751,12 +754,13 @@ body {
 }
 
 .scan-done .done-check.is-success #doneIconSuccess {
-    animation: doneCheckPulse 1.6s ease-in-out infinite;
+    animation: doneCheckPulse 2s ease-in-out infinite;
 }
 
+/* Centang muncul-hilang pelan (fade + sedikit mengecil) dalam siklus 6 detik. */
 @keyframes doneCheckPulse {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.15); }
+    0%, 100% { opacity: 1;   transform: scale(1); }
+    50%      { opacity: 0.15; transform: scale(0.8); }
 }
 
 /* ============================================================

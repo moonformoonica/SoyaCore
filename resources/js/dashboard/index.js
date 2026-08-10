@@ -82,9 +82,11 @@
         }
     }
 
-    async function loadDashboard() {
-        els.loading.style.display = 'block';
-        els.body.style.display = 'none';
+    async function loadDashboard(silent = false) {
+        if (!silent) {
+            els.loading.style.display = 'block';
+            els.body.style.display = 'none';
+        }
         els.error.style.display = 'none';
 
         const start = document.getElementById('startDate').value || null;
@@ -95,7 +97,6 @@
 
         try {
             if (kasir) {
-                // Kasir cuma boleh akses meta/ringkasan/produk-terlaris (lihat routes/api.php).
                 const [ringkasan, produkTerlaris] = await Promise.all([
                     apiGet('/ringkasan', params),
                     apiGet('/produk-terlaris', { ...params, by: 'qty', limit: 10 }),
@@ -104,20 +105,21 @@
                 renderRingkasan(ringkasan.data);
                 renderProdukTerlaris(produkTerlaris.data);
             } else {
-                const [ringkasan, timeSeries, revenueUkuran, produkSemua, platform, rfm] =
+                const [ringkasan, timeSeries, revenueUkuran, bestSeller, worstSeller, platform, rfm] =
                     await Promise.all([
                         apiGet('/ringkasan', params),
                         apiGet('/time-series', params),
                         apiGet('/revenue-ukuran', { ...params, sembunyikan_tidak_diketahui: true }),
-                        apiGet('/produk-terlaris', { ...params, by: 'qty', limit: 100 }),
+                        apiGet('/produk-terlaris', { ...params, by: 'qty', arah: 'tertinggi', limit: 10 }),
+                        apiGet('/produk-terlaris', { ...params, by: 'qty', arah: 'terendah', limit: 10 }),
                         apiGet('/platform', { ...params, sembunyikan_tidak_diketahui: true }),
                         apiGet('/rfm', {}),
                     ]);
 
                 renderRingkasan(ringkasan.data);
                 renderTrend(timeSeries.data, timeSeries.data_tersedia);
-                renderProdukTerlaris(produkSemua.data);
-                renderWorstSeller(produkSemua.data);
+                renderProdukTerlaris(bestSeller.data);
+                renderWorstSeller(worstSeller.data);
                 renderUkuran(revenueUkuran.data);
                 renderFilterPlatform(platform.data);
                 renderRfm(rfm.ringkasan_segmen);
@@ -128,8 +130,10 @@
             els.loading.style.display = 'none';
             els.body.style.display = 'block';
         } catch (err) {
-            els.loading.style.display = 'none';
-            showError(err.message || 'Terjadi kesalahan saat memuat dashboard.');
+            if (!silent) {
+                els.loading.style.display = 'none';
+                showError(err.message || 'Terjadi kesalahan saat memuat dashboard.');
+            }
         }
     }
 
@@ -143,13 +147,29 @@
         document.getElementById('cardRata').textContent = rupiah(rata);
     }
 
+    const HARI_URUT = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    function agregatPerHari(rows) {
+        const ember = {};
+        HARI_URUT.forEach(h => { ember[h] = { hari: h, revenue: 0, transaksi: 0, qty: 0, tanggal: [] }; });
+
+        rows.forEach(r => {
+            const b = ember[r.hari];
+            if (!b) return; 
+            b.revenue += Number(r.revenue || 0);
+            b.transaksi += Number(r.transaksi || 0);
+            b.qty += Number(r.qty || 0);
+            b.tanggal.push({ label: r.periode_label || r.periode, revenue: Number(r.revenue || 0) });
+        });
+
+        return HARI_URUT.map(h => ember[h]);
+    }
+
     function renderTrend(rows, dataTersedia) {
         destroyChart('trend');
 
         const ctx = document.getElementById('trendChart');
         const kosong = document.getElementById('trendKosong');
 
-        // Rentang tanpa data sama sekali: tampilkan keterangan, bukan chart kosong.
         if (dataTersedia === false || !rows.length) {
             ctx.hidden = true;
             if (kosong) kosong.hidden = false;
@@ -158,36 +178,46 @@
         ctx.hidden = false;
         if (kosong) kosong.hidden = true;
 
+        const perHari = agregatPerHari(rows);
+
         charts.trend = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: rows.map(r => r.hari ?? r.periode_label ?? r.periode),
+                labels: HARI_URUT,
                 datasets: [{
-                    label: 'Revenue',
-                    data: rows.map(r => r.revenue),
+                    label: 'Total Penjualan',
+                    data: perHari.map(b => b.revenue),
                     borderColor: '#2f9e5f',
-                    backgroundColor: 'rgba(47,158,95,0.1)',
+                    backgroundColor: 'rgba(47,158,95,0.12)',
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#2f9e5f',
+                    tension: 0.35,
                     fill: true,
-                    tension: 0.3,
                 }],
             },
             options: {
+                interaction: { mode: 'index', intersect: false },
+                scales: { y: { beginAtZero: true } },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            title: (items) => {
-                                const r = rows[items[0].dataIndex];
-                                const label = r.periode_label ?? r.periode;
-                                return r.hari ? `${r.hari}, ${label}` : label;
-                            },
+                            title: (items) => items[0].label, // nama hari
                             label: (item) => {
-                                const r = rows[item.dataIndex];
+                                const b = perHari[item.dataIndex];
                                 return [
-                                    `Revenue: ${rupiah(r.revenue)}`,
-                                    `Transaksi: ${Number(r.transaksi).toLocaleString('id-ID')}`,
-                                    `Qty: ${Number(r.qty).toLocaleString('id-ID')}`,
+                                    `Total: ${rupiah(b.revenue)}`,
+                                    `${Number(b.transaksi).toLocaleString('id-ID')} transaksi · ${Number(b.qty).toLocaleString('id-ID')} qty`,
                                 ];
+                            },
+                            afterBody: (items) => {
+                                const b = perHari[items[0].dataIndex];
+                                if (!b.tanggal.length) return [];
+                                return [''].concat(
+                                    b.tanggal.map(t => `${t.label}: ${rupiah(t.revenue)}`),
+                                );
                             },
                         },
                     },
@@ -232,38 +262,72 @@
     }
 
     function renderProdukTerlaris(rows) {
-        const top = rows.slice(0, 10);
         renderProdukChart(
             'bestSeller', 'bestSellerChart',
-            top.map(labelProduk), top.map(r => Number(r.qty || 0)), '#2f9e5f',
+            rows.map(labelProduk), rows.map(r => Number(r.qty || 0)), '#2f9e5f',
         );
     }
 
     function renderWorstSeller(rows) {
-        const worst = rows.slice(-10); // 10 qty terkecil, urut desc dari backend
         renderProdukChart(
             'worstSeller', 'worstSellerChart',
-            worst.map(labelProduk), worst.map(r => Number(r.qty || 0)), '#3fb98f',
+            rows.map(labelProduk), rows.map(r => Number(r.qty || 0)), '#3fb98f',
         );
     }
 
     function renderUkuran(rows) {
         destroyChart('ukuran');
         const ctx = document.getElementById('ukuranChart');
+        rows = [...rows].sort((a, b) => Number(b.jumlah_terjual || 0) - Number(a.jumlah_terjual || 0));
         charts.ukuran = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: rows.map(r => r.ukuran),
-                datasets: [{ label: 'Revenue', data: rows.map(r => r.total_revenue), backgroundColor: '#8fd6ac' }],
+                datasets: [{ label: 'Jumlah Terjual', data: rows.map(r => Number(r.jumlah_terjual || 0)), backgroundColor: '#8fd6ac' }],
             },
-            options: { plugins: { legend: { display: false } } },
+            options: {
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (item) => {
+                                const r = rows[item.dataIndex];
+                                return [
+                                    `Terjual: ${Number(r.jumlah_terjual || 0).toLocaleString('id-ID')} pcs`,
+                                    `Revenue: ${rupiah(r.total_revenue)}`,
+                                ];
+                            },
+                        },
+                    },
+                },
+            },
         });
     }
 
     let platformRows = [];
 
+    const PLATFORM_ALIAS = { 'cash': 'Tunai', 'qris': 'QRIS', 'tunai': 'Tunai' };
+
+    function normalizePlatform(nama) {
+        const key = String(nama || '').trim().toLowerCase();
+        return PLATFORM_ALIAS[key] || nama;
+    }
+
+    function mergePlatform(rows) {
+        const map = {};
+        rows.forEach((r) => {
+            const nama = normalizePlatform(r.platform);
+            if (!map[nama]) map[nama] = { platform: nama, transaksi: 0, revenue: 0, qty: 0 };
+            map[nama].transaksi += Number(r.transaksi || 0);
+            map[nama].revenue += Number(r.revenue || 0);
+            map[nama].qty += Number(r.qty || 0);
+        });
+        return Object.values(map);
+    }
+
     function renderFilterPlatform(rows) {
-        platformRows = [...rows].sort((a, b) => Number(b.transaksi) - Number(a.transaksi));
+        platformRows = mergePlatform(rows).sort((a, b) => Number(b.transaksi) - Number(a.transaksi));
         drawFilterPlatform('');
     }
 
@@ -330,7 +394,6 @@
 
         let html = `<button type="button" data-hal="${loyaltyPage - 1}" ${loyaltyPage <= 1 ? 'disabled' : ''}>&lsaquo;</button>`;
 
-        // Maksimal 5 nomor di sekitar halaman aktif.
         let awal = Math.max(1, loyaltyPage - 2);
         const akhir = Math.min(totalPage, awal + 4);
         awal = Math.max(1, akhir - 4);
@@ -358,8 +421,6 @@
         const total = values.reduce((a, b) => a + b, 0);
         const percents = values.map(v => total > 0 ? ((v / total) * 100).toFixed(1) : 0);
 
-        // Segmen mengikuti data RFM sumber (Data_RFM_Pelanggan.csv): Pelanggan
-        // Baru (hijau) / Butuh Perhatian (biru) / Potensial (kuning) / Loyal (merah).
         const colorMap = {
             'Pelanggan Baru': '#63c088',
             'Butuh Perhatian': '#5aa9e6',
@@ -397,4 +458,9 @@
     resizeObserver.observe(document.querySelector('.dash-content'));
 
     loadDashboard();
+
+    const AUTO_REFRESH_MS = 30000;
+    setInterval(function () {
+        if (!document.hidden) loadDashboard(true);
+    }, AUTO_REFRESH_MS);
 })();

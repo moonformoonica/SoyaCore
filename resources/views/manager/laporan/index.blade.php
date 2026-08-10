@@ -53,8 +53,7 @@
 
     <div class="lap-grid">
         <div class="panel panel-full">
-            <h3>Total Revenue per Ukuran</h3>
-            <div class="panel-sub">Total pendapatan dikelompokkan per ukuran minuman (data sama dengan dashboard)</div>
+            <h3>Jumlah Cup yang terjual</h3>
             <canvas id="revenueUkuranChart"></canvas>
         </div>
 
