@@ -1,14 +1,12 @@
 /* ============================================================
    SoyaScan, halaman self-order pelanggan (mobile-first).
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-
 :root {
     --scan-grad-a: #2f6b3f; /* stop 0%  */
     --scan-grad-b: #7fb77e; /* stop 100% */
-    --scan-green: #2f8f43;
-    --scan-green-dark: #26773a;
-    --scan-green-deep: #1f6e30;
+    --scan-green: var(--soya-green-700);
+    --scan-green-dark: var(--soya-green-800);
+    --scan-green-deep: var(--soya-green-900);
     --scan-yellow: #f5a623;
     --scan-yellow-dark: #e0940f;
     --scan-ink: #262a2e;

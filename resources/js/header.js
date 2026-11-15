@@ -69,6 +69,12 @@
                 const res = await fetch('/api/me', {
                     headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
                 });
+                if (res.status === 401) {
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('auth_user');
+                    window.location.replace('/login');
+                    return;
+                }
                 if (!res.ok) return;
 
                 const user = (await res.json()).user;

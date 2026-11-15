@@ -1,9 +1,7 @@
 @import 'tailwindcss';
 @import './sidebar.css';
 @import './header.css';
-@import './dashboard.css';
 @import './manager/transaksi.css';
-@import './profil.css';
 @import './login.css';
 /* Jalurnya HARUS lewat manager/, './menu/index.css' tidak ada dan membuat
    `npm run build` gagal total. Impor './sidebar.css' yang dobel sudah dibuang. */

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 *{
     margin:0;
     padding:0;
@@ -8,8 +6,8 @@
 }
 
 :root{
-    --primary:#5D8A43;
-    --primary-hover:#4B7137;
+    --primary:var(--soya-green-700);
+    --primary-hover:var(--soya-green-800);
 
     --green-dark:#2F6B3F;
     --green-light:#7FB77E;
@@ -37,7 +35,8 @@ body{
 
     display:flex;
     width:100%;
-    height:100vh;
+    min-height:100vh;
+    min-height:100dvh;
 }
 
 /* ====================================
@@ -170,49 +169,33 @@ body{
     font-size:18px;
     user-select:none;
     transition:.25s;
+    width:40px;
+    height:40px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    box-shadow:none;
+    display:grid;
+    place-items:center;
 }
 
 .toggle-password:hover{
     color:var(--primary);
+    background:transparent;
+    transform:translateY(-50%);
 }
 
-/* ====================================
-            REMEMBER
-==================================== */
-
-.login-option{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:30px;
+.toggle-password:active{
+    transform:translateY(-50%);
 }
 
-.remember{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-size:14px;
-    margin-bottom:0;
-}
-
-.forgot-password{
-
-    text-decoration:none;
-    font-size:14px;
-    color:var(--primary);
-    font-weight:500;
-    transition:.25s;
-}
-
-.forgot-password:hover{
-    text-decoration:underline;
-    color:var(--primary-hover);
-}
-
-.login-option input{
-    width:17px;
-    height:17px;
-    accent-color:var(--primary);
+.login-card .login-help {
+    margin: 14px 0 0;
+    color: var(--text-light);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
 }
 
 /* ====================================
@@ -299,6 +282,14 @@ button:disabled{
 
 .footer a:hover{
     text-decoration:underline;
+}
+
+.login-card .footer-note {
+    margin: 18px 0 0;
+    color: var(--text-light);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
 }
 
 /* ====================================

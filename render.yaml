@@ -14,7 +14,7 @@ services:
     region: singapore
 
     # Dipakai Render untuk cek service hidup. Route /up sudah ada bawaan
-    # Laravel 12 (lihat bootstrap/app.php). URL ini juga yang dipakai
+    # Laravel 13 (lihat bootstrap/app.php). URL ini juga yang dipakai
     # cron keep-alive untuk mencegah cold start free tier.
     healthCheckPath: /up
 

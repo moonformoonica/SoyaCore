@@ -1,9 +1,8 @@
 <header class="app-header">
 
-  <button type="button" class="toggle-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+  <button type="button" class="toggle-btn" id="sidebarToggle" aria-label="Buka navigasi" aria-controls="sidebar" aria-expanded="false">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M15 6l-6 6 6 6"></path>
-      <path d="M20 6l-6 6 6 6"></path>
+      <path d="M4 6h16M4 12h16M4 18h16"></path>
     </svg>
   </button>
 

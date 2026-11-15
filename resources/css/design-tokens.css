@@ -1,0 +1,28 @@
+:root {
+    --soya-green-900: #1F4D33;
+    --soya-green-800: #255A38;
+    --soya-green-700: #2F6B3F;
+    --soya-green-100: #EAF2E7;
+    --soya-canvas: #F4F8F2;
+    --soya-surface: #FFFFFF;
+    --soya-border: #DCE6DA;
+    --soya-text: #212B36;
+    --soya-muted: #647067;
+    --soya-focus: #F7C85C;
+}
+
+:focus-visible {
+    outline: 3px solid var(--soya-focus);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

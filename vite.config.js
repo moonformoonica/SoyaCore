@@ -10,31 +10,21 @@ export default defineConfig({
             // `npm run build` gagal total, sementara `npm run dev` tetap
             // terlihat normal karena memuat berkas sesuai permintaan.
             input: [
-                'resources/css/app.css',
-                'resources/js/app.js',
-
                 'resources/css/header.css',
                 'resources/js/header.js',
 
+                'resources/css/design-tokens.css',
+                'resources/css/layout.css',
                 'resources/css/sidebar.css',
                 'resources/js/sidebar.js',
 
                 // Dimuat layouts/app.blade.php untuk SETIAP halaman, jadi
                 // ketinggalannya membuat seluruh halaman ber-layout gagal
                 // render begitu di-build.
-                'resources/css/profil.css',
-
                 'resources/css/login.css',
                 'resources/js/auth/login.js',
 
-                'resources/css/dashboard.css',
-                // `dashboard/index.css` BUKAN duplikat `dashboard.css`.
-                // Yang pertama isi halamannya (kartu statistik, panel, grafik),
-                // yang kedua kerangka layout dan ikut lewat app.css. Halaman
-                // dashboard memanggilnya lewat @vite, jadi tanpa baris ini
-                // `npm run build` menghasilkan manifest tanpa entri itu dan
-                // halaman Dashboard gagal render di production, sementara
-                // `npm run dev` tetap terlihat normal.
+                // Dashboard memuat gaya konten grafiknya sendiri.
                 'resources/css/dashboard/index.css',
                 'resources/js/dashboard/index.js',
 
@@ -51,9 +41,8 @@ export default defineConfig({
 
                 'resources/css/manager/menu/index.css',
                 'resources/js/manager/menu/index.js',
-                'resources/css/manager/menu/create.css',
+                'resources/css/manager/menu/form.css',
                 'resources/js/manager/menu/create.js',
-                'resources/css/manager/menu/edit.css',
                 'resources/js/manager/menu/edit.js',
 
                 'resources/css/manager/loyalty.css',

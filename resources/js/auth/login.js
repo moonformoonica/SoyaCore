@@ -6,10 +6,14 @@ toggle.addEventListener("click", function () {
         password.type = "text";
         toggle.classList.remove("fa-eye");
         toggle.classList.add("fa-eye-slash");
+        toggle.setAttribute('aria-label', 'Sembunyikan kata sandi');
+        toggle.setAttribute('aria-pressed', 'true');
     } else {
         password.type = "password";
         toggle.classList.remove("fa-eye-slash");
         toggle.classList.add("fa-eye");
+        toggle.setAttribute('aria-label', 'Tampilkan kata sandi');
+        toggle.setAttribute('aria-pressed', 'false');
     }
 
 });

@@ -1,0 +1,42 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      APP_KEY: ${APP_KEY:?Run php artisan key:generate and set APP_KEY in .env}
+      PORT: "8000"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: soyacore
+      DB_USERNAME: soyacore
+      DB_PASSWORD: ${DB_PASSWORD:-soyacore-local}
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: soyacore
+      POSTGRES_USER: soyacore
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-soyacore-local}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soyacore -d soyacore"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - soyacore-db:/var/lib/postgresql/data
+
+volumes:
+  soyacore-db:

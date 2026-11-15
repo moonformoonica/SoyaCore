@@ -4,9 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('beranda');
 
-Route::get('/header', function () {
-    return view('header.index');
-});
+Route::redirect('/header', '/dashboard');
 
 Route::view('/login', 'auth.login')->name('login');
 

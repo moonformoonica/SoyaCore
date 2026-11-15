@@ -21,7 +21,7 @@ class SwitchSheet implements FromArray, WithEvents, WithTitle
 
     protected function barisHeader(): int
     {
-        return 3;
+        return 2;
     }
 
     /**
@@ -52,7 +52,6 @@ class SwitchSheet implements FromArray, WithEvents, WithTitle
 
         $rows = [
             ['Catatan: periode '.($periode ?? '-').', mengikuti rentang tanggal unduhan. Khusus minuman, dessert dan cookies tidak dihitung.'],
-            [],
             ['Nama Pelanggan', 'Rasa Favorit', 'Ukuran Saat Ini', 'Beli Reguler (pcs)', 'Beli Large (pcs)', 'Beli Botol (pcs)', 'Total Transaksi', 'Qty per Kunjungan', 'Total Belanja (Rp)', 'Rekomendasi'],
         ];
 

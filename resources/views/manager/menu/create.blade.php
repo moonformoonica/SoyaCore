@@ -3,7 +3,7 @@
 @section('title', 'Tambah Menu')
 
 @vite([
-    'resources/css/manager/menu/create.css',
+    'resources/css/manager/menu/form.css',
     'resources/js/manager/menu/create.js'
 ])
 

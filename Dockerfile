@@ -1,6 +1,18 @@
 # SoyaCore, image produksi untuk Render (M3).
 # Render tidak punya runtime PHP native, jadi deploy-nya lewat Docker.
-FROM php:8.2-apache
+FROM node:22-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY resources ./resources
+COPY public ./public
+COPY vite.config.js ./
+RUN npm run build
+
+FROM php:8.3-apache
 
 # Dependency sistem untuk ekstensi PHP yang dibutuhkan project ini:
 # - gd + zip  -> WAJIB untuk maatwebsite/excel (export .xlsx). Tanpa ini
@@ -42,6 +54,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
 
 COPY . .
+COPY --from=frontend /app/public/build ./public/build
 
 RUN composer dump-autoload --optimize --no-dev \
     && chown -R www-data:www-data storage bootstrap/cache \

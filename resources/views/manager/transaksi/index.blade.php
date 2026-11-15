@@ -2,6 +2,10 @@
 
 @section('title', 'Transaksi')
 
+@push('styles')
+@vite('resources/css/manager/transaksi.css')
+@endpush
+
 @section('content')
 
 <div class="transaction-page">
